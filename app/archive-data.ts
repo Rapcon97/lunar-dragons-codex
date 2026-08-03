@@ -486,44 +486,122 @@ function imperialRelayDate(date: Date) {
   return `0.${String(fraction).padStart(3, "0")}.056.M42`;
 }
 
-function messagesForDay(day: Date) {
-  const key = dateKey(day);
-  const seed = hashText(key);
-  const count = 1 + (seed % 2);
-  const start = seed % astropathicMessageTemplates.length;
-  const stride = 5 + (seed % 5);
-  return Array.from({ length: count }, (_, index): AstropathicMessage => {
-    const isNotableTransmission = index === 0 && seed % 100 === 0;
+const RELAY_DAY_MS = 86_400_000;
+const RELAY_MINUTE_MS = 60_000;
+const NOTABLE_RELAY_EPOCH = Date.UTC(2020, 0, 1, 12);
+
+export type AstropathicDailySchedule = {
+  key: string;
+  quiet: boolean;
+  burstCount: number;
+  messages: AstropathicMessage[];
+};
+
+function seededInteger(seed: string, minimum: number, maximum: number) {
+  if (maximum <= minimum) return minimum;
+  return minimum + (hashText(seed) % ((maximum - minimum) + 1));
+}
+
+function isNotableRelayDay(day: Date) {
+  const target = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 12);
+  if (target < NOTABLE_RELAY_EPOCH) return false;
+
+  let notableDay = NOTABLE_RELAY_EPOCH;
+  while (notableDay < target) {
+    const notableKey = dateKey(new Date(notableDay));
+    notableDay += seededInteger(`${notableKey}:notable-interval`, 14, 28) * RELAY_DAY_MS;
+  }
+  return notableDay === target;
+}
+
+export function astropathicScheduleForDay(day: Date): AstropathicDailySchedule {
+  const normalizedDay = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 12));
+  const key = dateKey(normalizedDay);
+  const quiet = hashText(`${key}:quiet-period`) % 1000 < 125;
+  const notable = isNotableRelayDay(normalizedDay);
+  const baseCount = quiet
+    ? (notable ? 1 : hashText(`${key}:quiet-count`) % 2)
+    : 2 + (hashText(`${key}:normal-count`) % 3);
+  const burst = !quiet && hashText(`${key}:traffic-burst`) % 100 < 10;
+  const burstCount = burst ? 1 + (hashText(`${key}:burst-count`) % 2) : 0;
+  const count = Math.min(6, baseCount + burstCount);
+  const scheduledMinutes: number[] = [];
+
+  if (count > 0 && quiet) {
+    scheduledMinutes.push(seededInteger(`${key}:quiet-arrival`, 18 * 60, (24 * 60) - 1));
+  } else if (count > 0) {
+    const burstReserve = burstCount * 25;
+    const lastBaseMinute = ((24 * 60) - 1) - burstReserve;
+    scheduledMinutes.push(seededInteger(`${key}:first-arrival`, 30, 6 * 60));
+
+    for (let index = 1; index < baseCount; index += 1) {
+      const previous = scheduledMinutes[index - 1];
+      const remainingBaseMessages = baseCount - index - 1;
+      const maximumGap = Math.min(12 * 60, lastBaseMinute - previous - (remainingBaseMessages * 3 * 60));
+      scheduledMinutes.push(previous + seededInteger(`${key}:normal-gap:${index}`, 3 * 60, maximumGap));
+    }
+
+    for (let index = 0; index < burstCount; index += 1) {
+      const previous = scheduledMinutes[scheduledMinutes.length - 1];
+      scheduledMinutes.push(previous + seededInteger(`${key}:burst-gap:${index}`, 5, 25));
+    }
+  }
+
+  const templateOrder = astropathicMessageTemplates
+    .map((_, index) => ({ index, rank: hashText(`${key}:template:${index}`) }))
+    .sort((left, right) => left.rank - right.rank || left.index - right.index)
+    .map(({ index }) => index);
+  let normalTemplateIndex = 0;
+
+  const messages = scheduledMinutes.slice(0, count).map((minute, index): AstropathicMessage => {
+    const isNotableTransmission = notable && index === 0;
     const template = isNotableTransmission
-      ? notableAstropathicMessageTemplates[Math.floor(seed / 100) % notableAstropathicMessageTemplates.length]
-      : astropathicMessageTemplates[(start + index * stride) % astropathicMessageTemplates.length];
+      ? notableAstropathicMessageTemplates[hashText(`${key}:notable-template`) % notableAstropathicMessageTemplates.length]
+      : astropathicMessageTemplates[templateOrder[normalTemplateIndex++ % templateOrder.length]];
+    const scheduledAt = new Date(Date.UTC(
+      normalizedDay.getUTCFullYear(),
+      normalizedDay.getUTCMonth(),
+      normalizedDay.getUTCDate(),
+      0,
+      minute,
+    ));
     return {
       ...template,
       id: `relay-${key}-${isNotableTransmission ? "notable" : index + 1}`,
-      received: imperialRelayDate(day),
-      receivedAt: key,
+      received: imperialRelayDate(scheduledAt),
+      receivedAt: scheduledAt.toISOString(),
     };
   });
+
+  return { key, quiet, burstCount, messages };
 }
 
 export function applyDailyAstropathicMessages(value: ChapterArchiveData, now = new Date()) {
   const archive = JSON.parse(JSON.stringify(value)) as ChapterArchiveData;
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12));
   const todayKey = dateKey(today);
-  if (archive.relayLastGeneratedDate === todayKey) return { archive, changed: false };
 
   const lastGenerated = dayFromKey(archive.relayLastGeneratedDate);
   const firstDay = lastGenerated
-    ? new Date(Math.max(lastGenerated.getTime() + 86_400_000, today.getTime() - 29 * 86_400_000))
+    ? dateKey(lastGenerated) === todayKey
+      ? today
+      : new Date(Math.max(lastGenerated.getTime() + RELAY_DAY_MS, today.getTime() - 29 * RELAY_DAY_MS))
     : today;
   const knownIds = new Set(archive.relayMessages.map((message) => message.id));
   const generated: AstropathicMessage[] = [];
 
-  for (let day = firstDay; day <= today; day = new Date(day.getTime() + 86_400_000)) {
-    for (const message of messagesForDay(day)) {
-      if (!knownIds.has(message.id)) generated.push(message);
+  for (let day = firstDay; day <= today; day = new Date(day.getTime() + RELAY_DAY_MS)) {
+    for (const message of astropathicScheduleForDay(day).messages) {
+      const scheduledTime = new Date(message.receivedAt).getTime();
+      if (scheduledTime <= now.getTime() && !knownIds.has(message.id)) {
+        generated.push(message);
+        knownIds.add(message.id);
+      }
     }
   }
+
+  const dateChanged = archive.relayLastGeneratedDate !== todayKey;
+  if (generated.length === 0 && !dateChanged) return { archive, changed: false };
 
   archive.relayMessages = [...generated.reverse(), ...archive.relayMessages].slice(0, 120);
   archive.relayLastGeneratedDate = todayKey;
@@ -780,7 +858,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
             body: text(candidate.body, template?.body ?? preview, 4000),
             priority,
             received: text(candidate.received, "0.---.056.M42", 40),
-            receivedAt: text(candidate.receivedAt, "", 20),
+            receivedAt: text(candidate.receivedAt, "", 40),
           } satisfies AstropathicMessage;
         })
         .filter((message, index, messages) => messages.findIndex((candidate) => candidate.id === message.id) === index)
