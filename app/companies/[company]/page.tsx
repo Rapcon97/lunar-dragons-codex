@@ -4,18 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAdminMode } from "../../_components/AdminMode";
+import { SidebarNavigation } from "../../_components/SidebarNavigation";
 import { useChapterArchive } from "../../_hooks/useChapterArchive";
-
-const navItems = [
-  ["☠", "Command", "/"],
-  ["✠", "Chapter", "/chapter"],
-  ["◢", "Lunaris", "/flagship"],
-  ["⚔", "Armoury", "/armoury"],
-  ["⚑", "Companies", "/companies"],
-  ["⌖", "Sector Intel", "/intel"],
-  ["ϟ", "Relay", "/relay"],
-  ["▤", "Chronicles", "/chronicles"],
-];
 
 const commandRoles = ["Captain", "Lieutenant", "Lieutenant", "Company Ancient", "Apothecary", "Chaplain"];
 
@@ -260,17 +250,7 @@ export default function CompanyOverview() {
   if (isEleventhCompany && !eleventhUnlocked) {
     return (
       <main className="app-shell">
-        <aside className="sidebar">
-          <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon" title="Lunar Dragons">✠</Link>
-          <nav aria-label="Primary navigation">
-            {navItems.map(([icon, label, href]) => (
-              <Link className={label === "Companies" ? "nav-item active" : "nav-item"} key={label} href={href} aria-label={label} title={label}>
-                <span>{icon}</span><small>{label}</small>
-              </Link>
-            ))}
-          </nav>
-          <Link href="/settings" className="nav-item settings" aria-label="Settings" title="Settings"><span>☸</span><small>Settings</small></Link>
-        </aside>
+        <SidebarNavigation activeHref="/companies" />
 
         <section className="workspace">
           <header className="topbar">
@@ -314,17 +294,7 @@ export default function CompanyOverview() {
 
   return (
     <main className="app-shell">
-      <aside className="sidebar">
-        <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon" title="Lunar Dragons">✠</Link>
-        <nav aria-label="Primary navigation">
-          {navItems.map(([icon, label, href]) => (
-            <Link className={label === "Companies" ? "nav-item active" : "nav-item"} key={label} href={href} aria-label={label} title={label}>
-              <span>{icon}</span><small>{label}</small>
-            </Link>
-          ))}
-        </nav>
-        <Link href="/settings" className="nav-item settings" aria-label="Settings" title="Settings"><span>☸</span><small>Settings</small></Link>
-      </aside>
+      <SidebarNavigation activeHref="/companies" />
 
       <section className="workspace">
         <header className="topbar">

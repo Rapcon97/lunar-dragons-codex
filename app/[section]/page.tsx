@@ -8,6 +8,7 @@ import { CartographyTransitionLink } from "../_components/CartographyTransitionL
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream, type RelayStreamLine } from "../_components/RelayDataStream";
+import { SidebarNavigation } from "../_components/SidebarNavigation";
 import { useChapterArchive } from "../_hooks/useChapterArchive";
 import {
   canonChronicleEntries,
@@ -18,17 +19,6 @@ import {
   type LoreEntry,
   type SectorIntel,
 } from "../archive-data";
-
-const navItems = [
-  ["☠", "Command", "/"],
-  ["✠", "Chapter", "/chapter"],
-  ["◢", "Lunaris", "/flagship"],
-  ["⚔", "Armoury", "/armoury"],
-  ["⚑", "Companies", "/companies"],
-  ["⌖", "Sector Intel", "/intel"],
-  ["ϟ", "Relay", "/relay"],
-  ["▤", "Chronicles", "/chronicles"],
-];
 
 const sectionInfo = {
   chapter: {
@@ -93,25 +83,7 @@ export default function SectionPage() {
 
   return (
     <main className="app-shell">
-      <aside className="sidebar">
-        <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon" title="Lunar Dragons">✠</Link>
-        <nav aria-label="Primary navigation">
-          {navItems.map(([icon, label, href]) => (
-            <Link
-              className={pathname === href ? "nav-item active" : "nav-item"}
-              key={label}
-              href={href}
-              aria-label={label}
-              title={label}
-            >
-              <span>{icon}</span><small>{label}</small>
-            </Link>
-          ))}
-        </nav>
-        <Link href="/settings" className={section === "settings" ? "nav-item settings active" : "nav-item settings"} aria-label="Settings" title="Settings">
-          <span>☸</span><small>Settings</small>
-        </Link>
-      </aside>
+      <SidebarNavigation activeHref={`/${section}`} />
 
       <section className="workspace">
         <header className="topbar">

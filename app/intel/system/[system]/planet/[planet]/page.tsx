@@ -4,13 +4,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAdminMode } from "../../../../../_components/AdminMode";
 import { PlanetThumbnail } from "../../../../../_components/PlanetThumbnail";
+import { SidebarNavigation } from "../../../../../_components/SidebarNavigation";
 import { useChapterArchive } from "../../../../../_hooks/useChapterArchive";
 import { usePlanetTypes } from "../../../../../_hooks/usePlanetTypes";
-
-const navItems = [
-  ["☠", "Command", "/"], ["✠", "Chapter", "/chapter"], ["◢", "Lunaris", "/flagship"], ["⚔", "Armoury", "/armoury"],
-  ["⚑", "Companies", "/companies"], ["⌖", "Sector Intel", "/intel"], ["ϟ", "Relay", "/relay"], ["▤", "Chronicles", "/chronicles"],
-];
 
 export default function PlanetaryIntelPage() {
   const params = useParams<{ system: string; planet: string }>();
@@ -52,11 +48,7 @@ export default function PlanetaryIntelPage() {
 
   return (
     <main className="app-shell">
-      <aside className="sidebar">
-        <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon"><span aria-hidden="true">✠</span></Link>
-        <nav aria-label="Primary navigation">{navItems.map(([icon,label,href]) => <Link className={label === "Sector Intel" ? "nav-item active" : "nav-item"} key={label} href={href} title={label}><span>{icon}</span><small>{label}</small></Link>)}</nav>
-        <Link href="/settings" className="nav-item settings" title="Settings"><span>☸</span><small>Settings</small></Link>
-      </aside>
+      <SidebarNavigation activeHref="/intel" />
       <section className="workspace">
         <header className="topbar">
           <div><p className="eyebrow">The Lunar Dragons · PLANETARIA INTELLIGENCE</p><div className="chapter-name fixed-chapter-name">THE LUNAR DRAGONS</div></div>

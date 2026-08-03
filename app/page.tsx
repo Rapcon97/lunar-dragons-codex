@@ -4,22 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAdminMode } from "./_components/AdminMode";
 import { RelayDataStream, type RelayStreamLine } from "./_components/RelayDataStream";
+import { SidebarNavigation } from "./_components/SidebarNavigation";
 import { useChapterArchive } from "./_hooks/useChapterArchive";
 import {
   canonChronicleEntries,
   type AstropathicMessage,
 } from "./archive-data";
-
-const navItems = [
-  ["☠", "Command", "/"],
-  ["✠", "Chapter", "/chapter"],
-  ["◢", "Lunaris", "/flagship"],
-  ["⚔", "Armoury", "/armoury"],
-  ["⚑", "Companies", "/companies"],
-  ["⌖", "Sector Intel", "/intel"],
-  ["ϟ", "Relay", "/relay"],
-  ["▤", "Chronicles", "/chronicles"],
-];
 
 export default function Home() {
   const { isAdminMode } = useAdminMode();
@@ -186,29 +176,7 @@ export default function Home() {
 
   return (
     <main className="app-shell" data-command-theme="lunar-dragons">
-      <aside className="sidebar">
-        <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon" title="Lunar Dragons">
-          <span aria-hidden="true">✠</span>
-        </Link>
-        <nav aria-label="Primary navigation">
-          {navItems.map(([icon, label, href]) => (
-            <Link
-              className={label === "Command" ? "nav-item active" : "nav-item"}
-              key={label}
-              href={href}
-              aria-label={label}
-              title={label}
-            >
-              <span>{icon}</span>
-              <small>{label}</small>
-            </Link>
-          ))}
-        </nav>
-        <Link href="/settings" className="nav-item settings" aria-label="Settings" title="Settings">
-          <span>☸</span>
-          <small>Settings</small>
-        </Link>
-      </aside>
+      <SidebarNavigation activeHref="/" />
 
       <section className="workspace">
         <header className="topbar command-topbar">

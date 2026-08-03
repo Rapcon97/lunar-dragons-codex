@@ -132,7 +132,63 @@ test("shared interface typography uses the 125 percent readability scale", async
   assert.match(styles, /\.guest-user-form input\s*\{[^}]*font:\s*var\(--ui-text-11\)/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.entry-form\s*\{[^}]*flex-direction:\s*column/s);
 
-  assert.match(styles, /\.nav-item span\s*\{[^}]*font:\s*18px\/1/s);
+  assert.match(styles, /\.nav-icon\s*\{[^}]*width:\s*26px;[^}]*height:\s*26px/s);
   assert.match(styles, /\.crest-shield b\s*\{[^}]*font-size:\s*13px/s);
   assert.match(styles, /\.system-register a > i\s*\{[^}]*font-size:\s*18px/s);
+});
+
+test("the sidebar uses one coordinated accessible SVG command-glyph system", async () => {
+  const [sidebar, styles, ...surfaces] = await Promise.all([
+    readFile("app/_components/SidebarNavigation.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+    readFile("app/page.tsx", "utf8"),
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/companies/[company]/page.tsx", "utf8"),
+    readFile("app/intel/system/[system]/page.tsx", "utf8"),
+    readFile("app/intel/system/[system]/planet/[planet]/page.tsx", "utf8"),
+  ]);
+
+  const expectedItems = [
+    ["Command", "/", "command"],
+    ["Chapter", "/chapter", "chapter"],
+    ["Lunaris", "/flagship", "lunaris"],
+    ["Armoury", "/armoury", "armoury"],
+    ["Companies", "/companies", "companies"],
+    ["Sector Intel", "/intel", "intel"],
+    ["Relay", "/relay", "relay"],
+    ["Chronicles", "/chronicles", "chronicles"],
+    ["Settings", "/settings", "settings"],
+  ];
+
+  let priorIndex = -1;
+  for (const [label, href, icon] of expectedItems) {
+    const declaration = `{ href: "${href}", icon: "${icon}", label: "${label}" }`;
+    const itemIndex = sidebar.indexOf(declaration);
+    assert.ok(itemIndex > priorIndex, `${label} remains in the approved navigation order`);
+    priorIndex = itemIndex;
+    assert.match(sidebar, new RegExp(`\\b${icon}: \\(`));
+  }
+
+  assert.match(sidebar, /const SIDEBAR_GLYPHS: Record<SidebarGlyphName, ReactNode>/);
+  assert.match(sidebar, /function SidebarNavigationItem/);
+  assert.match(sidebar, /viewBox="0 0 24 24"/);
+  assert.match(sidebar, /fill="none"/);
+  assert.match(sidebar, /stroke="currentColor"/);
+  assert.match(sidebar, /strokeWidth="1\.5"/);
+  assert.match(sidebar, /strokeLinecap="square"/);
+  assert.match(sidebar, /strokeLinejoin="miter"/);
+  assert.match(sidebar, /aria-current=\{active \? "page" : undefined\}/);
+  assert.doesNotMatch(sidebar, /<img|from ["'][^"']*(lucide|heroicons|fontawesome)/i);
+
+  for (const surface of surfaces) {
+    assert.match(surface, /<SidebarNavigation activeHref=/);
+    assert.doesNotMatch(surface, /const navItems|<aside className="sidebar"/);
+  }
+
+  assert.match(styles, /\.nav-icon-plate\s*\{[^}]*width:\s*40px;[^}]*height:\s*36px/s);
+  assert.match(styles, /\.nav-item:hover \.nav-icon-plate/);
+  assert.match(styles, /\.nav-item\.active \.nav-icon-plate/);
+  assert.match(styles, /\.nav-item:focus-visible\s*\{[^}]*outline:/s);
+  assert.match(styles, /\.nav-item small\s*\{[^}]*white-space:\s*nowrap/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.nav-item small\s*\{\s*display:\s*none;/s);
 });
