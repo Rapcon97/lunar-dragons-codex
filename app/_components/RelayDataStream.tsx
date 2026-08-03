@@ -3,97 +3,46 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   appendTransmissionRetrievalDots,
-  corruptTransmissionMetadataValue,
-  corruptTransmissionText,
+  formatTransmissionTranscript,
   formatCorruptionPercentage,
+  prepareTransmissionLine,
   splitTransmissionMetadata,
-  TERMINAL_MACHINE_BLESSING,
   TRANSMISSION_TIMING,
   transmissionCharacterDelay,
-  transmissionClosing,
-  transmissionCorruptionProfile,
-  transmissionMetadataValueCanCorrupt,
   type TransmissionSourceMetadata,
+  type TransmissionTranscriptLine,
 } from "./relay-transmission";
 
-export type RelayStreamLine = {
-  text: string;
-  command?: boolean;
-  content?: boolean;
-  corruption?: boolean;
-  gap?: boolean;
-  closing?: boolean;
-  blessing?: boolean;
-};
+export type RelayStreamLine = TransmissionTranscriptLine;
 
 type RelayDataStreamProps = {
   ariaLabel: string;
   className?: string;
-  lines: RelayStreamLine[];
   source: TransmissionSourceMetadata;
   streamKey: string;
 };
 
 type RenderPhase = "typing" | "pause" | "retrieval" | "complete";
 
-function isRetrievalCommand(line: RelayStreamLine, text: string) {
+function isRetrievalCommand(line: TransmissionTranscriptLine, text: string) {
   return line.command || text.trimStart().startsWith(">>");
 }
 
-function withTransmissionPresentation(
-  lines: RelayStreamLine[],
-  source: TransmissionSourceMetadata,
-) {
-  const presented = lines.map((line) => ({ ...line }));
-  const senderContent = presented.filter((line) => line.content).map((line) => line.text).join("\n");
-  const closing = transmissionClosing(source, senderContent);
-  const lastContentIndex = presented.findLastIndex((line) => line.content);
-
-  if (closing && lastContentIndex >= 0) {
-    presented.splice(lastContentIndex + 1, 0, {
-      text: `> ${closing}`,
-      content: true,
-      closing: true,
-    });
-  }
-
-  if (!presented.some((line) => line.text === TERMINAL_MACHINE_BLESSING)) {
-    if (!presented.at(-1)?.gap) presented.push({ text: "", gap: true });
-    presented.push({ text: TERMINAL_MACHINE_BLESSING, blessing: true });
-  }
-
-  return presented;
-}
-
-export function RelayDataStream({ ariaLabel, className = "", lines, source, streamKey }: RelayDataStreamProps) {
+export function RelayDataStream({ ariaLabel, className = "", source, streamKey }: RelayDataStreamProps) {
   const [renderedLines, setRenderedLines] = useState<string[]>([]);
   const [activeLineIndex, setActiveLineIndex] = useState(-1);
   const [phase, setPhase] = useState<RenderPhase>("typing");
-  const corruptionProfile = useMemo(
-    () => transmissionCorruptionProfile(source),
-    [source.agency, source.id, source.preview, source.priority, source.received, source.subject],
+  const [completedStreamKey, setCompletedStreamKey] = useState<string | null>(null);
+  const transcript = useMemo(
+    () => formatTransmissionTranscript(source),
+    [source.agency, source.body, source.id, source.preview, source.priority, source.received, source.receivedAt, source.subject],
   );
-  const presentedLines = useMemo(
-    () => withTransmissionPresentation(lines, source),
-    [lines, source],
+  const { analysis, lines: presentedLines } = transcript;
+  const corruptionProfile = analysis.corruption;
+  const preparedLines = useMemo(
+    () => presentedLines.map((line, lineIndex) => prepareTransmissionLine(line, corruptionProfile, lineIndex)),
+    [corruptionProfile, presentedLines],
   );
-  const preparedLines = useMemo(() => presentedLines.map((line, lineIndex) => {
-    if (line.corruption) {
-      return `> Data corruption query: ${formatCorruptionPercentage(corruptionProfile.percentage)}`;
-    }
-    if (line.gap) return "\u00a0";
-    if (line.closing || line.blessing) return line.text;
-    const metadata = !line.content ? splitTransmissionMetadata(line.text) : null;
-    if (metadata) {
-      return transmissionMetadataValueCanCorrupt(metadata.label)
-        ? corruptTransmissionMetadataValue(line.text, corruptionProfile, lineIndex)
-        : line.text;
-    }
-    if (line.content) {
-      return corruptTransmissionText(line.text, corruptionProfile, lineIndex);
-    }
-    return line.text;
-  }), [corruptionProfile, presentedLines]);
   const completedLines = useMemo(() => preparedLines.map((text, lineIndex) => (
     isRetrievalCommand(presentedLines[lineIndex], text)
       ? appendTransmissionRetrievalDots(text)
@@ -117,7 +66,7 @@ export function RelayDataStream({ ariaLabel, className = "", lines, source, stre
     setActiveLineIndex(-1);
     setPhase("typing");
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || completedStreamKey === streamKey) {
       setRenderedLines(completedLines);
       setActiveLineIndex(finalCursorIndex);
       setPhase("complete");
@@ -155,7 +104,7 @@ export function RelayDataStream({ ariaLabel, className = "", lines, source, stre
     }
 
     async function typePreparedLine(lineIndex: number, line: RelayStreamLine, text: string) {
-      const metadata = !line.content && !isRetrievalCommand(line, text)
+      const metadata = line.section !== "content" && !isRetrievalCommand(line, text)
         ? splitTransmissionMetadata(text)
         : null;
 
@@ -232,17 +181,26 @@ export function RelayDataStream({ ariaLabel, className = "", lines, source, stre
       }
       pendingWaits.clear();
     };
-  }, [streamKey]);
+  }, [completedStreamKey, streamKey]);
 
   return (
     <div className={`relay-data-stream ${className}`.trim()} role="document" aria-label={ariaLabel}>
+      {phase !== "complete" && (
+        <button
+          className="relay-data-instant"
+          onClick={() => setCompletedStreamKey(streamKey)}
+          type="button"
+        >
+          COMPLETE EXLOAD
+        </button>
+      )}
       <span className="relay-data-accessible">{accessibleTranscript}</span>
       <div className="relay-data-visual" aria-hidden="true">
         {renderedLines.map((text, index) => {
           const line = presentedLines[index];
           return (
             <p
-              className={`${line.command ? "stream-command " : ""}${line.content ? "stream-content " : ""}${line.closing ? "stream-closing " : ""}${line.blessing ? "stream-blessing " : ""}${line.gap ? "stream-gap" : ""}`}
+              className={`${line.command ? "stream-command " : ""}${line.section === "content" ? "stream-content " : ""}${line.section === "analysis" ? "stream-analysis " : ""}${line.section === "terminal-footer" ? "stream-terminal-footer " : ""}${line.closing ? "stream-closing " : ""}${line.blessing ? "stream-blessing " : ""}${line.gap ? "stream-gap" : ""}`}
               key={`${streamKey}-typed-${index}`}
             >
               {text}

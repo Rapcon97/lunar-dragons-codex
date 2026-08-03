@@ -2967,7 +2967,13 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; padding: 0;
   border: 0; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: pre-wrap;
 }
-.relay-data-stream { --relay-command-color: #b0c2a7; }
+.relay-data-stream { --relay-command-color: #b0c2a7; position: relative; }
+.relay-data-instant {
+  float: right; margin: 0 0 10px 16px; padding: 5px 8px; border: 1px solid #354632;
+  background: #030704; color: var(--relay-command-color); font: var(--ui-text-8)/1.2 "Courier New", monospace;
+  letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+}
+.relay-data-instant:hover, .relay-data-instant:focus-visible { border-color: #72836b; outline: none; box-shadow: 0 0 8px rgba(111, 164, 96, .2); }
 .relay-data-visual { display: block; }
 .relay-data-stream p { display: block; margin: 0; padding: 1px 0 1px 2ch; color: inherit; font: inherit; text-indent: -2ch; overflow-wrap: anywhere; }
 .relay-data-stream .stream-command { padding-top: 5px; color: var(--relay-command-color); font-weight: 700; text-shadow: 0 0 9px rgba(105, 151, 94, .14); }

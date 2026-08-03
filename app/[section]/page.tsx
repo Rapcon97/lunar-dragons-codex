@@ -7,7 +7,7 @@ import { useAdminMode } from "../_components/AdminMode";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
-import { RelayDataStream, type RelayStreamLine } from "../_components/RelayDataStream";
+import { RelayDataStream } from "../_components/RelayDataStream";
 import { SidebarNavigation } from "../_components/SidebarNavigation";
 import { useChapterArchive } from "../_hooks/useChapterArchive";
 import {
@@ -236,27 +236,6 @@ function AstropathicRelaySection({ messages }: { messages: AstropathicMessage[] 
   }, [messages, selectedId]);
 
   const selected = messages.find((message) => message.id === selectedId) ?? messages[0];
-  const transcriptLines = selected?.body.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((line) => line.trim()).filter(Boolean) ?? [];
-  const dataStreamLines: RelayStreamLine[] = selected ? [
-    { text: ">> ACCESSING DATA RELIQUARIUM 056//329652", command: true },
-    { text: "> Local systems query: SUCCESS" },
-    { text: `> Originator identification: ${selected.agency}` },
-    { text: `> Data-stamp: ${selected.received}` },
-    { text: "> Intended recipient: CHAPTER MASTER · LUNARIS" },
-    { text: "> Clearance signifier: ARGENT VIGIL · DRACO-PRIMUS" },
-    { text: `> Cipher fortitude: ${selected.priority}` },
-    { text: "> Exload communion attempts: XVII" },
-    { text: "", gap: true },
-    { text: ">> VOX-MISSIVE CONTENT // EXLOAD FOLLOWS", command: true },
-    { text: `> Subject ident: ${selected.subject}` },
-    ...transcriptLines.map((line) => ({ text: `> ${line}`, content: true })),
-    { text: "", gap: true },
-    { text: "> Cogitating ... complete" },
-    { text: "> Archive replication authorised" },
-    { text: "> Data corruption query: 0.00%", corruption: true },
-    { text: ">> EXLOAD CONCLUDES // MACHINE-SPIRIT SATISFIED", command: true },
-  ] : [];
-
   return (
     <section className="relay-inbox" aria-label="Astropathic Relay sanctum">
       <header className="panel relay-inbox-command">
@@ -292,7 +271,7 @@ function AstropathicRelaySection({ messages }: { messages: AstropathicMessage[] 
                 <span className={`relay-priority ${selected.priority.toLowerCase()}`}>{selected.priority}</span>
               </header>
               <div className="relay-inbox-body">
-                <RelayDataStream ariaLabel={selected.subject} lines={dataStreamLines} source={selected} streamKey={selected.id} />
+                <RelayDataStream ariaLabel={selected.subject} source={selected} streamKey={selected.id} />
               </div>
             </>
           ) : <p className="relay-empty">The choir awaits a signal reliquary.</p>}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAdminMode } from "./_components/AdminMode";
-import { RelayDataStream, type RelayStreamLine } from "./_components/RelayDataStream";
+import { RelayDataStream } from "./_components/RelayDataStream";
 import { SidebarNavigation } from "./_components/SidebarNavigation";
 import { useChapterArchive } from "./_hooks/useChapterArchive";
 import {
@@ -51,23 +51,6 @@ export default function Home() {
     () => companies.slice(0, 10).reduce((sum, company) => sum + Number(company.strength || 0), 0),
     [companies],
   );
-  const commandRelayLines: RelayStreamLine[] = selectedRelayMessage ? [
-    { text: ">> ACCESSING DATA RELIQUARIUM 056//COMMAND-LINK", command: true },
-    { text: "> Local systems query: SUCCESS" },
-    { text: `> Originator identification: ${selectedRelayMessage.agency}` },
-    { text: `> Data-stamp: ${selectedRelayMessage.received}` },
-    { text: "> Intended recipient: CHAPTER MASTER · LUNARIS" },
-    { text: `> Cipher fortitude: ${selectedRelayMessage.priority}` },
-    { text: "", gap: true },
-    { text: ">> VOX-MISSIVE CONTENT // EXLOAD FOLLOWS", command: true },
-    { text: `> Subject ident: ${selectedRelayMessage.subject}` },
-    ...(selectedRelayMessage.body.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? []).map((line) => ({ text: `> ${line.trim()}`, content: true })),
-    { text: "", gap: true },
-    { text: "> Archive replication authorised" },
-    { text: "> Data corruption query: 0.00%", corruption: true },
-    { text: ">> EXLOAD CONCLUDES // MACHINE-SPIRIT SATISFIED", command: true },
-  ] : [];
-
   async function addEntry() {
     const trimmed = note.trim();
     if (!trimmed) return;
@@ -290,7 +273,6 @@ export default function Home() {
                   <RelayDataStream
                     ariaLabel={selectedRelayMessage.subject}
                     className="command-relay-data-stream"
-                    lines={commandRelayLines}
                     source={selectedRelayMessage}
                     streamKey={selectedRelayMessage.id}
                   />
