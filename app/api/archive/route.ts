@@ -1,4 +1,9 @@
-import { type ArchiveSection, normalizeArchiveData } from "../../archive-data";
+import {
+  canonChronicleEntries,
+  type ArchiveSection,
+  type ChapterArchiveData,
+  normalizeArchiveData,
+} from "../../archive-data";
 import { getArchiveAdmin, getArchiveViewer } from "../../archive-auth";
 import {
   readChapterArchive,
@@ -28,14 +33,29 @@ async function adminUser() {
   return getArchiveAdmin();
 }
 
+function archiveForViewer(data: ChapterArchiveData, canAdmin: boolean) {
+  if (canAdmin) return data;
+
+  return {
+    ...data,
+    entries: canonChronicleEntries(data),
+    loreEntries: data.loreEntries.filter((entry) => entry.status === "canon"),
+  };
+}
+
 export async function GET() {
   try {
-    if (!(await authenticatedUser())) {
+    const viewer = await authenticatedUser();
+    if (!viewer) {
       return Response.json({ error: "Sign in to view the archive." }, { status: 401 });
     }
-    const data = await readChapterArchive();
+    const storedData = await readChapterArchive();
+    const data = storedData ?? normalizeArchiveData(undefined);
     return Response.json(
-      { data: data ?? normalizeArchiveData(undefined), persisted: Boolean(data) },
+      {
+        data: archiveForViewer(data, viewer.canAdmin),
+        persisted: Boolean(storedData),
+      },
       { headers: { "cache-control": "no-store" } },
     );
   } catch {

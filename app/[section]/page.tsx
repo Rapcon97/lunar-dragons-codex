@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAdminMode } from "../_components/AdminMode";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
+import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream, type RelayStreamLine } from "../_components/RelayDataStream";
 import { useChapterArchive } from "../_hooks/useChapterArchive";
@@ -14,6 +15,7 @@ import {
   type ChapterCompany,
   type ChapterIdentity,
   type ChapterRelic,
+  type LoreEntry,
   type SectorIntel,
 } from "../archive-data";
 
@@ -82,7 +84,7 @@ const sectionInfo = {
 type Section = keyof typeof sectionInfo;
 
 export default function SectionPage() {
-  const { isAdminMode } = useAdminMode();
+  const { canAdmin, isAdminMode } = useAdminMode();
   const { data, error, isLoading, isSaving, resetArchive, saveSection, updateSection } = useChapterArchive();
   const pathname = usePathname();
   const section = (pathname.split("/")[1] || "chapter") as Section;
@@ -153,7 +155,9 @@ export default function SectionPage() {
           {section === "relay" && <AstropathicRelaySection messages={data.relayMessages} />}
           {section === "settings" && (
             <SettingsSection
-              canEdit={isAdminMode}
+              canAdmin={canAdmin}
+              isAdminMode={isAdminMode}
+              loreEntries={data.loreEntries}
               onReset={resetArchive}
             />
           )}
@@ -1290,12 +1294,17 @@ function VoxSection({
 }
 
 function SettingsSection({
-  canEdit,
+  canAdmin,
+  isAdminMode,
+  loreEntries,
   onReset,
 }: {
-  canEdit: boolean;
+  canAdmin: boolean;
+  isAdminMode: boolean;
+  loreEntries: LoreEntry[];
   onReset: () => Promise<boolean>;
 }) {
+  const canEdit = isAdminMode;
   const [message, setMessage] = useState("");
   async function resetSharedArchive() {
     if (await onReset()) setMessage("Shared chapter records reset. Uploaded heraldry was left intact.");
@@ -1306,6 +1315,11 @@ function SettingsSection({
         <section className="panel settings-card"><p className="section-kicker">Storage</p><h2>Shared chapter records</h2><p>Names, lore, milestones, companies, relics, chronicles, and sector intelligence are stored with the hosted archive and remain consistent across signed-in devices.</p></section>
         <section className="panel settings-card danger-card"><p className="section-kicker">Reset</p><h2>Reset shared archive</h2><p>This resets the chapter’s structured records for every viewer. It does not remove your uploaded badge or banner.</p>{canEdit ? <button onClick={resetSharedArchive}>RESET SHARED RECORDS</button> : <span>Enter Admin Mode to access archive controls.</span>}{message && <span role="status">{message}</span>}</section>
       </div>
+      <LoreDevelopmentDashboard
+        canAdmin={canAdmin}
+        entries={loreEntries}
+        isAdminMode={isAdminMode}
+      />
       <GuestAccountManager canEdit={canEdit} />
     </div>
   );
