@@ -93,6 +93,10 @@ test("the terminal footer unifies viewer controls and the live chronometer", asy
   assert.match(chronometer, /window\.setInterval\(update, 1000\)/);
   assert.match(chronometer, /timeZone: "Europe\/Amsterdam"/);
   assert.match(styles, /\.archive-terminal-footer\s*\{[^}]*position:\s*fixed/s);
+  assert.match(styles, /--actual-sidebar-width:\s*82px/);
+  assert.match(styles, /\.archive-terminal-footer\s*\{[^}]*left:\s*var\(--actual-sidebar-width\);[^}]*right:\s*0;[^}]*bottom:\s*0;/s);
+  assert.match(styles, /\.archive-terminal-footer\s*\{[^}]*width:\s*auto;[^}]*max-width:\s*none;[^}]*margin:\s*0;[^}]*box-sizing:\s*border-box;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*--actual-sidebar-width:\s*58px/);
   assert.match(styles, /\.archive-mode\s*\{[^}]*padding-bottom:/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.archive-terminal-footer/);
 });
