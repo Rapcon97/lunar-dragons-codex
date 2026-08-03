@@ -192,3 +192,46 @@ test("the sidebar uses one coordinated accessible SVG command-glyph system", asy
   assert.match(styles, /\.nav-item small\s*\{[^}]*white-space:\s*nowrap/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.nav-item small\s*\{\s*display:\s*none;/s);
 });
+
+test("homepage and Relay share the deterministic accessible transmission renderer", async () => {
+  const [renderer, helper, home, sectionPage, styles] = await Promise.all([
+    readFile("app/_components/RelayDataStream.tsx", "utf8"),
+    readFile("app/_components/relay-transmission.ts", "utf8"),
+    readFile("app/page.tsx", "utf8"),
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(home, /<RelayDataStream[\s\S]*source=\{selectedRelayMessage\}[\s\S]*streamKey=\{selectedRelayMessage\.id\}/);
+  assert.match(sectionPage, /<RelayDataStream[^>]*source=\{selected\}[^>]*streamKey=\{selected\.id\}/);
+  assert.match(home, /corruption:\s*true/);
+  assert.match(sectionPage, /corruption:\s*true/);
+  assert.match(home, /document\.body\.style\.overflow = "hidden"/);
+
+  assert.match(renderer, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
+  assert.match(renderer, /transmissionRetrievalPause\(corruptionProfile\.seed, lineIndex\)/);
+  assert.match(renderer, /className="relay-data-accessible"/);
+  assert.match(renderer, /className="relay-data-visual" aria-hidden="true"/);
+  assert.match(renderer, /activeLineIndex === index/);
+  assert.match(renderer, /phase !== "complete"/);
+  assert.match(renderer, /formatCorruptionPercentage\(currentPercentage\)/);
+
+  assert.match(helper, /const CORRUPTION_RANGES/);
+  assert.match(helper, /"warp-anomalous": \[12, 30\]/);
+  assert.match(helper, /const CORRUPTION_GLYPHS = \["█", "▒", "\?", "\/", "\\\\"\]/);
+  assert.match(helper, /hashTransmissionValue\(`\$\{profile\.seed\}:\$\{lineIndex\}:\$\{characterIndex\}`\)/);
+
+  assert.match(styles, /\.relay-dialog\s*\{[^}]*width:\s*min\(760px, calc\(100vw - 32px\)\);[^}]*height:\s*min\(620px, calc\(100vh - 32px\)\);/s);
+  assert.match(styles, /\.relay-dialog\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\);[^}]*overflow:\s*hidden/s);
+  assert.match(styles, /\.relay-dialog-body\s*\{[^}]*overflow:\s*auto/s);
+  assert.match(styles, /\.relay-data-cursor\s*\{[^}]*background:\s*#9dff80/s);
+  assert.match(styles, /\.relay-data-cursor\.pause\s*\{[^}]*relay-stream-cursor/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.relay-dialog\s*\{[^}]*height:\s*calc\(100dvh - 16px\)/s);
+
+  const relaySection = sectionPage.slice(
+    sectionPage.indexOf("function AstropathicRelaySection"),
+    sectionPage.indexOf("const identityFields"),
+  );
+  assert.match(relaySection, /className="relay-inbox-grid panel"/);
+  assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
+});

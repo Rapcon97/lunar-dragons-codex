@@ -253,7 +253,7 @@ function AstropathicRelaySection({ messages }: { messages: AstropathicMessage[] 
     { text: "", gap: true },
     { text: "> Cogitating ... complete" },
     { text: "> Archive replication authorised" },
-    { text: "> Data corruption query: 0.00%" },
+    { text: "> Data corruption query: 0.00%", corruption: true },
     { text: ">> EXLOAD CONCLUDES // MACHINE-SPIRIT SATISFIED", command: true },
   ] : [];
 
@@ -292,7 +292,7 @@ function AstropathicRelaySection({ messages }: { messages: AstropathicMessage[] 
                 <span className={`relay-priority ${selected.priority.toLowerCase()}`}>{selected.priority}</span>
               </header>
               <div className="relay-inbox-body">
-                <RelayDataStream ariaLabel={selected.subject} lines={dataStreamLines} streamKey={selected.id} />
+                <RelayDataStream ariaLabel={selected.subject} lines={dataStreamLines} source={selected} streamKey={selected.id} />
               </div>
             </>
           ) : <p className="relay-empty">The choir awaits a signal reliquary.</p>}

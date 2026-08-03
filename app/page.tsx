@@ -36,11 +36,16 @@ export default function Home() {
 
   useEffect(() => {
     if (!selectedRelayMessage) return;
+    const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setSelectedRelayMessage(null);
     };
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
   }, [selectedRelayMessage]);
   const chapterStrength = useMemo(
     () => companies.slice(0, 10).reduce((sum, company) => sum + Number(company.strength || 0), 0),
@@ -59,7 +64,7 @@ export default function Home() {
     ...(selectedRelayMessage.body.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? []).map((line) => ({ text: `> ${line.trim()}`, content: true })),
     { text: "", gap: true },
     { text: "> Archive replication authorised" },
-    { text: "> Data corruption query: 0.00%" },
+    { text: "> Data corruption query: 0.00%", corruption: true },
     { text: ">> EXLOAD CONCLUDES // MACHINE-SPIRIT SATISFIED", command: true },
   ] : [];
 
@@ -282,7 +287,13 @@ export default function Home() {
                   <button autoFocus onClick={() => setSelectedRelayMessage(null)} type="button">CLOSE EXLOAD ×</button>
                 </header>
                 <div className="relay-dialog-body">
-                  <RelayDataStream ariaLabel={selectedRelayMessage.subject} className="command-relay-data-stream" lines={commandRelayLines} streamKey={selectedRelayMessage.id} />
+                  <RelayDataStream
+                    ariaLabel={selectedRelayMessage.subject}
+                    className="command-relay-data-stream"
+                    lines={commandRelayLines}
+                    source={selectedRelayMessage}
+                    streamKey={selectedRelayMessage.id}
+                  />
                 </div>
               </section>
             </div>
