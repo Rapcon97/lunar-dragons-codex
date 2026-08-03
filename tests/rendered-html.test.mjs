@@ -100,3 +100,38 @@ test("the terminal footer unifies viewer controls and the live chronometer", asy
   assert.match(styles, /\.archive-mode\s*\{[^}]*padding-bottom:/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.archive-terminal-footer/);
 });
+
+test("shared interface typography uses the 125 percent readability scale", async () => {
+  const styles = await readFile("app/globals.css", "utf8");
+
+  const expectedScale = {
+    5: "6.25px",
+    6: "7.5px",
+    7: "8.75px",
+    8: "10px",
+    9: "11.25px",
+    10: "12.5px",
+    11: "13.75px",
+    12: "15px",
+    13: "16.25px",
+    14: "17.5px",
+    15: "18.75px",
+    16: "20px",
+    17: "21.25px",
+    18: "22.5px",
+  };
+
+  for (const [level, size] of Object.entries(expectedScale)) {
+    assert.match(styles, new RegExp(`--ui-text-${level}:\\s*${size.replace(".", "\\.")}`));
+  }
+
+  assert.match(styles, /body\s*\{[^}]*font-size:\s*var\(--ui-text-15\)/s);
+  assert.match(styles, /\.nav-item small\s*\{[^}]*font-size:\s*var\(--ui-text-9\)/s);
+  assert.match(styles, /\.archive-terminal-prompt > div\s*\{[^}]*font-size:\s*var\(--ui-text-10\)/s);
+  assert.match(styles, /\.timeline p\s*\{[^}]*font-size:\s*var\(--ui-text-14\)/s);
+  assert.match(styles, /\.guest-user-form input\s*\{[^}]*font:\s*var\(--ui-text-11\)/s);
+
+  assert.match(styles, /\.nav-item span\s*\{[^}]*font:\s*18px\/1/s);
+  assert.match(styles, /\.crest-shield b\s*\{[^}]*font-size:\s*13px/s);
+  assert.match(styles, /\.system-register a > i\s*\{[^}]*font-size:\s*18px/s);
+});
