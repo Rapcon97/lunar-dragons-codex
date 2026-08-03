@@ -52,3 +52,8 @@ next-env.d.ts
 
 # Local archive backups
 /chapter-archive-v*.tgz
+
+# Editor temporary files
+*.swp
+*.swo
+*~
