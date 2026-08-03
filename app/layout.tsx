@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { AdminModeProvider } from "./_components/AdminMode";
 import { ArchiveBootSequence } from "./_components/ArchiveBootSequence";
-import { ImperialChronometer } from "./_components/ImperialChronometer";
 import { ChapterArchiveProvider } from "./_hooks/useChapterArchive";
 import { getArchiveViewer } from "./archive-auth";
 import { chatGPTSignInPath, chatGPTSignOutPath } from "./chatgpt-auth";
@@ -82,9 +81,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             canAdmin={viewer.canAdmin}
             displayName={viewer.displayName}
             signOutHref={signOutHref}
+            viewerKind={viewer.kind}
           >
             <ChapterArchiveProvider>
-              <ImperialChronometer />
               {children}
             </ChapterArchiveProvider>
           </AdminModeProvider>

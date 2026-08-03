@@ -70,3 +70,29 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.match(dashboard, /entry\.updatedAt/);
   assert.doesNotMatch(dashboard, /method:\s*["']DELETE|resetChapterArchive/);
 });
+
+test("the terminal footer unifies viewer controls and the live chronometer", async () => {
+  const [footer, adminMode, chronometer, layout, styles] = await Promise.all([
+    readFile("app/_components/ArchiveTerminalFooter.tsx", "utf8"),
+    readFile("app/_components/AdminMode.tsx", "utf8"),
+    readFile("app/_components/ImperialChronometer.tsx", "utf8"),
+    readFile("app/layout.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(adminMode, /<ArchiveTerminalFooter/);
+  assert.doesNotMatch(adminMode, /admin-mode-dock/);
+  assert.match(footer, /<ImperialChronometer \/>/);
+  assert.match(footer, /USER/);
+  assert.match(footer, /ACCESS/);
+  assert.match(footer, /MODE/);
+  assert.match(footer, /onClick=\{onToggleAdminMode\}/);
+  assert.match(footer, /href=\{signOutHref\}/);
+  assert.match(layout, /viewerKind=\{viewer\.kind\}/);
+  assert.doesNotMatch(layout, /<ImperialChronometer \/>/);
+  assert.match(chronometer, /window\.setInterval\(update, 1000\)/);
+  assert.match(chronometer, /timeZone: "Europe\/Amsterdam"/);
+  assert.match(styles, /\.archive-terminal-footer\s*\{[^}]*position:\s*fixed/s);
+  assert.match(styles, /\.archive-mode\s*\{[^}]*padding-bottom:/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.archive-terminal-footer/);
+});
