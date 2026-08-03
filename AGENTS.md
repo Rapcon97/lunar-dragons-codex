@@ -1,27 +1,46 @@
-# Lunar Dragons Codex — Repository Instructions
+# Lunar Dragons Codex - Repository Instructions
 
-This repository contains the Lunar Dragons Codex web application and an external GPT API integration.
+This repository contains the Lunar Dragons Codex website and its production GPT API integration. The website may evolve, but the GPT API is an established external contract and must remain stable.
 
-The Codex website may continue to evolve, but the GPT API must be treated as a stable external integration.
+## 1. Production authority
 
----
+The production Site is [https://lunardragons.cloud](https://lunardragons.cloud).
 
-# 1. GPT API Stability
+- The Site-managed D1 database bound as `DB` is the authoritative data store.
+- The Site-managed R2 bucket bound as `CHAPTER_ASSETS` is the authoritative asset store.
+- The staging Worker and its resources are fallback/staging only.
+- Production and staging secrets, D1 data, R2 assets, identifiers, and deployment configuration must remain isolated.
+- Never use staging D1/R2 identifiers in the Site build or production deployment artifact.
 
-The GPT API is an external contract.
+## 2. Established GPT API contract
 
-Changes to the website, archive structure, database schema, UI, storage implementation, or internal TypeScript models must not silently break the GPT API.
+The current `/api/gpt/v1/*` API is live production functionality, not future work.
 
-Current protected GPT endpoints:
+Protected versioned routes include:
+
+- `GET /api/gpt/v1/lore`
+- `GET /api/gpt/v1/search`
+- `GET /api/gpt/v1/entries`
+- `POST /api/gpt/v1/entries`
+- `GET /api/gpt/v1/entries/:id`
+- `PATCH /api/gpt/v1/entries/:id`
+- `POST /api/gpt/v1/chronicle` as a compatibility write surface
+
+Legacy compatibility routes must also remain available:
 
 - `GET /api/gpt/lore`
 - `GET /api/gpt/search`
 - `POST /api/gpt/chronicle`
 
-Current protected GPT-related files:
+Do not silently break, remove, relocate, or weaken these routes. If internal fields or storage structures change, preserve the published behavior through translation or adapter logic.
+
+The primary GPT-related files are:
 
 - `app/gpt-api-auth.ts`
+- `app/gpt-api-adapter.ts`
+- `app/api/gpt/v1/**`
 - `app/api/gpt/**`
+- `openapi/lunar-dragons-gpt.yaml`
 
 Shared backend files used by the GPT API include:
 
@@ -29,161 +48,170 @@ Shared backend files used by the GPT API include:
 - `storage/chapter-records.ts`
 - `db/schema.ts`
 
-These shared files may be changed when necessary, but GPT compatibility must be preserved.
+## 3. Authentication requirements
 
----
+All `/api/gpt/**` endpoints containing Lunar Dragons data require Bearer authentication:
 
-# 2. External API Contract
+```http
+Authorization: Bearer <GPT_API_KEY>
+```
 
-When modifying internal archive structures, maintain compatibility with the existing GPT API.
-
-The website/database model may change.
-
-The external GPT API response contract should change only deliberately.
-
-If internal fields are renamed, moved, replaced, or restructured, introduce translation or adapter logic instead of silently breaking the API.
-
-Do not remove an existing GPT API field simply because the internal database representation has changed.
-
----
-
-# 3. Authentication Requirements
-
-All `/api/gpt/**` endpoints containing Lunar Dragons data must require Bearer authentication.
-
-Authentication is implemented using:
-
-`Authorization: Bearer <GPT_API_KEY>`
+Unauthenticated or incorrectly authenticated requests must return `401 Unauthorized`.
 
 Never:
 
 - hard-code `GPT_API_KEY`
-- return the API key in an API response
-- log the API key
+- return an API key in a response
+- log an API key
 - expose it to client-side JavaScript
-- commit `.dev.vars`
-- commit production secrets
+- commit `.dev.vars` or `.env` files
+- place secret values in examples, documentation, tests, screenshots, or generated output
 - disable authentication as part of unrelated work
 
-Unauthenticated or incorrectly authenticated GPT API requests must return:
+The local development secret belongs in `.dev.vars`. Production secrets are supplied only through the Site environment.
 
-`401 Unauthorized`
+## 4. Secret files
 
-The local development secret is stored in:
-
-`.dev.vars`
-
-The production secret must be provided through the hosting environment.
-
----
-
-# 4. Secret Files
-
-The following files must remain excluded from source control:
+The following must remain excluded from source control:
 
 - `.dev.vars`
 - `.dev.vars.*`
 - `.env`
 - `.env.*`
 
-Do not copy secrets into source files, examples, documentation, tests, screenshots, or generated output.
+Documentation may name `GUEST_SESSION_SECRET` and `GPT_API_KEY`, but must never contain their values.
 
----
+## 5. External response compatibility
 
-# 5. GPT Permissions
+The website/database model may change. The external GPT response contract should change only deliberately.
 
-GPT-facing routes must use least privilege.
+### Lore response
 
-The GPT integration may eventually be allowed to:
-
-- read Chapter lore
-- search Chapter lore
-- create draft lore
-- update specific lore records
-- promote explicitly approved records to canon
-
-The GPT integration must not receive unrestricted database access.
-
-Do not expose GPT operations that can:
-
-- reset the Chapter archive
-- wipe the database
-- delete the complete archive
-- replace the entire archive without validation
-- access guest account credentials
-- access password hashes or password salts
-- modify authentication configuration
-- access unrelated administrative data
-
-Do not expose `resetChapterArchive()` through the GPT API.
-
----
-
-# 6. Existing GPT API Behaviour
-
-## GET `/api/gpt/lore`
-
-Must require Bearer authentication.
-
-The response currently exposes the GPT-facing representation of:
+`GET /api/gpt/v1/lore` and its legacy compatibility route must continue to expose the GPT-facing concepts:
 
 - `chapter`
 - `timeline`
 - `relics`
 - `sector`
 
-Additional metadata such as `source` and `persisted` may also be returned.
+Structured lore and metadata such as `source` and `persisted` may also be returned. Do not remove an existing external field merely because the internal representation changed.
 
-Internal archive restructuring must not silently remove these GPT-facing concepts.
+### Search response
 
----
+`GET /api/gpt/v1/search?q=<query>` and its legacy compatibility route must:
 
-## GET `/api/gpt/search?q=<query>`
+- require a non-empty query
+- return `query`, `count`, `source`, and `results`
+- retain result fields `category`, `title`, and `content`
 
-Must require Bearer authentication.
+The internal search implementation may change while this behavior remains stable.
 
-Must reject requests without a search query.
+### Structured entry response
 
-The response must contain:
+Structured entry endpoints must retain stable entry IDs and expose validated lore records without leaking unrelated archive or authentication data.
 
-- `query`
-- `count`
-- `source`
-- `results`
+## 6. Structured lore integrity
 
-Search results currently use:
+Structured lore supports these statuses:
 
-- `category`
-- `title`
-- `content`
+- `draft`
+- `review`
+- `canon`
+- `retconned`
 
-Internal search implementation may change while preserving this external behaviour.
+Apply these rules explicitly:
 
----
+1. New structured GPT lore defaults to `draft` when `status` is omitted.
+2. Explicit valid statuses remain supported.
+3. Explicit invalid or unknown statuses return a validation error and must not be silently normalized.
+4. Established timeline lore migrated during the structured-lore cutover remains `canon`.
+5. The public Chronicles page displays `canon` only.
+6. `draft`, `review`, and `retconned` material must not be exposed as established canon.
+7. Canon promotion must be explicit.
+8. Generated or speculative material must not silently rewrite established lore.
 
-## POST `/api/gpt/chronicle`
+## 7. Structured entry creation and updates
 
-Must require Bearer authentication.
+### Create
 
-This endpoint may add one chronicle entry.
+`POST /api/gpt/v1/entries` may add one validated lore entry. It must:
 
-It must:
-
-- validate the request body
-- reject empty entries
-- reject excessively large entries
+- accept only known fields
+- require non-empty content
+- enforce field and content limits
+- use `draft` when status is omitted
+- reject invalid explicit statuses
 - reject exact duplicates
-- update only the intended chronicle data
-- return `201 Created` when successful
-- return `409 Conflict` for an existing identical entry
+- return `201 Created` on success
+- return `409 Conflict` for a duplicate or optimistic-write conflict
 
-It must not permit the caller to replace the complete Chapter archive.
+Search-before-create behavior should be retained and encouraged so GPT clients reduce duplicate or near-duplicate lore.
 
----
+### Update
 
-# 7. Codex Archive Changes
+`PATCH /api/gpt/v1/entries/:id` may update only the supplied fields of one existing entry. It must:
 
-When modifying any of the following:
+- address the record by its existing structured entry ID
+- preserve that ID during the update
+- preserve immutable creation metadata
+- validate all supplied fields
+- reject empty or unknown updates
+- retain optimistic write protection
+- return a conflict rather than overwrite a newer concurrent change
+- update only structured lore, the compatibility mirror when appropriate, and archive update metadata
+
+Do not implement entry updates by replacing the complete archive or regenerating IDs.
+
+### Legacy chronicle append
+
+`POST /api/gpt/v1/chronicle` and `POST /api/gpt/chronicle` remain compatibility routes. They may append one validated Chronicle entry but must not accept complete-archive replacement.
+
+## 8. GPT least privilege
+
+GPT-facing routes may read/search lore and perform the narrowly validated lore writes described above.
+
+The GPT API must not expose:
+
+- `DELETE` operations
+- database or archive reset operations
+- complete-archive replacement
+- `resetChapterArchive()`
+- unrestricted D1 access
+- guest account credentials
+- password hashes or salts
+- authentication configuration
+- secret management
+- unrelated administrative data
+
+Do not add a reset or deletion route for convenience in development.
+
+## 9. Canon compatibility mirror
+
+The legacy `archive.entries` timeline remains a compatibility representation of established lore.
+
+- Existing migrated timeline entries remain canon.
+- Canon structured entries may be mirrored into the timeline as required by compatibility behavior.
+- Draft, review, and retconned entries must not appear in the public timeline as canon.
+- Internal restructuring must preserve the original seven established Chronicle entries unless a deliberate, approved lore change says otherwise.
+
+## 10. Database safety
+
+The application uses Cloudflare D1. Development, staging, and production databases must be treated as separate resources.
+
+Do not:
+
+- reset production data for testing
+- run destructive migrations without explicit approval
+- delete archive records during unrelated changes
+- assume local or staging D1 contains production data
+- replay a migration without checking the production migration ledger and schema
+- replace `chapter_archive` as part of a compatibility change
+
+Prefer additive migrations and backward-compatible transformations. Preserve existing data until the new representation has been verified. A migration file must not be assumed to execute merely because it exists; confirm the Sites migration lifecycle before production deployment.
+
+## 11. Archive change procedure
+
+Before modifying any of the following:
 
 - `ChapterArchiveData`
 - `archive.entries`
@@ -191,129 +219,63 @@ When modifying any of the following:
 - `archive.relics`
 - `archive.sectorIntel`
 - `chapter_archive`
+- `chapter_archive.lore_entries`
 - `storage/chapter-records.ts`
 - `app/archive-data.ts`
 
-first determine whether the GPT API depends on the affected structure.
+determine whether the versioned or legacy GPT API depends on it.
 
 If it does:
 
 1. update the internal model
 2. update the GPT adapter/API implementation
-3. preserve the external API contract where practical
-4. update regression tests
-5. verify authenticated and unauthenticated behaviour
+3. preserve external response and write behavior where practical
+4. preserve canon filtering, stable IDs, and optimistic writes
+5. update regression tests
+6. verify authenticated and unauthenticated behavior
 
-Do not assume that a website feature is isolated from the GPT API.
+Do not assume that a website-only feature is isolated from the shared archive.
 
----
+## 12. API versioning
 
-# 8. Future API Versioning
+Avoid breaking the published v1 API. If an incompatible redesign becomes necessary, introduce a new version such as `/api/gpt/v2/*` and retain v1 compatibility for existing clients.
 
-The GPT API should move toward explicit versioning.
+Legacy `/api/gpt/*` routes remain compatibility routes until they are deliberately retired through an approved migration plan.
 
-Preferred future structure:
+## 13. Required validation
 
-- `/api/gpt/v1/lore`
-- `/api/gpt/v1/search`
-- `/api/gpt/v1/entries`
-
-Once versioned endpoints are established, avoid breaking a published API version.
-
-If an incompatible API redesign becomes necessary, introduce a new version such as:
-
-`/api/gpt/v2/...`
-
-rather than silently changing `v1`.
-
----
-
-# 9. Lore Integrity
-
-The Lunar Dragons Codex is the source of truth for established Chapter lore.
-
-Do not automatically treat generated or speculative material as canonical.
-
-Future structured lore should support states such as:
-
-- `draft`
-- `review`
-- `canon`
-- `retconned`
-
-New AI-generated lore should default to `draft` unless the user explicitly approves it as canon.
-
-Do not silently rewrite established canon while implementing unrelated application features.
-
----
-
-# 10. Database Safety
-
-The application currently uses Cloudflare D1.
-
-Development and production databases must be treated separately.
-
-Do not:
-
-- reset production data for testing
-- run destructive migrations without explicit need
-- delete archive records as part of unrelated changes
-- assume the local D1 database contains production data
-
-Prefer additive migrations and backward-compatible transformations.
-
-When migrating existing lore, preserve the existing data until the new representation has been verified.
-
----
-
-# 11. Development Expectations
-
-Before completing changes that affect the archive or GPT API:
-
-1. ensure the application builds
-2. ensure the GPT API still requires authentication
-3. verify the relevant GPT endpoints
-4. run GPT API regression tests when available
-5. fix compatibility issues before considering the work complete
-
-If a requested change conflicts with these requirements, preserve the user's requested functionality while maintaining the GPT API through an adapter or compatibility layer.
-
----
-
-# 12. Do Not Modify GPT API Incidentally
-
-When performing unrelated work such as:
-
-- UI redesigns
-- adding Codex pages
-- adding characters
-- adding planets
-- changing navigation
-- changing visual styling
-- adding archive categories
-- adding sector features
-
-do not rewrite, relocate, remove, or weaken the GPT API unless the change genuinely requires it.
-
-If a GPT API change is necessary, explicitly account for backward compatibility and tests.
-
----
-
-# 13. Required GPT API Regression Test
-
-After any change affecting:
+After changes affecting any of the following:
 
 - `app/api/gpt/**`
 - `app/gpt-api-auth.ts`
+- `app/gpt-api-adapter.ts`
 - `app/archive-data.ts`
 - `storage/chapter-records.ts`
 - `db/schema.ts`
 - archive storage or database structure
+- GPT OpenAPI behavior
 
 run:
 
-`npm run test:gpt-api`
+```powershell
+npm run test:gpt-api
+```
 
-The work is not complete until this command reports zero failures.
+The work is not complete until it reports zero failures. Also ensure the application builds when runtime or shared storage code changes. If an intentional internal change breaks a regression test, preserve the external contract with adapter or compatibility logic rather than weakening or removing the test.
 
-If the test fails because an internal model was intentionally changed, preserve the external GPT API contract through adapter or compatibility logic rather than weakening or removing the test.
+## 14. Unrelated website work
+
+UI redesigns, navigation changes, new pages, characters, planets, styling, sector features, and other site work must not incidentally rewrite or weaken the GPT API.
+
+If an unrelated change genuinely requires a GPT API adjustment, account explicitly for authentication, compatibility, lore status safety, stable IDs, optimistic writes, tests, and production/staging isolation.
+
+## 15. Known-good milestone
+
+The verified production integration milestone is:
+
+- Tag: `release-101-gpt-integration`
+- Commit: `d8f7b1c7abfac5cf35807931dcc64321d64ad1c7`
+- Production release: `101`
+- Production environment revision: `5`
+
+Use this as a comparison point for regressions. Do not commit, deploy, migrate, rotate secrets, or change production resources unless the user has explicitly authorized that action.
