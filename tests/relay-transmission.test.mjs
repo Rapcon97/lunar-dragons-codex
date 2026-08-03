@@ -56,6 +56,122 @@ test("Phase 1B analysis is deterministic across all approved origin classificati
   }
 });
 
+test("explicit metadata overrides misleading prose and maps only to approved analysis labels", () => {
+  const misleading = source({
+    id: "explicit-origin-override",
+    agency: "Astropathica",
+    subject: "Impossible chronology signal echo from Kharon",
+    preview: "The Vesper Rift is discussed in the recovered report.",
+    transmission: {
+      originLocationId: "vigil-ix",
+      originLabel: "VIGIL IX // WESTERN BASTION",
+      originRegion: "IMPERIUM NIHILUS",
+      originBand: "nearby Argent Vigil",
+      routeClass: "argent-vigil-relay",
+      transmissionMethod: "encrypted-astropathic",
+      warpExposure: "MINOR",
+      identityState: "VERIFIED",
+      originState: "CONFIRMED",
+      timestampState: "PARTIAL",
+    },
+  });
+  const analysis = analyzeTransmission(misleading);
+
+  assert.equal(analysis.originBasis, "metadata");
+  assert.equal(analysis.originBand, "nearby Argent Vigil");
+  assert.equal(analysis.originRegion, "IMPERIUM NIHILUS");
+  assert.equal(analysis.originLocationId, "vigil-ix");
+  assert.equal(analysis.probableOriginLabel, "VIGIL IX // WESTERN BASTION");
+  assert.equal(analysis.relayPathLabel, "ARGENT VIGIL RELAY");
+  assert.equal(analysis.transmissionMethod, "encrypted-astropathic");
+  assert.equal(analysis.identityState, "VERIFIED");
+  assert.equal(analysis.triangulationState, "CONFIRMED");
+  assert.equal(analysis.timestampIntegrityState, "PARTIAL");
+  assert.equal(analysis.warpExposureState, "MINOR");
+  assert.ok(analysis.corruptionPercentage >= 0.5 && analysis.corruptionPercentage <= 4);
+});
+
+test("partial metadata overrides only supplied fields", () => {
+  const fixture = source({
+    id: "partial-metadata-override",
+    agency: "Adeptus Terra",
+    subject: "Indomitus compliance return",
+    priority: "PRIMUS",
+  });
+  const inferred = analyzeTransmission(fixture);
+  const partial = analyzeTransmission({
+    ...fixture,
+    transmission: { originLabel: "SEALED CENTRAL ARCHIVE" },
+  });
+
+  assert.equal(partial.probableOriginLabel, "SEALED CENTRAL ARCHIVE");
+  assert.equal(partial.originBand, inferred.originBand);
+  assert.equal(partial.originRegion, inferred.originRegion);
+  assert.equal(partial.relayPathLabel, inferred.relayPathLabel);
+  assert.equal(partial.transmissionMethod, inferred.transmissionMethod);
+  assert.equal(partial.identityState, inferred.identityState);
+  assert.equal(partial.triangulationState, inferred.triangulationState);
+  assert.equal(partial.timestampIntegrityState, inferred.timestampIntegrityState);
+  assert.equal(partial.warpExposureState, inferred.warpExposureState);
+  assert.equal(partial.corruptionPercentage, inferred.corruptionPercentage);
+});
+
+test("an authenticated Kharon inquiry is distinct from a true anomalous Kharon echo", () => {
+  const inquiry = analyzeTransmission(source({
+    id: "kharon-inquiry",
+    agency: "Ordo Xenos",
+    subject: "Kharon cipher inquiry",
+    preview: "The recovered pre-founding signal is discussed under seal.",
+    transmission: {
+      originLabel: "ORDO XENOS // SELENE CONCLAVE",
+      originRegion: "IMPERIUM NIHILUS",
+      originBand: "nearby Argent Vigil",
+      routeClass: "contested-relay",
+      transmissionMethod: "encrypted-astropathic",
+      identityState: "VERIFIED",
+      originState: "PROBABLE",
+      timestampState: "VERIFIED",
+      warpExposure: "MINOR",
+    },
+  }));
+  const echo = analyzeTransmission(source({
+    id: "kharon-echo",
+    agency: "Originator unknown",
+    subject: "Kharon pre-founding distress signal echo",
+    preview: "Impossible chronology detected.",
+  }));
+
+  assert.equal(inquiry.originBand, "nearby Argent Vigil");
+  assert.equal(inquiry.identityState, "VERIFIED");
+  assert.equal(inquiry.relayPathLabel, "CONTESTED RELAY PATH");
+  assert.equal(echo.originBand, "anomalous source");
+  assert.notEqual(echo.probableOriginLabel, inquiry.probableOriginLabel);
+});
+
+test("explicit location analysis leaves reliquarium, clearance, and encryption derivation unchanged", () => {
+  const fixture = source({
+    id: "institutional-stability",
+    agency: "Adeptus Mechanicus",
+    subject: "Noospheric telemetry",
+    priority: "SEALED",
+  });
+  const inferred = analyzeTransmission(fixture);
+  const explicit = analyzeTransmission({
+    ...fixture,
+    transmission: {
+      originBand: "unstable Rift crossing",
+      routeClass: "rift-crossing",
+      originState: "CONFIRMED",
+    },
+  });
+
+  assert.equal(explicit.reliquariumNumber, inferred.reliquariumNumber);
+  assert.equal(explicit.clearanceGrade, inferred.clearanceGrade);
+  assert.equal(explicit.encryptionProtocol, inferred.encryptionProtocol);
+  assert.equal(explicit.originBand, "unstable Rift crossing");
+  assert.equal(explicit.relayPathLabel, "RIFT-CROSSING RELAY");
+});
+
 test("the shared formatter produces identical Command and Relay transcripts", () => {
   const commandTranscript = formatTransmissionTranscript(source());
   const relayTranscript = formatTransmissionTranscript({ ...source() });
@@ -137,6 +253,30 @@ test("unknown origins fall back to a broad theatre-level fix without inventing a
   assert.equal(unknown.triangulationState, "INCONCLUSIVE");
   assert.equal(unknown.relayPathLabel, "UNRESOLVED TRANSMISSION PATH");
   assert.doesNotMatch(transcript, /exact system|system designation:|coordinates|relay station/i);
+});
+
+test("explicit metadata never invents the unnamed receiving system or unsupported relay terminology", () => {
+  const transcript = formatTransmissionTranscript(source({
+    id: "no-invented-system",
+    agency: "Belisarius Cawl · Archmagos Dominus",
+    subject: "A most reasonable request for impossible data",
+    transmission: {
+      originLabel: "ORIGIN UNRESOLVED // ARCHMAGOS DOMINUS",
+      originRegion: "UNRESOLVED",
+      routeClass: "unresolved",
+      transmissionMethod: "mechanicus-burst",
+      identityState: "VERIFIED",
+      originState: "UNRECOVERED",
+      timestampState: "VERIFIED",
+    },
+  }));
+  const text = transcript.lines.map((line) => line.text).join("\n");
+
+  assert.equal(transcript.analysis.originBasis, "receiving-theatre-fallback");
+  assert.equal(transcript.analysis.probableOriginLabel, "ORIGIN UNRESOLVED // ARCHMAGOS DOMINUS");
+  assert.equal(transcript.analysis.relayPathLabel, "UNRESOLVED TRANSMISSION PATH");
+  assert.equal(transcript.analysis.triangulationState, "UNRECOVERED");
+  assert.doesNotMatch(text, /system designation|exact system|coordinates|Draconis Gate relay|Selene relay/i);
 });
 
 test("legacy date-only timestamps remain valid but categorically partial", () => {

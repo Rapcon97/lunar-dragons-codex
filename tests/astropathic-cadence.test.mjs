@@ -5,6 +5,7 @@ import {
   applyDailyAstropathicMessages,
   astropathicScheduleForDay,
   createDefaultArchiveData,
+  normalizeArchiveData,
 } from "../app/archive-data.ts";
 
 function dateAt(dayOffset, hour = 12, minute = 0) {
@@ -25,6 +26,20 @@ function emptyArchive() {
   archive.relayMessages = [];
   archive.relayLastGeneratedDate = "";
   return archive;
+}
+
+function relayRecord(overrides = {}) {
+  return {
+    id: "relay-normalization-fixture",
+    agency: "Adeptus Terra",
+    subject: "Archive normalization report",
+    preview: "A structured transmission fixture.",
+    body: "The structured message remains intact.",
+    priority: "NOTICE",
+    received: "0.588.056.M42",
+    receivedAt: "2026-08-03T14:25:00.000Z",
+    ...overrides,
+  };
 }
 
 test("normal days schedule two to four messages with three-to-twelve-hour gaps", () => {
@@ -130,4 +145,110 @@ test("notable transmissions remain fourteen to twenty-eight days apart", () => {
     const gap = notableDays[index] - notableDays[index - 1];
     assert.ok(gap >= 14 && gap <= 28);
   }
+});
+
+test("valid optional transmission metadata survives normalization and JSON round-tripping", () => {
+  const archive = createDefaultArchiveData();
+  archive.relayMessages = [relayRecord({
+    transmission: {
+      originLocationId: "  vigil-ix  ",
+      originLabel: "  VIGIL IX // WESTERN BASTION  ",
+      originRegion: "IMPERIUM NIHILUS",
+      originBand: "nearby Argent Vigil",
+      routeClass: "argent-vigil-relay",
+      transmissionMethod: "encrypted-astropathic",
+      warpExposure: "MINOR",
+      identityState: "VERIFIED",
+      originState: "CONFIRMED",
+      timestampState: "PARTIAL",
+    },
+  })];
+
+  const normalized = normalizeArchiveData(JSON.parse(JSON.stringify(archive)));
+  assert.deepEqual(normalized.relayMessages[0].transmission, {
+    originLocationId: "vigil-ix",
+    originLabel: "VIGIL IX // WESTERN BASTION",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "VERIFIED",
+    originState: "CONFIRMED",
+    timestampState: "PARTIAL",
+  });
+  assert.deepEqual(
+    normalizeArchiveData(JSON.parse(JSON.stringify(normalized))).relayMessages[0].transmission,
+    normalized.relayMessages[0].transmission,
+  );
+});
+
+test("invalid and empty transmission metadata is discarded without altering legacy messages", () => {
+  const archive = createDefaultArchiveData();
+  const legacy = relayRecord({ subject: "Kharon cipher inquiry" });
+  archive.relayMessages = [
+    legacy,
+    relayRecord({
+      id: "invalid-transmission",
+      transmission: {
+        originLocationId: "   ",
+        originLabel: "   ",
+        originRegion: "SEGMENTUM UNKNOWN",
+        originBand: "Kharon echo",
+        routeClass: "warp-superhighway",
+        transmissionMethod: "carrier-pigeon",
+        warpExposure: "CATASTROPHIC",
+        identityState: "CERTAIN",
+        originState: "CERTAIN",
+        timestampState: "CERTAIN",
+      },
+    }),
+  ];
+
+  const normalized = normalizeArchiveData(archive);
+  assert.equal("transmission" in normalized.relayMessages[0], false);
+  assert.equal("transmission" in normalized.relayMessages[1], false);
+  assert.deepEqual(normalized.relayMessages[0], legacy);
+});
+
+test("every finite generated template carries the approved explicit Phase 2 classification", () => {
+  const expectedSubjects = new Set([
+    "Compliance return overdue",
+    "Convoy passage requested",
+    "Veil Anchor 7 telemetry",
+    "Vigil IX relief appeal",
+    "Kharon cipher inquiry",
+    "Pilgrim fleet benediction",
+    "Founding rolls discrepancy",
+    "Argent Psalm signal echo",
+    "Discipline review requested",
+    "Navigator warning: Vesper Drift",
+    "Munitions allocation dispute",
+    "Restricted witness transfer",
+    "To those who hold the sundered road",
+    "Counsel from the returned Lion",
+    "Nihilus strategic notice",
+    "A most reasonable request for impossible data",
+    "Concerning the Argent Procession",
+    "Eyes of Terra: restricted advisory",
+  ]);
+  const messagesBySubject = new Map();
+
+  for (let offset = 0; offset < 3_000 && messagesBySubject.size < expectedSubjects.size; offset += 1) {
+    for (const message of astropathicScheduleForDay(dateAt(offset)).messages) {
+      if (expectedSubjects.has(message.subject)) messagesBySubject.set(message.subject, message);
+    }
+  }
+
+  assert.equal(messagesBySubject.size, expectedSubjects.size);
+  for (const message of messagesBySubject.values()) assert.ok(message.transmission);
+  assert.equal(messagesBySubject.get("Compliance return overdue").transmission.originBand, "Imperium Sanctus via Nachmund");
+  assert.equal(messagesBySubject.get("Vigil IX relief appeal").transmission.originBand, "nearby Argent Vigil");
+  assert.equal(messagesBySubject.get("Munitions allocation dispute").transmission.originBand, "northern Nachmund theatre");
+  assert.equal(messagesBySubject.get("Nihilus strategic notice").transmission.originBand, "distant Imperium Nihilus");
+  assert.equal(messagesBySubject.get("Veil Anchor 7 telemetry").transmission.originBand, "unstable Rift crossing");
+  assert.equal(messagesBySubject.get("Argent Psalm signal echo").transmission.originBand, "anomalous source");
+  assert.equal(messagesBySubject.get("Kharon cipher inquiry").transmission.originBand, "nearby Argent Vigil");
+  assert.equal(messagesBySubject.get("A most reasonable request for impossible data").transmission.originRegion, "UNRESOLVED");
+  assert.equal("originBand" in messagesBySubject.get("A most reasonable request for impossible data").transmission, false);
 });

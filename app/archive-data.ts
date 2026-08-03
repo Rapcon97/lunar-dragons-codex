@@ -53,6 +53,73 @@ export type LoreEntry = {
   updatedAt: number;
 };
 
+export type TransmissionOriginBand =
+  | "internal Lunaris"
+  | "same system"
+  | "nearby Argent Vigil"
+  | "northern Nachmund theatre"
+  | "distant Imperium Nihilus"
+  | "Imperium Sanctus via Nachmund"
+  | "unstable Rift crossing"
+  | "anomalous source";
+
+export type TransmissionRouteClass =
+  | "direct-noospheric"
+  | "local-system-relay"
+  | "argent-vigil-relay"
+  | "nachmund-corridor"
+  | "sanctioned-choir-chain"
+  | "contested-relay"
+  | "rift-crossing"
+  | "astropathic-echo"
+  | "unresolved";
+
+export type TransmissionMethod =
+  | "noospheric"
+  | "vox"
+  | "astropathic"
+  | "encrypted-astropathic"
+  | "navigational-choir"
+  | "mechanicus-burst"
+  | "warp-echo"
+  | "unknown";
+
+export type TransmissionOriginRegion =
+  | "IMPERIUM NIHILUS"
+  | "IMPERIUM SANCTUS"
+  | "GREAT RIFT"
+  | "UNRESOLVED";
+
+export type TransmissionConfidenceState =
+  | "VERIFIED"
+  | "CONFIRMED"
+  | "PROBABLE"
+  | "PARTIAL"
+  | "INCONCLUSIVE"
+  | "CONTRADICTORY"
+  | "UNRECOVERED";
+
+export type TransmissionWarpExposure =
+  | "NEGLIGIBLE"
+  | "MINOR"
+  | "MODERATE"
+  | "ELEVATED"
+  | "SEVERE"
+  | "EXTREMIS";
+
+export type AstropathicTransmissionMetadata = {
+  originLocationId?: string;
+  originLabel?: string;
+  originRegion?: TransmissionOriginRegion;
+  originBand?: TransmissionOriginBand;
+  routeClass?: TransmissionRouteClass;
+  transmissionMethod?: TransmissionMethod;
+  warpExposure?: TransmissionWarpExposure;
+  identityState?: TransmissionConfidenceState;
+  originState?: TransmissionConfidenceState;
+  timestampState?: TransmissionConfidenceState;
+};
+
 export type AstropathicMessage = {
   id: string;
   agency: string;
@@ -62,6 +129,7 @@ export type AstropathicMessage = {
   priority: "PRIMUS" | "ACTION" | "URGENT" | "SEALED" | "PETITION" | "NOTICE";
   received: string;
   receivedAt: string;
+  transmission?: AstropathicTransmissionMetadata;
 };
 
 export type BadgeMode = "badge" | "banner";
@@ -329,7 +397,209 @@ const defaultArchive: ChapterArchiveData = {
   },
 };
 
-const astropathicMessageTemplates = [
+const transmissionMetadataBySubject = {
+  "Compliance return overdue": {
+    originLabel: "ADEPTUS TERRA // STRATEGIC COMMAND ARCHIVE",
+    originRegion: "IMPERIUM SANCTUS",
+    originBand: "Imperium Sanctus via Nachmund",
+    routeClass: "sanctioned-choir-chain",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Convoy passage requested": {
+    originLabel: "TASK GROUP HELIOS // NACHMUND TRANSIT",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "nachmund-corridor",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Veil Anchor 7 telemetry": {
+    originLocationId: "veil-anchor-7",
+    originLabel: "VEIL ANCHOR 7 // VESPER RIFT",
+    originRegion: "GREAT RIFT",
+    originBand: "unstable Rift crossing",
+    routeClass: "rift-crossing",
+    transmissionMethod: "mechanicus-burst",
+    warpExposure: "SEVERE",
+    identityState: "CONFIRMED",
+    originState: "CONFIRMED",
+    timestampState: "VERIFIED",
+  },
+  "Vigil IX relief appeal": {
+    originLocationId: "vigil-ix",
+    originLabel: "VIGIL IX // WESTERN BASTION",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "CONFIRMED",
+    originState: "CONFIRMED",
+    timestampState: "VERIFIED",
+  },
+  "Kharon cipher inquiry": {
+    originLabel: "ORDO XENOS // SELENE CONCLAVE",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "contested-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Pilgrim fleet benediction": {
+    originLocationId: "orison",
+    originLabel: "ORISON // CARDINALATE",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "astropathic",
+    warpExposure: "MINOR",
+    identityState: "CONFIRMED",
+    originState: "CONFIRMED",
+    timestampState: "VERIFIED",
+  },
+  "Founding rolls discrepancy": {
+    originLabel: "ADMINISTRATUM // ULTIMA FOUNDING REGISTRY",
+    originRegion: "IMPERIUM SANCTUS",
+    originBand: "Imperium Sanctus via Nachmund",
+    routeClass: "sanctioned-choir-chain",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Argent Psalm signal echo": {
+    originLabel: "SOURCE UNRESOLVED // BEYOND VESPER RIFT",
+    originRegion: "UNRESOLVED",
+    originBand: "anomalous source",
+    routeClass: "astropathic-echo",
+    transmissionMethod: "warp-echo",
+    warpExposure: "EXTREMIS",
+    identityState: "PARTIAL",
+    originState: "UNRECOVERED",
+    timestampState: "PARTIAL",
+  },
+  "Discipline review requested": {
+    originLabel: "OFFICIO PREFECTUS // ARGENT VIGIL",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Navigator warning: Vesper Drift": {
+    originLabel: "HOUSE CAELORN // VESPER DRIFT",
+    originRegion: "GREAT RIFT",
+    originBand: "unstable Rift crossing",
+    routeClass: "rift-crossing",
+    transmissionMethod: "navigational-choir",
+    warpExposure: "SEVERE",
+    identityState: "CONFIRMED",
+    originState: "PARTIAL",
+    timestampState: "PARTIAL",
+  },
+  "Munitions allocation dispute": {
+    originLabel: "DEPARTMENTO MUNITORUM // NACHMUND COMMAND",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "nachmund-corridor",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "INCONCLUSIVE",
+    timestampState: "VERIFIED",
+  },
+  "Restricted witness transfer": {
+    originLabel: "ORDO HERETICUS // SEALED CHANNEL",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "contested-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "To those who hold the sundered road": {
+    originLabel: "ADEPTUS TERRA // LORD COMMANDER'S STRATEGIUM",
+    originRegion: "IMPERIUM SANCTUS",
+    originBand: "Imperium Sanctus via Nachmund",
+    routeClass: "sanctioned-choir-chain",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Counsel from the returned Lion": {
+    originLabel: "LION EL'JONSON // SECURED COMMAND CHANNEL",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "distant Imperium Nihilus",
+    routeClass: "contested-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "VERIFIED",
+    originState: "PARTIAL",
+    timestampState: "VERIFIED",
+  },
+  "Nihilus strategic notice": {
+    originLabel: "IMPERIUM NIHILUS // LORD REGENT'S STRATEGIUM",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "distant Imperium Nihilus",
+    routeClass: "sanctioned-choir-chain",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "A most reasonable request for impossible data": {
+    originLabel: "ORIGIN UNRESOLVED // ARCHMAGOS DOMINUS",
+    originRegion: "UNRESOLVED",
+    routeClass: "unresolved",
+    transmissionMethod: "mechanicus-burst",
+    identityState: "VERIFIED",
+    originState: "UNRECOVERED",
+    timestampState: "VERIFIED",
+  },
+  "Concerning the Argent Procession": {
+    originLabel: "ADEPTA SORORITAS // ABBESS SANCTORUM",
+    originRegion: "IMPERIUM SANCTUS",
+    originBand: "Imperium Sanctus via Nachmund",
+    routeClass: "sanctioned-choir-chain",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Eyes of Terra: restricted advisory": {
+    originLabel: "ADEPTUS CUSTODES // EYES OF TERRA",
+    originRegion: "IMPERIUM SANCTUS",
+    originBand: "Imperium Sanctus via Nachmund",
+    routeClass: "sanctioned-choir-chain",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "VERIFIED",
+    originState: "CONFIRMED",
+    timestampState: "VERIFIED",
+  },
+} as const satisfies Record<string, AstropathicTransmissionMetadata>;
+
+const astropathicMessageTemplates = ([
   { agency: "Adeptus Terra", subject: "Compliance return overdue", preview: "The strategic command archive respectfully requests the present disposition of the Argent Vigil and its restored systems.", body: "Chapter Master, the strategic command archive has not received the current compliance return entered under warrant 008.M42/DR-017. Adeptus Terra respectfully requests the disposition of the Lunar Dragons, the status of every system restored under the Nachmund Charge, and the location of the Gift of Luna. Any omission will be entered as a failure of record, not of service.", priority: "PRIMUS" },
   { agency: "Navis Imperialis", subject: "Convoy passage requested", preview: "Task Group Helios petitions for Astartes overwatch through the Moonward Passage during its next translation window.", body: "Task Group Helios will attempt translation through the Moonward Passage within the next sanctioned window. Three troop transports, two munition hulks and the hospital ship Mercy of Juno require Astartes overwatch. Naval command requests a Lunar Dragons escort from Draconis Gate to the Selene anchorage and confirmation of any hostile contacts along the route.", priority: "ACTION" },
   { agency: "Adeptus Mechanicus", subject: "Veil Anchor 7 telemetry", preview: "The station's machine-spirit reports a widening variance. Escort is requested for a Magos reclamation cohort.", body: "Veil Anchor 7 reports a widening variance in the Vesper Rift containment lattice. The station's machine-spirit has repeated the same warning cant for nineteen cycles and now refuses nonessential commands. A Magos reclamation cohort is prepared to translate, but requires Chapter escort and permission to draw upon the fleet's Gellar specialists.", priority: "URGENT" },
@@ -342,16 +612,22 @@ const astropathicMessageTemplates = [
   { agency: "Navis Nobilite", subject: "Navigator warning: Vesper Drift", preview: "House Caelorn's bonded Navigator reports an impossible lunar reflection within the active warp channel.", body: "The bonded Navigator of House Caelorn reports an impossible lunar reflection within the active channel of the Vesper Drift. The image persists with eyes closed and does not correspond to any charted body. Three junior Navigators have refused the passage. House Caelorn requests Chapter augur records and a sealed audience.", priority: "SEALED" },
   { agency: "Departmento Munitorum", subject: "Munitions allocation dispute", preview: "Two crusade battlegroups claim priority over the same macro-shell allotment. A command ruling is requested.", body: "Battlegroups Castor and Maccabeus both claim priority over the macro-shell allotment aboard the bulk carrier Unquestioned Duty. Their warrants are of equal grade and mutually incompatible. Munitorum command requests the Chapter Master's ruling based on the current strategic needs of the Argent Vigil.", priority: "ACTION" },
   { agency: "Ordo Hereticus", subject: "Restricted witness transfer", preview: "Under inquisitorial seal, a protected witness recovered from Selene Prime is submitted for conveyance under absolute silence.", body: "Chapter Master, under formal seal of the Ordo Hereticus, a protected witness recovered beneath Hive Enoch is to be transferred to the Lunar Dragons fleet under absolute silence. The subject bears knowledge of a cult network extending beyond Selene Prime. No local authority is to be informed. The Inquisition requires your designation of a secure rendezvous and a squad whose loyalty is beyond question.", priority: "PRIMUS" },
-] as const satisfies ReadonlyArray<Omit<AstropathicMessage, "id" | "received" | "receivedAt">>;
+] as const).map((template) => ({
+  ...template,
+  transmission: transmissionMetadataBySubject[template.subject],
+})) satisfies ReadonlyArray<Omit<AstropathicMessage, "id" | "received" | "receivedAt">>;
 
-const notableAstropathicMessageTemplates = [
+const notableAstropathicMessageTemplates = ([
   { agency: "Roboute Guilliman · Lord Commander", subject: "To those who hold the sundered road", preview: "A general crusade address carries a brief, authenticated acknowledgement of the Argent Vigil.", body: "Lunar Dragons, your vigil lies far from the triumphal routes and the eyes of Terra, but it is not unseen. The passage between the divided Imperium is preserved as often by endurance as by conquest. Hold what you have reclaimed. Record what has been lost. Spend lives only where their sacrifice purchases a future for those who remain. Your duty is not yet concluded. — Roboute Guilliman, Lord Commander of the Imperium", priority: "PRIMUS" },
   { agency: "Lion El’Jonson · Primarch of the First", subject: "Counsel from the returned Lion", preview: "A tightly ciphered strategic advisory warns against mistaking silence beyond the Rift for peace.", body: "To the master of the Lunar Dragons: do not mistake an enemy's silence for ignorance, nor a quiet frontier for an empty one. Beyond the Great Rift, strength is measured by what can still answer when called. Keep your companies close enough to become a fist, and your watchers distant enough to see the blade before it falls. No reply is required. — Lion El’Jonson, Primarch of the First Legion", priority: "SEALED" },
   { agency: "Lord Regent Dante · Imperium Nihilus", subject: "Nihilus strategic notice", preview: "The Lord Regent requests current passage conditions and offers reciprocal fleet intelligence.", body: "Chapter Master, every stable road through Imperium Nihilus is now a fortress without walls. Forward the latest condition of the Nachmund approaches and any confirmed hostile translation patterns. In return, my strategium will release the Blood Angels' current corsair and xenos contact reports for your operational reach. We cannot defend every world, but we can ensure no world stands unwarned. — Commander Dante, Lord Regent of Imperium Nihilus", priority: "ACTION" },
   { agency: "Belisarius Cawl · Archmagos Dominus", subject: "A most reasonable request for impossible data", preview: "The Archmagos requests anomalous readings from the Vesper Rift and insists the request is entirely routine.", body: "Esteemed inheritors of my perfectly serviceable handiwork: your reports concerning the Vesper Rift contain three readings that are impossible, two that are merely improbable, and one that has caused an attached sub-mind to petition for memory excision. Transmit the unabridged telemetry before anyone attempts to sanctify, simplify, or shoot it. This is a routine request. The number of sealed Mechanicus annexes attached should not be interpreted otherwise. — Archmagos Dominus Belisarius Cawl", priority: "SEALED" },
   { agency: "Morvenn Vahl · Abbess Sanctorum", subject: "Concerning the Argent Procession", preview: "The Abbess Sanctorum commends the protected pilgrim route and warns that faith must not outrun supply.", body: "The protection granted to the Argent Procession has been entered with honour. Yet devotion does not fill a transport's holds or seal a failing Gellar field. Ensure those who travel beneath the Aquila are guarded by discipline as well as prayer. Should the road fail, preserve the faithful before the relics; the Emperor's servants are not lesser vessels than the bones they carry. — Morvenn Vahl, Abbess Sanctorum of the Adepta Sororitas", priority: "PRIMUS" },
   { agency: "Trajann Valoris · Captain-General", subject: "Eyes of Terra: restricted advisory", preview: "A rare Custodian cipher confirms that the Chapter’s restored corridor remains under distant observation.", body: "By authority of the Captain-General: the strategic value of the corridor held under the Nachmund Charge is recognised. Continue your vigil without expectation of reinforcement or acclaim. Report any evidence that the enemies gathering beyond the Rift possess knowledge of the Gift of Luna. This advisory is to be committed to the Chapter Master's sealed archive and nowhere else. — Trajann Valoris, Captain-General of the Adeptus Custodes", priority: "SEALED" },
-] as const satisfies ReadonlyArray<Omit<AstropathicMessage, "id" | "received" | "receivedAt">>;
+] as const).map((template) => ({
+  ...template,
+  transmission: transmissionMetadataBySubject[template.subject],
+})) satisfies ReadonlyArray<Omit<AstropathicMessage, "id" | "received" | "receivedAt">>;
 
 function dateKey(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -717,6 +993,106 @@ function text(value: unknown, fallback: string, max = 4000) {
   return typeof value === "string" ? value.slice(0, max) : fallback;
 }
 
+const transmissionOriginBands = [
+  "internal Lunaris",
+  "same system",
+  "nearby Argent Vigil",
+  "northern Nachmund theatre",
+  "distant Imperium Nihilus",
+  "Imperium Sanctus via Nachmund",
+  "unstable Rift crossing",
+  "anomalous source",
+] as const satisfies readonly TransmissionOriginBand[];
+
+const transmissionRouteClasses = [
+  "direct-noospheric",
+  "local-system-relay",
+  "argent-vigil-relay",
+  "nachmund-corridor",
+  "sanctioned-choir-chain",
+  "contested-relay",
+  "rift-crossing",
+  "astropathic-echo",
+  "unresolved",
+] as const satisfies readonly TransmissionRouteClass[];
+
+const transmissionMethods = [
+  "noospheric",
+  "vox",
+  "astropathic",
+  "encrypted-astropathic",
+  "navigational-choir",
+  "mechanicus-burst",
+  "warp-echo",
+  "unknown",
+] as const satisfies readonly TransmissionMethod[];
+
+const transmissionOriginRegions = [
+  "IMPERIUM NIHILUS",
+  "IMPERIUM SANCTUS",
+  "GREAT RIFT",
+  "UNRESOLVED",
+] as const satisfies readonly TransmissionOriginRegion[];
+
+const transmissionConfidenceStates = [
+  "VERIFIED",
+  "CONFIRMED",
+  "PROBABLE",
+  "PARTIAL",
+  "INCONCLUSIVE",
+  "CONTRADICTORY",
+  "UNRECOVERED",
+] as const satisfies readonly TransmissionConfidenceState[];
+
+const transmissionWarpExposures = [
+  "NEGLIGIBLE",
+  "MINOR",
+  "MODERATE",
+  "ELEVATED",
+  "SEVERE",
+  "EXTREMIS",
+] as const satisfies readonly TransmissionWarpExposure[];
+
+function optionalTransmissionText(value: unknown, max: number) {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().slice(0, max);
+  return normalized || undefined;
+}
+
+function validTransmissionEnum<T extends string>(value: unknown, values: readonly T[]) {
+  return typeof value === "string" && values.includes(value as T)
+    ? value as T
+    : undefined;
+}
+
+function normalizeTransmissionMetadata(value: unknown): AstropathicTransmissionMetadata | undefined {
+  const candidate = record(value);
+  const transmission: AstropathicTransmissionMetadata = {};
+  const originLocationId = optionalTransmissionText(candidate.originLocationId, 120);
+  const originLabel = optionalTransmissionText(candidate.originLabel, 240);
+  const originRegion = validTransmissionEnum(candidate.originRegion, transmissionOriginRegions);
+  const originBand = validTransmissionEnum(candidate.originBand, transmissionOriginBands);
+  const routeClass = validTransmissionEnum(candidate.routeClass, transmissionRouteClasses);
+  const transmissionMethod = validTransmissionEnum(candidate.transmissionMethod, transmissionMethods);
+  const warpExposure = validTransmissionEnum(candidate.warpExposure, transmissionWarpExposures);
+  const identityState = validTransmissionEnum(candidate.identityState, transmissionConfidenceStates);
+  const originState = validTransmissionEnum(candidate.originState, transmissionConfidenceStates);
+  const timestampState = validTransmissionEnum(candidate.timestampState, transmissionConfidenceStates);
+
+  if (originLocationId) transmission.originLocationId = originLocationId;
+  if (originLabel) transmission.originLabel = originLabel;
+  if (originRegion) transmission.originRegion = originRegion;
+  if (originBand) transmission.originBand = originBand;
+  if (routeClass) transmission.routeClass = routeClass;
+  if (transmissionMethod) transmission.transmissionMethod = transmissionMethod;
+  if (warpExposure) transmission.warpExposure = warpExposure;
+  if (identityState) transmission.identityState = identityState;
+  if (originState) transmission.originState = originState;
+  if (timestampState) transmission.timestampState = timestampState;
+
+  return Object.keys(transmission).length > 0 ? transmission : undefined;
+}
+
 export function normalizeArchiveData(value: unknown): ChapterArchiveData {
   const defaults = createDefaultArchiveData();
   const source = record(value);
@@ -844,6 +1220,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
         .map((item, index) => {
           const candidate = record(item);
           const template = astropathicMessageTemplates.find((message) => message.subject === candidate.subject);
+          const transmission = normalizeTransmissionMetadata(candidate.transmission);
           const preview = text(candidate.preview, "No readable message body was recovered.", 1200);
           const priority =
             candidate.priority === "PRIMUS" || candidate.priority === "ACTION" || candidate.priority === "URGENT" ||
@@ -859,6 +1236,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
             priority,
             received: text(candidate.received, "0.---.056.M42", 40),
             receivedAt: text(candidate.receivedAt, "", 40),
+            ...(transmission ? { transmission } : {}),
           } satisfies AstropathicMessage;
         })
         .filter((message, index, messages) => messages.findIndex((candidate) => candidate.id === message.id) === index)

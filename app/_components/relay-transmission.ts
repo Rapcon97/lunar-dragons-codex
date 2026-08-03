@@ -1,3 +1,13 @@
+import type {
+  AstropathicTransmissionMetadata,
+  TransmissionConfidenceState,
+  TransmissionMethod,
+  TransmissionOriginBand as ArchiveTransmissionOriginBand,
+  TransmissionOriginRegion,
+  TransmissionRouteClass,
+  TransmissionWarpExposure,
+} from "../archive-data";
+
 export type TransmissionSourceMetadata = {
   id: string;
   agency: string;
@@ -7,29 +17,15 @@ export type TransmissionSourceMetadata = {
   priority?: string;
   received?: string;
   receivedAt?: string;
+  transmission?: AstropathicTransmissionMetadata;
 };
 
-export type TransmissionOriginBand =
-  | "internal Lunaris"
-  | "same system"
-  | "nearby Argent Vigil"
-  | "northern Nachmund theatre"
-  | "distant Imperium Nihilus"
-  | "Imperium Sanctus via Nachmund"
-  | "unstable Rift crossing"
-  | "anomalous source";
+export type TransmissionOriginBand = ArchiveTransmissionOriginBand;
 
 export type ImperialClearanceGrade = "CYAN" | "SCARLET" | "MAGENTA" | "OBSIDIAN" | "VERMILION";
 export type EncryptionProtocol = "CRYPTOX" | "OMEGA" | "TELOS" | "ESCULIS" | "PANTHER";
-export type AnalysisState =
-  | "VERIFIED"
-  | "CONFIRMED"
-  | "PROBABLE"
-  | "PARTIAL"
-  | "INCONCLUSIVE"
-  | "CONTRADICTORY"
-  | "UNRECOVERED";
-export type WarpExposureState = "NEGLIGIBLE" | "MINOR" | "MODERATE" | "ELEVATED" | "SEVERE" | "EXTREMIS";
+export type AnalysisState = TransmissionConfidenceState;
+export type WarpExposureState = TransmissionWarpExposure;
 export type TransmissionTranscriptSection = "analysis" | "content" | "terminal-footer";
 
 export type TransmissionTranscriptLine = {
@@ -58,7 +54,10 @@ export type TransmissionCorruptionProfile = {
 export type TransmissionAnalysis = {
   reliquariumNumber: string;
   originBand: TransmissionOriginBand;
+  originRegion: TransmissionOriginRegion;
+  originLocationId?: string;
   probableOriginLabel: string;
+  transmissionMethod: TransmissionMethod;
   clearanceGrade: ImperialClearanceGrade;
   encryptionProtocol: EncryptionProtocol;
   identityState: AnalysisState;
@@ -70,7 +69,7 @@ export type TransmissionAnalysis = {
   corruptionPercentage: number;
   corruptionPattern: "SPARSE GLYPH LOSS" | "DEGRADED BINHARIC" | "CANT FRAGMENTATION" | "REDACTION LOSS";
   corruption: TransmissionCorruptionProfile;
-  originBasis: "explicit" | "inferred" | "receiving-theatre-fallback";
+  originBasis: "metadata" | "explicit" | "inferred" | "receiving-theatre-fallback";
 };
 
 export type FormattedTransmissionTranscript = {
@@ -166,6 +165,12 @@ function deterministicChoice<T>(source: Pick<TransmissionSourceMetadata, "id">, 
 }
 
 function classifyTransmissionOriginDetail(source: TransmissionSourceMetadata): Pick<TransmissionAnalysis, "originBand" | "originBasis"> {
+  if (source.transmission?.originBand) {
+    return { originBand: source.transmission.originBand, originBasis: "metadata" };
+  }
+  if (source.transmission?.originRegion === "UNRESOLVED") {
+    return { originBand: "northern Nachmund theatre", originBasis: "receiving-theatre-fallback" };
+  }
   const metadata = metadataText(source);
 
   if (/impossible chronology|temporal inversion|soul-binding|signal echo|astropathic echo|provenance contradiction|unknown soul|source anomal|kharon|pre-founding|distress transmission/.test(metadata)) {
@@ -212,6 +217,37 @@ function probableOriginLabel(originBand: TransmissionOriginBand, originBasis: Tr
     "anomalous source": "SOURCE UNRESOLVED // ASTROPATHIC ECHO",
   };
   return labels[originBand];
+}
+
+const RELAY_PATH_LABELS: Record<TransmissionRouteClass, string> = {
+  "direct-noospheric": "DIRECT NOOSPHERIC LINK",
+  "local-system-relay": "LOCAL ASTROPATHIC CHOIR",
+  "argent-vigil-relay": "ARGENT VIGIL RELAY",
+  "nachmund-corridor": "NACHMUND RELAY CORRIDOR",
+  "sanctioned-choir-chain": "SANCTIONED CHOIR CHAIN",
+  "contested-relay": "CONTESTED RELAY PATH",
+  "rift-crossing": "RIFT-CROSSING RELAY",
+  "astropathic-echo": "ASTROPATHIC ECHO",
+  unresolved: "UNRESOLVED TRANSMISSION PATH",
+};
+
+function originRegion(originBand: TransmissionOriginBand): TransmissionOriginRegion {
+  if (originBand === "Imperium Sanctus via Nachmund") return "IMPERIUM SANCTUS";
+  if (originBand === "unstable Rift crossing") return "GREAT RIFT";
+  if (originBand === "anomalous source") return "UNRESOLVED";
+  return "IMPERIUM NIHILUS";
+}
+
+function transmissionMethod(source: TransmissionSourceMetadata, originBand: TransmissionOriginBand): TransmissionMethod {
+  if (source.transmission?.transmissionMethod) return source.transmission.transmissionMethod;
+  const metadata = metadataText(source);
+  if (originBand === "anomalous source") return "warp-echo";
+  if (/mechanicus|magos|cawl|noospher|omnissiah/.test(metadata)) return "mechanicus-burst";
+  if (/navis nobilite|navigator/.test(metadata)) return "navigational-choir";
+  if (originBand === "internal Lunaris") return "noospheric";
+  if (/astropathica|astropath|choir|soul-binding|psychic/.test(metadata)) return "astropathic";
+  if (source.priority === "SEALED" || source.priority === "PRIMUS") return "encrypted-astropathic";
+  return "astropathic";
 }
 
 function clearanceGrade(source: TransmissionSourceMetadata): ImperialClearanceGrade {
@@ -262,6 +298,7 @@ function triangulationState(source: TransmissionSourceMetadata, originBand: Tran
 }
 
 function relayPathLabel(source: TransmissionSourceMetadata, originBand: TransmissionOriginBand, originBasis: TransmissionAnalysis["originBasis"]) {
+  if (source.transmission?.routeClass) return RELAY_PATH_LABELS[source.transmission.routeClass];
   if (originBasis === "receiving-theatre-fallback") return "UNRESOLVED TRANSMISSION PATH";
   const paths: Record<TransmissionOriginBand, readonly string[]> = {
     "internal Lunaris": ["DIRECT NOOSPHERIC LINK"],
@@ -356,14 +393,17 @@ export function analyzeTransmission(source: TransmissionSourceMetadata): Transmi
   return {
     reliquariumNumber: `${receivedYear}//${reliquariumSuffix}`,
     originBand,
-    probableOriginLabel: probableOriginLabel(originBand, originBasis),
+    originRegion: source.transmission?.originRegion ?? originRegion(originBand),
+    ...(source.transmission?.originLocationId ? { originLocationId: source.transmission.originLocationId } : {}),
+    probableOriginLabel: source.transmission?.originLabel ?? probableOriginLabel(originBand, originBasis),
+    transmissionMethod: transmissionMethod(source, originBand),
     clearanceGrade: grade,
     encryptionProtocol: protocol,
-    identityState: identityState(source, originBand),
-    triangulationState: triangulationState(source, originBand, originBasis),
+    identityState: source.transmission?.identityState ?? identityState(source, originBand),
+    triangulationState: source.transmission?.originState ?? triangulationState(source, originBand, originBasis),
     relayPathLabel: relayPathLabel(source, originBand, originBasis),
-    timestampIntegrityState: timestampIntegrityState(source, originBand),
-    warpExposureState: warpExposureState(source, originBand),
+    timestampIntegrityState: source.transmission?.timestampState ?? timestampIntegrityState(source, originBand),
+    warpExposureState: source.transmission?.warpExposure ?? warpExposureState(source, originBand),
     communionAttempts: deterministicInteger(source, "communion-attempts", minimumAttempts, maximumAttempts),
     corruptionPercentage,
     corruptionPattern: corruptionPattern(corruptionPercentage),
