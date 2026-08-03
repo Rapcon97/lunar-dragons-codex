@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  appendTransmissionRetrievalDots,
   classifyTransmissionSource,
   corruptTransmissionText,
+  TRANSMISSION_TIMING,
+  transmissionCharacterDelay,
   transmissionCorruptionProfile,
-  transmissionRetrievalPause,
 } from "../app/_components/relay-transmission.ts";
 
 const sources = {
@@ -33,7 +35,7 @@ test("transmission distance bands retain their approved corruption ranges", () =
   }
 });
 
-test("corruption percentages, glyph positions, and retrieval pauses are deterministic", () => {
+test("corruption percentages, glyph positions, and machine-cant fragments are deterministic", () => {
   const profileA = transmissionCorruptionProfile(sources.anomalous);
   const profileB = transmissionCorruptionProfile({ ...sources.anomalous });
   assert.deepEqual(profileA, profileB);
@@ -43,12 +45,25 @@ test("corruption percentages, glyph positions, and retrieval pauses are determin
   const corruptedB = corruptTransmissionText(content, profileB, 11);
   assert.equal(corruptedA, corruptedB);
   assert.notEqual(corruptedA, content);
-  assert.match(corruptedA, /[█▒?\\/]/);
+  assert.match(corruptedA, /[█▓▒░╳╱╲│║╬†‡ϟƵ҂⌁⌇⫷⫸]|\[(?:NOOS|CANT|VOX-ERR|SIG-LOSS|DATA-NULL|REDACTED)\]|\+\+|\/\/\/|0x/u);
+  assert.match(corruptedA, /\[(?:SIG-LOSS|DATA-NULL|REDACTED)\]|\+\+::\+\+|\/\/\/0x\/\/\/|҂҂|ϟϟ/u);
+});
 
-  const pauseA = transmissionRetrievalPause(profileA.seed, 4);
-  const pauseB = transmissionRetrievalPause(profileB.seed, 4);
-  assert.equal(pauseA, pauseB);
-  assert.ok(pauseA >= 400 && pauseA <= 900);
+test("shared typewriter timing and four-dot retrieval cadence stay explicit", () => {
+  assert.deepEqual(TRANSMISSION_TIMING, {
+    characterMs: 50,
+    minorPunctuationAdditionalMs: 100,
+    terminalPunctuationAdditionalMs: 180,
+    lineBreakMs: 200,
+    retrievalDotMs: 500,
+    retrievalDotCount: 4,
+    corruptionStepMs: 40,
+  });
+  assert.equal(transmissionCharacterDelay("A"), 50);
+  assert.equal(transmissionCharacterDelay(","), 150);
+  assert.equal(transmissionCharacterDelay("!"), 230);
+  assert.equal(transmissionCharacterDelay("\n"), 250);
+  assert.equal(appendTransmissionRetrievalDots(">> RETRIEVING ARCHIVE"), ">> RETRIEVING ARCHIVE....");
 });
 
 test("visual corruption never mutates the source text", () => {

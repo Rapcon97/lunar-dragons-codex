@@ -209,23 +209,35 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(home, /document\.body\.style\.overflow = "hidden"/);
 
   assert.match(renderer, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
-  assert.match(renderer, /transmissionRetrievalPause\(corruptionProfile\.seed, lineIndex\)/);
+  assert.match(renderer, /transmissionCharacterDelay\(typedText\[characterIndex - 1\]\)/);
+  assert.match(renderer, /TRANSMISSION_TIMING\.retrievalDotCount/);
+  assert.match(renderer, /TRANSMISSION_TIMING\.retrievalDotMs/);
+  assert.match(renderer, /appendTransmissionRetrievalDots\(typedText, dotCount\)/);
+  assert.match(renderer, /window\.clearTimeout\(timer\)/);
   assert.match(renderer, /className="relay-data-accessible"/);
   assert.match(renderer, /className="relay-data-visual" aria-hidden="true"/);
   assert.match(renderer, /activeLineIndex === index/);
-  assert.match(renderer, /phase !== "complete"/);
+  assert.match(renderer, /setActiveLineIndex\(finalCursorIndex\)/);
   assert.match(renderer, /formatCorruptionPercentage\(currentPercentage\)/);
 
+  assert.match(helper, /export const TRANSMISSION_TIMING/);
+  assert.match(helper, /characterMs:\s*50/);
+  assert.match(helper, /retrievalDotMs:\s*500/);
+  assert.match(helper, /retrievalDotCount:\s*4/);
   assert.match(helper, /const CORRUPTION_RANGES/);
   assert.match(helper, /"warp-anomalous": \[12, 30\]/);
-  assert.match(helper, /const CORRUPTION_GLYPHS = \["█", "▒", "\?", "\/", "\\\\"\]/);
+  assert.match(helper, /const CORRUPTION_GLYPHS = \["█", "▓", "▒", "░"/);
+  assert.match(helper, /const MACHINE_CANT_FRAGMENTS = \["\+\+", "\/\/\/", "::", "0x", "\[NOOS\]"/);
+  assert.match(helper, /const SEVERE_CANT_FRAGMENTS = \["\[SIG-LOSS\]", "\[DATA-NULL\]", "\[REDACTED\]"/);
   assert.match(helper, /hashTransmissionValue\(`\$\{profile\.seed\}:\$\{lineIndex\}:\$\{characterIndex\}`\)/);
 
   assert.match(styles, /\.relay-dialog\s*\{[^}]*width:\s*min\(760px, calc\(100vw - 32px\)\);[^}]*height:\s*min\(620px, calc\(100vh - 32px\)\);/s);
   assert.match(styles, /\.relay-dialog\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\);[^}]*overflow:\s*hidden/s);
   assert.match(styles, /\.relay-dialog-body\s*\{[^}]*overflow:\s*auto/s);
-  assert.match(styles, /\.relay-data-cursor\s*\{[^}]*background:\s*#9dff80/s);
-  assert.match(styles, /\.relay-data-cursor\.pause\s*\{[^}]*relay-stream-cursor/s);
+  assert.match(styles, /\.relay-data-stream\s*\{[^}]*--relay-command-color:\s*#b0c2a7/s);
+  assert.match(styles, /\.stream-command\s*\{[^}]*color:\s*var\(--relay-command-color\)/s);
+  assert.match(styles, /\.relay-data-cursor\s*\{[^}]*background:\s*currentColor/s);
+  assert.match(styles, /\.relay-data-cursor\.pause, \.relay-data-cursor\.complete\s*\{[^}]*relay-stream-cursor \.6s/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.relay-dialog\s*\{[^}]*height:\s*calc\(100dvh - 16px\)/s);
 
   const relaySection = sectionPage.slice(
