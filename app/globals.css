@@ -1272,6 +1272,7 @@ a { color: inherit; text-decoration: none; }
   text-shadow: 0 0 13px rgba(103, 166, 96, .25);
 }
 .imperial-chronometer > small { color: #4e624a; font: var(--ui-text-6) "Courier New", monospace; letter-spacing: .14em; }
+.chronometer-ship-time-short { display: none; }
 .imperial-chronometer > small i {
   display: inline-block; width: 4px; height: 4px; margin-right: 6px; border-radius: 50%;
   background: #789b70; box-shadow: 0 0 7px rgba(110, 185, 104, .6); animation: chrono-pulse 2s steps(1, end) infinite;
@@ -2597,6 +2598,8 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .imperial-chronometer > span { font-size: var(--ui-text-5); letter-spacing: .14em; }
   .imperial-chronometer > strong { font-size: var(--ui-text-9); letter-spacing: .04em; }
   .imperial-chronometer > small { font-size: var(--ui-text-5); letter-spacing: .05em; }
+  .chronometer-ship-time-full { display: none; }
+  .chronometer-ship-time-short { display: inline; }
   .topbar { grid-template-columns: 1fr; align-items: start; gap: 10px; padding-right: 12px; }
   .topbar.command-topbar { grid-template-columns: 1fr; grid-template-rows: auto; min-height: 86px; }
   .command-topbar .vox-screen { width: 100%; height: 56px; grid-template-rows: 35px 20px; }
