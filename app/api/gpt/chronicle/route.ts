@@ -1,0 +1,1 @@
+export { dynamic, POST } from "../v1/chronicle/route";

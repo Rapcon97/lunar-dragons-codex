@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  "name": "lunar-dragons-codex",
+
+  "account_id": "c9f9a2de4869786bdffee6f0dfa057c8",
+
+  "main": "./worker/index.ts",
+
+  "compatibility_date": "2026-05-22",
+
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+
+  "workers_dev": true,
+
+  "d1_databases": [
+  {
+    "binding": "DB",
+    "database_name": "lunar-dragons-codex",
+    "database_id": "bc3a4740-405c-4d7f-9fc2-2ba4cced6a9a"
+  }
+],
+
+    "r2_buckets": [
+    {
+      "binding": "CHAPTER_ASSETS",
+      "bucket_name": "lunar-dragons-assets"
+    }
+  ],
+
+  "secrets": {
+    "required": [
+      "GPT_API_KEY"
+    ]
+  }
+}

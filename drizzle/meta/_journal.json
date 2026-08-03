@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1785084928948,
+      "tag": "0000_shared_chapter_archive",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1785146400000,
+      "tag": "0001_vox_quote_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785153600000,
+      "tag": "0002_guest_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785349253149,
+      "tag": "0003_sector_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1785686400000,
+      "tag": "0004_astropathic_relay",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1785699274800,
+      "tag": "0005_structured_lore",
+      "breakpoints": true
+    }
+  ]
+}

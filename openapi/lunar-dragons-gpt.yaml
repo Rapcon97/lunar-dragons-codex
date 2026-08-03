@@ -1,0 +1,473 @@
+openapi: 3.1.0
+
+info:
+  title: Lunar Dragons Codex API
+  version: 1.0.0
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+  description: >
+    Read and maintain the structured lore archive for the Lunar Dragons
+    Warhammer 40,000 homebrew Chapter.
+
+servers:
+  - url: https://lunardragons.cloud
+    description: Lunar Dragons Site and authoritative archive API
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/gpt/v1/lore:
+    get:
+      operationId: getLoreArchive
+      summary: Read the Lunar Dragons lore archive
+      description: >
+        Returns broad Chapter context including identity, timeline, relics,
+        and sector intelligence.
+      responses:
+        "200":
+          description: The current Lunar Dragons lore archive.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoreArchiveResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/gpt/v1/search:
+    get:
+      operationId: searchLoreArchive
+      summary: Search Lunar Dragons lore
+      description: >
+        Searches indexed Lunar Dragons lore. Search before creating new lore
+        when the subject may already exist.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search text.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+      responses:
+        "200":
+          description: Matching archive results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/gpt/v1/entries:
+    get:
+      operationId: listLoreEntries
+      summary: List all structured lore entries
+      description: >
+        Returns all structured lore records with stable IDs, categories,
+        statuses, content, and timestamps.
+      responses:
+        "200":
+          description: All structured lore entries.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoreEntryListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+    post:
+      operationId: createLoreEntry
+      summary: Create a structured lore entry
+      description: >
+        Creates a lore entry. Search existing lore first when practical.
+        Omitted status defaults to draft. Use review for material awaiting
+        approval and canon only for explicitly established lore. An unknown
+        status is rejected rather than normalized.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLoreEntryRequest"
+      responses:
+        "201":
+          description: Lore entry created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateLoreEntryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: A matching entry exists or the bounded optimistic write conflicted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/gpt/v1/entries/{id}:
+    get:
+      operationId: getLoreEntryById
+      summary: Get one structured lore entry
+      description: >
+        Retrieves one exact structured lore entry using its stable record ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Stable identifier of the structured lore entry.
+          schema:
+            type: string
+            maxLength: 160
+      responses:
+        "200":
+          description: The requested structured lore entry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoreEntryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+    patch:
+      operationId: updateLoreEntryById
+      summary: Update an existing structured lore entry
+      description: >
+        Partially updates a lore entry by ID. Only supplied fields change.
+        The ID and creation time are preserved. Read the current record first
+        when practical. Use retconned for superseded lore.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Stable identifier of the structured lore entry.
+          schema:
+            type: string
+            maxLength: 160
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLoreEntryRequest"
+      responses:
+        "200":
+          description: Lore entry updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateLoreEntryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The update would duplicate another entry or its optimistic write conflicted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Lunar Dragons GPT API Bearer token.
+
+  schemas:
+    LoreStatus:
+      type: string
+      enum:
+        - draft
+        - review
+        - canon
+        - retconned
+      description: Canonical state of the lore record.
+
+    LoreCategory:
+      type: string
+      enum:
+        - campaign
+        - event
+        - character
+        - relic
+        - world
+        - organization
+        - decree
+        - other
+
+    LoreEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - date
+        - title
+        - category
+        - status
+        - content
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          maxLength: 160
+          description: Stable unique identifier.
+        date:
+          type: string
+          maxLength: 80
+          description: In-universe date such as 008.M42.
+        title:
+          type: string
+          maxLength: 240
+          description: Human-readable lore title.
+        category:
+          $ref: "#/components/schemas/LoreCategory"
+        status:
+          $ref: "#/components/schemas/LoreStatus"
+        content:
+          type: string
+          maxLength: 12000
+          description: Full lore text.
+        createdAt:
+          type: integer
+          format: int64
+          description: Creation timestamp in Unix milliseconds.
+        updatedAt:
+          type: integer
+          format: int64
+          description: Last update timestamp in Unix milliseconds.
+
+    CreateLoreEntryRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - content
+      properties:
+        date:
+          type: string
+          maxLength: 80
+          description: In-universe date or chronology marker.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+          description: Concise descriptive title.
+        category:
+          $ref: "#/components/schemas/LoreCategory"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/LoreStatus"
+          default: draft
+          description: Defaults to draft when omitted; unknown values are invalid.
+        content:
+          type: string
+          minLength: 1
+          maxLength: 12000
+          description: Complete lore text.
+
+    UpdateLoreEntryRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        date:
+          type: string
+          maxLength: 80
+          description: Replacement in-universe date.
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+          description: Replacement title.
+        category:
+          $ref: "#/components/schemas/LoreCategory"
+        status:
+          $ref: "#/components/schemas/LoreStatus"
+        content:
+          type: string
+          minLength: 1
+          maxLength: 12000
+          description: Replacement lore content.
+
+    LoreEntryListResponse:
+      type: object
+      required:
+        - source
+        - persisted
+        - count
+        - entries
+      properties:
+        source:
+          type: string
+        persisted:
+          type: boolean
+        count:
+          type: integer
+          minimum: 0
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/LoreEntry"
+
+    LoreEntryResponse:
+      type: object
+      required:
+        - source
+        - persisted
+        - entry
+      properties:
+        source:
+          type: string
+        persisted:
+          type: boolean
+        entry:
+          $ref: "#/components/schemas/LoreEntry"
+
+    CreateLoreEntryResponse:
+      type: object
+      required:
+        - success
+        - entry
+        - count
+      properties:
+        success:
+          type: boolean
+        entry:
+          $ref: "#/components/schemas/LoreEntry"
+        count:
+          type: integer
+          minimum: 1
+
+    UpdateLoreEntryResponse:
+      type: object
+      required:
+        - success
+        - entry
+      properties:
+        success:
+          type: boolean
+        entry:
+          $ref: "#/components/schemas/LoreEntry"
+
+    SearchResult:
+      type: object
+      additionalProperties: true
+      properties:
+        category:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+
+    SearchResponse:
+      type: object
+      required:
+        - query
+        - count
+        - source
+        - results
+      properties:
+        query:
+          type: string
+        count:
+          type: integer
+          minimum: 0
+        source:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+
+    LoreArchiveResponse:
+      type: object
+      required:
+        - source
+        - persisted
+        - chapter
+        - timeline
+        - relics
+        - sector
+      properties:
+        source:
+          type: string
+        persisted:
+          type: boolean
+        chapter:
+          type: object
+          additionalProperties: true
+        timeline:
+          type: array
+          items:
+            type: string
+        relics:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        sector:
+          type: object
+          additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Request validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: Missing or invalid Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFound:
+      description: The requested lore entry does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    ServerError:
+      description: The archive could not process the request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
