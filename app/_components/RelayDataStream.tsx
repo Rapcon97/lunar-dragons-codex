@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   appendTransmissionRetrievalDots,
   formatTransmissionTranscript,
@@ -16,6 +16,7 @@ import {
 export type RelayStreamLine = TransmissionTranscriptLine;
 
 type RelayDataStreamProps = {
+  afterComplete?: ReactNode;
   ariaLabel: string;
   className?: string;
   source: TransmissionSourceMetadata;
@@ -28,7 +29,7 @@ function isRetrievalCommand(line: TransmissionTranscriptLine, text: string) {
   return line.command || text.trimStart().startsWith(">>");
 }
 
-export function RelayDataStream({ ariaLabel, className = "", source, streamKey }: RelayDataStreamProps) {
+export function RelayDataStream({ afterComplete, ariaLabel, className = "", source, streamKey }: RelayDataStreamProps) {
   const [renderedLines, setRenderedLines] = useState<string[]>([]);
   const [activeLineIndex, setActiveLineIndex] = useState(-1);
   const [phase, setPhase] = useState<RenderPhase>("typing");
@@ -211,6 +212,9 @@ export function RelayDataStream({ ariaLabel, className = "", source, streamKey }
           );
         })}
       </div>
+      {phase === "complete" && afterComplete && (
+        <div className="relay-data-after-complete">{afterComplete}</div>
+      )}
     </div>
   );
 }

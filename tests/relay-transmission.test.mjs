@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { createDefaultArchiveData } from "../app/archive-data.ts";
+import {
+  normalizeTransmissionOriginId,
+  resolveTransmissionOrigin,
+} from "../app/_components/transmission-origin.ts";
+
 import {
   analyzeTransmission,
   appendTransmissionRetrievalDots,
@@ -350,4 +356,126 @@ test("sender closings and the final machine blessing remain unchanged", () => {
   assert.equal(transmissionClosing(source(), "The Emperor protects."), null);
   assert.equal(transmissionClosing({ agency: "Belisarius Cawl" }, "By the Omnissiah's will."), null);
   assert.equal(TERMINAL_MACHINE_BLESSING, "+++ HAIL THE OMNISSIAH, PRAISE THE MACHINE GOD +++");
+});
+
+test("the controlled origin aliases resolve all three supported records", () => {
+  const intel = createDefaultArchiveData().sectorIntel;
+  const vigil = resolveTransmissionOrigin(intel, { originLocationId: "vigil-ix", originState: "CONFIRMED" });
+  const orison = resolveTransmissionOrigin(intel, { originLocationId: "orison", originState: "VERIFIED" });
+  const anchor = resolveTransmissionOrigin(intel, { originLocationId: "veil-anchor-7", originState: "CONFIRMED" });
+
+  assert.deepEqual(vigil, {
+    kind: "exact",
+    canonicalId: "vigil-ix",
+    label: "Vigil IX",
+    parentSystemLabel: "Vigil IX",
+    parentSystemIndex: 3,
+    mapHref: "/intel?origin=vigil-ix",
+    recordHref: "/intel/system/4",
+  });
+  assert.deepEqual(orison, {
+    kind: "exact",
+    canonicalId: "orison",
+    label: "Orison",
+    parentSystemLabel: "Orison",
+    parentSystemIndex: 4,
+    mapHref: "/intel?origin=orison",
+    recordHref: "/intel/system/5",
+  });
+  assert.deepEqual(anchor, {
+    kind: "exact",
+    canonicalId: "veil-anchor-7",
+    label: "Veil Anchor 7",
+    parentSystemLabel: "The Vesper Rift",
+    parentSystemIndex: 5,
+    bodyIndex: 0,
+    mapHref: "/intel?origin=veil-anchor-7",
+    recordHref: "/intel/system/6/planet/1",
+  });
+});
+
+test("explicit origin IDs normalize case, whitespace, underscores, and Imperial dash forms", () => {
+  const intel = createDefaultArchiveData().sectorIntel;
+  const variants = ["  VIGIL IX  ", "vigil_ix", "Vigil‑IX", "vigil---ix"];
+  for (const value of variants) {
+    assert.equal(normalizeTransmissionOriginId(value), "vigil-ix");
+    assert.equal(
+      resolveTransmissionOrigin(intel, { originLocationId: value, originState: "CONFIRMED" }).kind,
+      "exact",
+    );
+  }
+});
+
+test("origin routes are calculated from the current runtime array order", () => {
+  const intel = createDefaultArchiveData().sectorIntel;
+  const reordered = { ...intel, worlds: [...intel.worlds].reverse() };
+  const vigil = resolveTransmissionOrigin(reordered, { originLocationId: "vigil-ix", originState: "CONFIRMED" });
+  const anchor = resolveTransmissionOrigin(reordered, { originLocationId: "veil-anchor-7", originState: "CONFIRMED" });
+
+  assert.equal(vigil.kind, "exact");
+  assert.equal(vigil.parentSystemIndex, 2);
+  assert.equal(vigil.recordHref, "/intel/system/3");
+  assert.equal(anchor.kind, "exact");
+  assert.equal(anchor.parentSystemIndex, 0);
+  assert.equal(anchor.recordHref, "/intel/system/1/planet/1");
+});
+
+test("missing, renamed, duplicated, and ambiguous archive records never resolve", () => {
+  const intel = createDefaultArchiveData().sectorIntel;
+  const withoutVigil = { ...intel, worlds: intel.worlds.filter((world) => world.name !== "Vigil IX") };
+  const renamedVigil = {
+    ...intel,
+    worlds: intel.worlds.map((world) => world.name === "Vigil IX" ? { ...world, name: "Western Bastion" } : world),
+  };
+  const vigil = intel.worlds.find((world) => world.name === "Vigil IX");
+  const duplicateVigil = { ...intel, worlds: [...intel.worlds, { ...vigil }] };
+  const rift = intel.worlds.find((world) => world.name === "The Vesper Rift");
+  const duplicateAnchor = {
+    ...intel,
+    worlds: intel.worlds.map((world) => world.name === "The Vesper Rift"
+      ? { ...world, bodies: [...world.bodies, { ...rift.bodies[0] }] }
+      : world),
+  };
+
+  for (const candidate of [withoutVigil, renamedVigil, duplicateVigil]) {
+    const resolution = resolveTransmissionOrigin(candidate, { originLocationId: "vigil-ix", originState: "CONFIRMED" });
+    assert.equal(resolution.kind, "unresolved");
+    assert.equal("recordHref" in resolution, false);
+  }
+  const anchor = resolveTransmissionOrigin(duplicateAnchor, { originLocationId: "veil-anchor-7", originState: "CONFIRMED" });
+  assert.equal(anchor.kind, "unresolved");
+  assert.equal("recordHref" in anchor, false);
+});
+
+test("low-confidence, legacy, inferred, and prose-only origins receive no active links", () => {
+  const intel = createDefaultArchiveData().sectorIntel;
+  const partial = resolveTransmissionOrigin(intel, { originLocationId: "orison", originState: "PARTIAL" });
+  const legacy = resolveTransmissionOrigin(intel);
+  const proseOnly = resolveTransmissionOrigin(intel, {
+    originLabel: "KHARON // SELENE CONCLAVE",
+    originBand: "nearby Argent Vigil",
+    originState: "CONFIRMED",
+  });
+  const inferredKharon = resolveTransmissionOrigin(intel, { originLocationId: "kharon", originState: "CONFIRMED" });
+  const falseReceivingSystem = resolveTransmissionOrigin(intel, { originLocationId: "lunaris", originState: "CONFIRMED" });
+
+  assert.equal(partial.kind, "broad");
+  assert.match(partial.reason, /TRIANGULATION PARTIAL/);
+  assert.equal(legacy.kind, "broad");
+  assert.match(legacy.reason, /PHASE 1 INFERENCE/);
+  assert.equal(proseOnly.kind, "broad");
+  assert.equal(inferredKharon.kind, "unresolved");
+  assert.equal(falseReceivingSystem.kind, "unresolved");
+  for (const resolution of [partial, legacy, proseOnly, inferredKharon, falseReceivingSystem]) {
+    assert.equal("recordHref" in resolution, false);
+    assert.doesNotMatch(JSON.stringify(resolution), /\/intel\/system\/1/);
+  }
+});
+
+test("the shared resolver gives Command and Relay identical origin destinations", () => {
+  const intel = createDefaultArchiveData().sectorIntel;
+  const metadata = { originLocationId: "veil-anchor-7", originState: "VERIFIED" };
+  const command = resolveTransmissionOrigin(intel, metadata);
+  const relay = resolveTransmissionOrigin(intel, { ...metadata });
+  assert.deepEqual(command, relay);
 });

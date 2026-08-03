@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAdminMode } from "./_components/AdminMode";
 import { RelayDataStream } from "./_components/RelayDataStream";
 import { SidebarNavigation } from "./_components/SidebarNavigation";
+import { TransmissionOriginActions } from "./_components/TransmissionOriginActions";
 import { useChapterArchive } from "./_hooks/useChapterArchive";
 import {
   canonChronicleEntries,
@@ -271,6 +272,7 @@ export default function Home() {
                 </header>
                 <div className="relay-dialog-body">
                   <RelayDataStream
+                    afterComplete={<TransmissionOriginActions intel={data.sectorIntel} source={selectedRelayMessage} />}
                     ariaLabel={selectedRelayMessage.subject}
                     className="command-relay-data-stream"
                     source={selectedRelayMessage}

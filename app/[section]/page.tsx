@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAdminMode } from "../_components/AdminMode";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
@@ -9,6 +9,8 @@ import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboar
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream } from "../_components/RelayDataStream";
 import { SidebarNavigation } from "../_components/SidebarNavigation";
+import { TransmissionOriginActions } from "../_components/TransmissionOriginActions";
+import { resolveTransmissionOrigin } from "../_components/transmission-origin";
 import { useChapterArchive } from "../_hooks/useChapterArchive";
 import {
   canonChronicleEntries,
@@ -77,6 +79,7 @@ export default function SectionPage() {
   const { canAdmin, isAdminMode } = useAdminMode();
   const { data, error, isLoading, isSaving, resetArchive, saveSection, updateSection } = useChapterArchive();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const section = (pathname.split("/")[1] || "chapter") as Section;
   const info = sectionInfo[section] || sectionInfo.chapter;
   const chapterName = "THE LUNAR DRAGONS";
@@ -123,8 +126,8 @@ export default function SectionPage() {
               onSave={(value) => saveSection("entries", value)}
             />
           )}
-          {section === "intel" && <SectorIntelSection canEdit={isAdminMode} intel={data.sectorIntel} onSave={(value) => saveSection("sectorIntel", value)} />}
-          {section === "relay" && <AstropathicRelaySection messages={data.relayMessages} />}
+          {section === "intel" && <SectorIntelSection canEdit={isAdminMode} intel={data.sectorIntel} onSave={(value) => saveSection("sectorIntel", value)} originLocationId={searchParams.get("origin")} />}
+          {section === "relay" && <AstropathicRelaySection intel={data.sectorIntel} messages={data.relayMessages} />}
           {section === "settings" && (
             <SettingsSection
               canAdmin={canAdmin}
@@ -227,7 +230,7 @@ function LunarisSection() {
   );
 }
 
-function AstropathicRelaySection({ messages }: { messages: AstropathicMessage[] }) {
+function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; messages: AstropathicMessage[] }) {
   const [selectedId, setSelectedId] = useState("");
 
   useEffect(() => {
@@ -271,7 +274,12 @@ function AstropathicRelaySection({ messages }: { messages: AstropathicMessage[] 
                 <span className={`relay-priority ${selected.priority.toLowerCase()}`}>{selected.priority}</span>
               </header>
               <div className="relay-inbox-body">
-                <RelayDataStream ariaLabel={selected.subject} source={selected} streamKey={selected.id} />
+                <RelayDataStream
+                  afterComplete={<TransmissionOriginActions intel={intel} source={selected} />}
+                  ariaLabel={selected.subject}
+                  source={selected}
+                  streamKey={selected.id}
+                />
               </div>
             </>
           ) : <p className="relay-empty">The choir awaits a signal reliquary.</p>}
@@ -744,10 +752,12 @@ function SectorIntelSection({
   canEdit,
   intel,
   onSave,
+  originLocationId,
 }: {
   canEdit: boolean;
   intel: SectorIntel;
   onSave: (value: SectorIntel) => Promise<boolean>;
+  originLocationId: string | null;
 }) {
   const [draft, setDraft] = useState<SectorIntel>(intel);
   const [isEditing, setIsEditing] = useState(false);
@@ -809,6 +819,9 @@ function SectorIntelSection({
   }
 
   const display = isEditing ? draft : intel;
+  const plottedOrigin = originLocationId
+    ? resolveTransmissionOrigin(display, { originLocationId, originState: "CONFIRMED" })
+    : null;
 
   return (
     <div className={isEditing ? "sector-intel editing" : "sector-intel"}>
@@ -845,6 +858,17 @@ function SectorIntelSection({
           <div className="sector-map" aria-label={`Localized map of ${display.subsectorName}`}>
             <div className="sector-map-grid" aria-hidden="true" />
             <div className="sector-rift" aria-hidden="true"><i /><i /><i /></div>
+            {plottedOrigin?.kind === "exact" && (
+              <div className="sector-origin-fix" role="status">
+                <span>TRANSMISSION ORIGIN FIX</span>
+                <b>{plottedOrigin.label}</b>
+                <small>
+                  {plottedOrigin.bodyIndex === undefined
+                    ? `SYSTEM RECORD · ${plottedOrigin.parentSystemLabel}`
+                    : `EXACT BODY · PARENT SYSTEM ${plottedOrigin.parentSystemLabel}`}
+                </small>
+              </div>
+            )}
             {display.warpLanes.map((lane, index) => {
               const from = display.worlds[lane.from];
               const to = display.worlds[lane.to];
@@ -867,20 +891,25 @@ function SectorIntelSection({
                 </div>
               );
             })}
-            {display.worlds.map((world, index) => (
-              <CartographyTransitionLink
-                className={`sector-world world-${index + 1} ${world.status.toLowerCase().replace(/[^a-z]+/g, "-")}`}
-                key={`${world.name}-${index}`}
-                href={`/intel/system/${index + 1}`}
-                style={{ left: `${world.x}%`, top: `${world.y}%` }}
-                title={`${world.name} · ${world.classification} · ${world.status}`}
-                aria-label={`Open ${world.name} solar system`}
-              >
-                <i />
-                <b>{world.name}</b>
-                <small>{world.status}</small>
-              </CartographyTransitionLink>
-            ))}
+            {display.worlds.map((world, index) => {
+              const isOriginFocus = plottedOrigin?.kind === "exact" && plottedOrigin.parentSystemIndex === index;
+              return (
+                <CartographyTransitionLink
+                  aria-current={isOriginFocus ? "location" : undefined}
+                  aria-label={isOriginFocus ? `Transmission origin focus: ${plottedOrigin.label}; open ${world.name} solar system` : `Open ${world.name} solar system`}
+                  className={`sector-world world-${index + 1} ${world.status.toLowerCase().replace(/[^a-z]+/g, "-")}${isOriginFocus ? " transmission-origin-focus" : ""}`}
+                  data-origin-focus={isOriginFocus ? plottedOrigin.canonicalId : undefined}
+                  key={`${world.name}-${index}`}
+                  href={`/intel/system/${index + 1}`}
+                  style={{ left: `${world.x}%`, top: `${world.y}%` }}
+                  title={`${world.name} · ${world.classification} · ${world.status}`}
+                >
+                  <i />
+                  <b>{world.name}</b>
+                  <small>{world.status}</small>
+                </CartographyTransitionLink>
+              );
+            })}
             <span className="map-compass" aria-hidden="true">N<br />✦</span>
             <span className="map-scale">12.4 LIGHT YEARS</span>
           </div>

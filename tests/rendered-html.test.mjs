@@ -209,7 +209,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   ]);
 
   assert.match(home, /<RelayDataStream[\s\S]*source=\{selectedRelayMessage\}[\s\S]*streamKey=\{selectedRelayMessage\.id\}/);
-  assert.match(sectionPage, /<RelayDataStream[^>]*source=\{selected\}[^>]*streamKey=\{selected\.id\}/);
+  assert.match(sectionPage, /<RelayDataStream[\s\S]*source=\{selected\}[\s\S]*streamKey=\{selected\.id\}/);
   assert.doesNotMatch(home, /COMMAND-LINK|commandRelayLines|lines=\{commandRelayLines\}/);
   assert.doesNotMatch(sectionPage, /056\/\/329652|dataStreamLines|lines=\{dataStreamLines\}/);
   assert.match(home, /document\.body\.style\.overflow = "hidden"/);
@@ -288,4 +288,48 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   );
   assert.match(relaySection, /className="relay-inbox-grid panel"/);
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
+});
+
+test("Phase 3 origin actions share one controlled resolver and safe Intel focus", async () => {
+  const [resolver, actions, renderer, home, sectionPage, styles] = await Promise.all([
+    readFile("app/_components/transmission-origin.ts", "utf8"),
+    readFile("app/_components/TransmissionOriginActions.tsx", "utf8"),
+    readFile("app/_components/RelayDataStream.tsx", "utf8"),
+    readFile("app/page.tsx", "utf8"),
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(resolver, /"vigil-ix": \{ systemName: "Vigil IX" \}/);
+  assert.match(resolver, /orison: \{ systemName: "Orison" \}/);
+  assert.match(resolver, /"veil-anchor-7": \{ systemName: "The Vesper Rift", bodyName: "Veil Anchor 7" \}/);
+  assert.match(resolver, /matchingIndexes\(intel\.worlds/);
+  assert.match(resolver, /parentSystemIndex \+ 1/);
+  assert.match(resolver, /bodyIndex \+ 1/);
+  assert.match(resolver, /EXACT_ORIGIN_STATES\.has\(originState\)/);
+  assert.doesNotMatch(resolver, /agency|subject|preview|bodyText|probableOrigin|phase 1.*system/i);
+  assert.doesNotMatch(resolver, /\/intel\/system\/4|\/intel\/system\/5|\/intel\/system\/6/);
+
+  assert.match(actions, /resolveTransmissionOrigin\(intel, source\.transmission\)/);
+  assert.match(actions, />PLOT ORIGIN</);
+  assert.match(actions, />OPEN ORIGIN RECORD</);
+  assert.doesNotMatch(actions, /TRACE RELAY PATH/);
+  assert.match(actions, /data-origin-resolution=\{resolution\.kind\}/);
+
+  assert.match(renderer, /afterComplete\?: ReactNode/);
+  assert.match(renderer, /phase === "complete" && afterComplete/);
+  assert.match(home, /afterComplete=\{<TransmissionOriginActions intel=\{data\.sectorIntel\} source=\{selectedRelayMessage\} \/>\}/);
+  assert.match(sectionPage, /afterComplete=\{<TransmissionOriginActions intel=\{intel\} source=\{selected\} \/>\}/);
+
+  assert.match(sectionPage, /searchParams\.get\("origin"\)/);
+  assert.match(sectionPage, /resolveTransmissionOrigin\(display, \{ originLocationId, originState: "CONFIRMED" \}\)/);
+  assert.match(sectionPage, /plottedOrigin\?\.kind === "exact"/);
+  assert.match(sectionPage, /plottedOrigin\.parentSystemIndex === index/);
+  assert.match(sectionPage, /data-origin-focus=\{isOriginFocus \? plottedOrigin\.canonicalId : undefined\}/);
+  assert.match(sectionPage, /aria-current=\{isOriginFocus \? "location" : undefined\}/);
+
+  assert.match(styles, /\.transmission-origin-actions nav\s*\{[^}]*flex-wrap:\s*wrap/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.transmission-origin-actions\s*\{[^}]*flex-direction:\s*column/s);
+  assert.match(styles, /\.sector-world\.transmission-origin-focus/);
+  assert.match(styles, /\.sector-origin-fix/);
 });
