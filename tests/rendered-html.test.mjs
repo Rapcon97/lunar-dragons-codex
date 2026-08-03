@@ -126,10 +126,11 @@ test("shared interface typography uses the 125 percent readability scale", async
   }
 
   assert.match(styles, /body\s*\{[^}]*font-size:\s*var\(--ui-text-15\)/s);
-  assert.match(styles, /\.nav-item small\s*\{[^}]*font-size:\s*var\(--ui-text-9\)/s);
+  assert.match(styles, /\.nav-item small\s*\{[^}]*font-size:\s*var\(--ui-text-9\)[^}]*white-space:\s*nowrap/s);
   assert.match(styles, /\.archive-terminal-prompt > div\s*\{[^}]*font-size:\s*var\(--ui-text-10\)/s);
   assert.match(styles, /\.timeline p\s*\{[^}]*font-size:\s*var\(--ui-text-14\)/s);
   assert.match(styles, /\.guest-user-form input\s*\{[^}]*font:\s*var\(--ui-text-11\)/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.entry-form\s*\{[^}]*flex-direction:\s*column/s);
 
   assert.match(styles, /\.nav-item span\s*\{[^}]*font:\s*18px\/1/s);
   assert.match(styles, /\.crest-shield b\s*\{[^}]*font-size:\s*13px/s);

@@ -2699,6 +2699,8 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .roster-summary { flex-wrap: wrap; }
   .roster-summary i { width: 100%; margin-left: 0; }
   .quick-entry { flex-direction: column; }
+  .entry-form { flex-direction: column; }
+  .entry-form button { width: 100%; }
   .edit-mode-bar { align-items: flex-start; flex-direction: column; }
   .edit-actions { width: 100%; }
   .edit-actions button { flex: 1; }
@@ -2742,7 +2744,7 @@ body { color: var(--paper); font-size: var(--ui-text-15); }
 .workspace { line-height: 1.5; }
 .eyebrow, .section-kicker { color: #819477; font-size: var(--ui-text-9); line-height: 1.45; }
 .chapter-name { color: #a7b79c; }
-.nav-item small { color: #7f9077; font-size: var(--ui-text-9); letter-spacing: .05em; }
+.nav-item small { color: #7f9077; font-size: var(--ui-text-9); line-height: 1.2; letter-spacing: -.02em; white-space: nowrap; }
 .nav-item:hover small, .nav-item.active small { color: #b7c4ad; }
 .save-state { color: #74826e; font-size: var(--ui-text-10); }
 .seal-button, .text-button, .upload-button, .remove-badge, .entry-form button,
