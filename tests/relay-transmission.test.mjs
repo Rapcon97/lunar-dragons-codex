@@ -4,10 +4,17 @@ import test from "node:test";
 import {
   appendTransmissionRetrievalDots,
   classifyTransmissionSource,
+  corruptTransmissionMetadataValue,
   corruptTransmissionText,
+  IMPERIAL_TRANSMISSION_CLOSING,
+  MECHANICUS_TRANSMISSION_CLOSING,
+  splitTransmissionMetadata,
+  TERMINAL_MACHINE_BLESSING,
   TRANSMISSION_TIMING,
   transmissionCharacterDelay,
+  transmissionClosing,
   transmissionCorruptionProfile,
+  transmissionMetadataValueCanCorrupt,
 } from "../app/_components/relay-transmission.ts";
 
 const sources = {
@@ -49,21 +56,63 @@ test("corruption percentages, glyph positions, and machine-cant fragments are de
   assert.match(corruptedA, /\[(?:SIG-LOSS|DATA-NULL|REDACTED)\]|\+\+::\+\+|\/\/\/0x\/\/\/|҂҂|ϟϟ/u);
 });
 
-test("shared typewriter timing and four-dot retrieval cadence stay explicit", () => {
+test("shared typewriter timing, metadata retrieval, and four-dot cadence stay explicit", () => {
   assert.deepEqual(TRANSMISSION_TIMING, {
-    characterMs: 50,
-    minorPunctuationAdditionalMs: 100,
-    terminalPunctuationAdditionalMs: 180,
+    characterMs: 38,
+    minorPunctuationAdditionalMs: 60,
+    terminalPunctuationAdditionalMs: 125,
+    metadataLabelMs: 10,
+    metadataValuePauseMs: 200,
     lineBreakMs: 200,
     retrievalDotMs: 500,
     retrievalDotCount: 4,
     corruptionStepMs: 40,
   });
-  assert.equal(transmissionCharacterDelay("A"), 50);
-  assert.equal(transmissionCharacterDelay(","), 150);
-  assert.equal(transmissionCharacterDelay("!"), 230);
-  assert.equal(transmissionCharacterDelay("\n"), 250);
+  assert.equal(transmissionCharacterDelay("A"), 38);
+  assert.equal(transmissionCharacterDelay(","), 98);
+  assert.equal(transmissionCharacterDelay("!"), 163);
+  assert.equal(transmissionCharacterDelay("\n"), 238);
+  assert.ok(TRANSMISSION_TIMING.metadataLabelMs < TRANSMISSION_TIMING.characterMs);
   assert.equal(appendTransmissionRetrievalDots(">> RETRIEVING ARCHIVE"), ">> RETRIEVING ARCHIVE....");
+});
+
+test("structured metadata reveals its fixed label faster and corrupts only the retrieved value", () => {
+  const line = "> Local systems query: Officio Prefectus: Vigil IX";
+  const metadata = splitTransmissionMetadata(line);
+  assert.deepEqual(metadata, {
+    label: "> Local systems query:",
+    value: " Officio Prefectus: Vigil IX",
+  });
+
+  const profile = { band: "warp-anomalous", percentage: 30, seed: 919191 };
+  const corrupted = corruptTransmissionMetadataValue(line, profile, 3);
+  assert.ok(corrupted.startsWith(metadata.label));
+  assert.equal(corrupted.slice(0, metadata.label.length), metadata.label);
+  assert.notEqual(corrupted.slice(metadata.label.length), metadata.value);
+  assert.equal(splitTransmissionMetadata(">> RETRIEVING ARCHIVE: DRACO"), null);
+  assert.equal(transmissionMetadataValueCanCorrupt("> Originator identification:"), false);
+  assert.equal(transmissionMetadataValueCanCorrupt("> Subject ident:"), false);
+  assert.equal(transmissionMetadataValueCanCorrupt("> Local systems query:"), true);
+});
+
+test("sender closings respect Mechanicus origin and never duplicate an existing benediction", () => {
+  assert.equal(
+    transmissionClosing(sources.long, "The sealed report follows."),
+    IMPERIAL_TRANSMISSION_CLOSING,
+  );
+  assert.equal(
+    transmissionClosing({ agency: "Adeptus Mechanicus" }, "Telemetry follows."),
+    MECHANICUS_TRANSMISSION_CLOSING,
+  );
+  assert.equal(
+    transmissionClosing(sources.long, "The Emperor protects."),
+    null,
+  );
+  assert.equal(
+    transmissionClosing({ agency: "Belisarius Cawl · Archmagos Dominus" }, "By the Omnissiah's will."),
+    null,
+  );
+  assert.equal(TERMINAL_MACHINE_BLESSING, "+++ HAIL THE OMNISSIAH, PRAISE THE MACHINE GOD +++");
 });
 
 test("visual corruption never mutates the source text", () => {

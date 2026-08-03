@@ -209,19 +209,27 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(home, /document\.body\.style\.overflow = "hidden"/);
 
   assert.match(renderer, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
-  assert.match(renderer, /transmissionCharacterDelay\(typedText\[characterIndex - 1\]\)/);
+  assert.match(renderer, /setRenderedLines\(completedLines\)/);
+  assert.match(renderer, /typeSegment\(lineIndex, metadata\.label, metadata\.value, transmissionCharacterDelay\)/);
+  assert.match(renderer, /TRANSMISSION_TIMING\.metadataLabelMs/);
+  assert.match(renderer, /TRANSMISSION_TIMING\.metadataValuePauseMs/);
   assert.match(renderer, /TRANSMISSION_TIMING\.retrievalDotCount/);
   assert.match(renderer, /TRANSMISSION_TIMING\.retrievalDotMs/);
-  assert.match(renderer, /appendTransmissionRetrievalDots\(typedText, dotCount\)/);
+  assert.match(renderer, /appendTransmissionRetrievalDots\(text, dotCount\)/);
   assert.match(renderer, /window\.clearTimeout\(timer\)/);
   assert.match(renderer, /className="relay-data-accessible"/);
   assert.match(renderer, /className="relay-data-visual" aria-hidden="true"/);
   assert.match(renderer, /activeLineIndex === index/);
   assert.match(renderer, /setActiveLineIndex\(finalCursorIndex\)/);
   assert.match(renderer, /formatCorruptionPercentage\(currentPercentage\)/);
+  assert.match(renderer, /transmissionClosing\(source, senderContent\)/);
+  assert.match(renderer, /TERMINAL_MACHINE_BLESSING/);
+  assert.match(renderer, /blessing:\s*true/);
 
   assert.match(helper, /export const TRANSMISSION_TIMING/);
-  assert.match(helper, /characterMs:\s*50/);
+  assert.match(helper, /characterMs:\s*38/);
+  assert.match(helper, /metadataLabelMs:\s*10/);
+  assert.match(helper, /metadataValuePauseMs:\s*200/);
   assert.match(helper, /retrievalDotMs:\s*500/);
   assert.match(helper, /retrievalDotCount:\s*4/);
   assert.match(helper, /const CORRUPTION_RANGES/);
@@ -230,6 +238,11 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(helper, /const MACHINE_CANT_FRAGMENTS = \["\+\+", "\/\/\/", "::", "0x", "\[NOOS\]"/);
   assert.match(helper, /const SEVERE_CANT_FRAGMENTS = \["\[SIG-LOSS\]", "\[DATA-NULL\]", "\[REDACTED\]"/);
   assert.match(helper, /hashTransmissionValue\(`\$\{profile\.seed\}:\$\{lineIndex\}:\$\{characterIndex\}`\)/);
+  assert.match(helper, /IMPERIAL_TRANSMISSION_CLOSING = "The Emperor protects\."/);
+  assert.match(helper, /MECHANICUS_TRANSMISSION_CLOSING = "By the Omnissiah's will\."/);
+  assert.match(helper, /TERMINAL_MACHINE_BLESSING = "\+\+\+ HAIL THE OMNISSIAH, PRAISE THE MACHINE GOD \+\+\+"/);
+  assert.match(helper, /splitTransmissionMetadata/);
+  assert.match(helper, /corruptTransmissionMetadataValue/);
 
   assert.match(styles, /\.relay-dialog\s*\{[^}]*width:\s*min\(760px, calc\(100vw - 32px\)\);[^}]*height:\s*min\(620px, calc\(100vh - 32px\)\);/s);
   assert.match(styles, /\.relay-dialog\s*\{[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\);[^}]*overflow:\s*hidden/s);
@@ -237,7 +250,10 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(styles, /\.relay-data-stream\s*\{[^}]*--relay-command-color:\s*#b0c2a7/s);
   assert.match(styles, /\.stream-command\s*\{[^}]*color:\s*var\(--relay-command-color\)/s);
   assert.match(styles, /\.relay-data-cursor\s*\{[^}]*background:\s*currentColor/s);
-  assert.match(styles, /\.relay-data-cursor\.pause, \.relay-data-cursor\.complete\s*\{[^}]*relay-stream-cursor \.6s/s);
+  assert.match(styles, /\.relay-data-cursor\.pause\s*\{[^}]*relay-stream-cursor \.6s/s);
+  assert.match(styles, /\.relay-data-cursor\.complete\s*\{[^}]*relay-stream-cursor 1s/s);
+  assert.match(styles, /\.relay-data-stream \.stream-blessing\s*\{[^}]*color:\s*#8f514d/s);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.relay-data-stream p, \.relay-data-cursor\s*\{[^}]*animation:\s*none !important/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.relay-dialog\s*\{[^}]*height:\s*calc\(100dvh - 16px\)/s);
 
   const relaySection = sectionPage.slice(

@@ -21,14 +21,20 @@ export type TransmissionCorruptionProfile = {
 };
 
 export const TRANSMISSION_TIMING = {
-  characterMs: 50,
-  minorPunctuationAdditionalMs: 100,
-  terminalPunctuationAdditionalMs: 180,
+  characterMs: 38,
+  minorPunctuationAdditionalMs: 60,
+  terminalPunctuationAdditionalMs: 125,
+  metadataLabelMs: 10,
+  metadataValuePauseMs: 200,
   lineBreakMs: 200,
   retrievalDotMs: 500,
   retrievalDotCount: 4,
   corruptionStepMs: 40,
 } as const;
+
+export const IMPERIAL_TRANSMISSION_CLOSING = "The Emperor protects.";
+export const MECHANICUS_TRANSMISSION_CLOSING = "By the Omnissiah's will.";
+export const TERMINAL_MACHINE_BLESSING = "+++ HAIL THE OMNISSIAH, PRAISE THE MACHINE GOD +++";
 
 const CORRUPTION_RANGES: Record<TransmissionCorruptionBand, readonly [number, number]> = {
   local: [0, 1],
@@ -102,6 +108,34 @@ export function appendTransmissionRetrievalDots(text: string, count = TRANSMISSI
   return `${text}${".".repeat(count)}`;
 }
 
+export function splitTransmissionMetadata(text: string) {
+  if (!text.startsWith(">") || text.startsWith(">>")) return null;
+  const colonIndex = text.indexOf(":");
+  if (colonIndex < 1 || colonIndex === text.length - 1) return null;
+  return {
+    label: text.slice(0, colonIndex + 1),
+    value: text.slice(colonIndex + 1),
+  };
+}
+
+export function transmissionMetadataValueCanCorrupt(label: string) {
+  return !/originator identification|intended recipient|subject ident|data-stamp/i.test(label);
+}
+
+export function isMechanicusTransmission(source: Pick<TransmissionSourceMetadata, "agency">) {
+  return /mechanicus|magos|cawl|omnissiah/i.test(source.agency);
+}
+
+export function transmissionClosing(
+  source: Pick<TransmissionSourceMetadata, "agency">,
+  messageText: string,
+) {
+  if (/the emperor protects\.|by the omnissiah(?:'|’)?s will\./i.test(messageText)) return null;
+  return isMechanicusTransmission(source)
+    ? MECHANICUS_TRANSMISSION_CLOSING
+    : IMPERIAL_TRANSMISSION_CLOSING;
+}
+
 function corruptionTier(percentage: number) {
   if (percentage <= 3) return "low";
   if (percentage <= 12) return "medium";
@@ -156,4 +190,14 @@ export function corruptTransmissionText(text: string, profile: TransmissionCorru
   }
 
   return output.join("");
+}
+
+export function corruptTransmissionMetadataValue(
+  text: string,
+  profile: TransmissionCorruptionProfile,
+  lineIndex: number,
+) {
+  const metadata = splitTransmissionMetadata(text);
+  if (!metadata) return text;
+  return `${metadata.label}${corruptTransmissionText(metadata.value, profile, lineIndex)}`;
 }

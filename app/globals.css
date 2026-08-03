@@ -2970,12 +2970,15 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .relay-data-stream .stream-command { padding-top: 5px; color: var(--relay-command-color); font-weight: 700; text-shadow: 0 0 9px rgba(105, 151, 94, .14); }
 .relay-data-stream .stream-gap { height: 17px; padding: 0; }
 .relay-data-stream .stream-content { padding-left: 4ch; color: #a8baa0; }
+.relay-data-stream .stream-closing { padding-top: 11px; color: #b2c2aa; font-style: italic; }
+.relay-data-stream .stream-blessing { color: #8f514d; font-weight: 700; letter-spacing: .055em; text-shadow: 0 0 8px rgba(143, 81, 77, .18); }
 .relay-data-cursor {
   display: inline-block; width: .72ch; height: 1.05em; margin-left: .18ch; vertical-align: -.18em;
   color: var(--relay-command-color); background: currentColor; box-shadow: 0 0 9px currentColor; opacity: 1;
 }
 .relay-data-cursor.typing, .relay-data-cursor.retrieval { animation: none; }
-.relay-data-cursor.pause, .relay-data-cursor.complete { animation: relay-stream-cursor .6s steps(1, end) infinite; }
+.relay-data-cursor.pause { animation: relay-stream-cursor .6s steps(1, end) infinite; }
+.relay-data-cursor.complete { animation: relay-stream-cursor 1s steps(1, end) infinite; }
 .astropathic-relay { background: radial-gradient(ellipse at 65% 30%, rgba(63, 104, 54, .075), transparent 60%), #030704; box-shadow: inset 0 0 70px rgba(37, 70, 33, .12); }
 .relay-header h2, .relay-message-copy h3 { font-family: "Courier New", monospace; text-transform: uppercase; }
 .relay-message-copy p { font-family: "Courier New", monospace; }
