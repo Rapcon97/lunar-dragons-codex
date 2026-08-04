@@ -3136,6 +3136,43 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     outline: 1px solid #60765a;
     outline-offset: -1px;
   }
+
+  /* Recessed cogitator data rails for the Relay's two desktop scroll surfaces. */
+  .relay-inbox-list,
+  .relay-inbox-body {
+    scrollbar-width: thin;
+    scrollbar-color: #5d7556 #030604;
+  }
+  .relay-inbox-list::-webkit-scrollbar,
+  .relay-inbox-body::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  .relay-inbox-list::-webkit-scrollbar-track,
+  .relay-inbox-body::-webkit-scrollbar-track {
+    border-left: 1px solid #1d2a1c;
+    background: repeating-linear-gradient(180deg, #020503 0 7px, #152014 7px 8px);
+    box-shadow: inset 1px 0 #071008, inset -1px 0 #243222;
+  }
+  .relay-inbox-list::-webkit-scrollbar-thumb,
+  .relay-inbox-body::-webkit-scrollbar-thumb {
+    min-height: 36px;
+    border: 2px solid #030604;
+    border-radius: 0;
+    background:
+      linear-gradient(90deg, transparent 0 3px, rgba(151, 181, 137, .3) 3px 4px, transparent 4px),
+      repeating-linear-gradient(180deg, #53684d 0 5px, #3b4d38 5px 7px);
+    box-shadow: inset 0 0 0 1px #71826a, 0 0 8px rgba(83, 116, 75, .2);
+  }
+  .relay-inbox-list::-webkit-scrollbar-thumb:hover,
+  .relay-inbox-body::-webkit-scrollbar-thumb:hover {
+    background:
+      linear-gradient(90deg, transparent 0 3px, rgba(184, 211, 171, .48) 3px 4px, transparent 4px),
+      repeating-linear-gradient(180deg, #6c8464 0 5px, #4c6247 5px 7px);
+    box-shadow: inset 0 0 0 1px #91a689, 0 0 10px rgba(102, 150, 91, .34);
+  }
+  .relay-inbox-list::-webkit-scrollbar-corner,
+  .relay-inbox-body::-webkit-scrollbar-corner { background: #020503; }
 }
 
 @media (max-width: 700px) {

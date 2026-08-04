@@ -319,6 +319,9 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(styles, /\.relay-inbox-body > \.relay-data-stream\s*\{[^}]*max-width:\s*none[^}]*line-height:\s*1\.3/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.relay-terminal-rack-title strong\s*\{[^}]*white-space:\s*normal/s);
   assert.match(styles, /\.relay-inbox-body\s*\{[^}]*overflow-y:\s*auto[^}]*scrollbar-gutter:\s*stable/s);
+  assert.match(styles, /\.relay-inbox-list,[\s\S]*?\.relay-inbox-body\s*\{[^}]*scrollbar-width:\s*thin[^}]*scrollbar-color:\s*#5d7556 #030604/s);
+  assert.match(styles, /\.relay-inbox-list::\-webkit-scrollbar-thumb,[\s\S]*?\.relay-inbox-body::\-webkit-scrollbar-thumb\s*\{[^}]*border-radius:\s*0[^}]*repeating-linear-gradient/s);
+  assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?::-webkit-scrollbar-track/s);
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
 });
 
