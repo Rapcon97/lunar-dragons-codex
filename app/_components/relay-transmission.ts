@@ -517,23 +517,15 @@ export function formatTransmissionTranscript(source: TransmissionSourceMetadata)
     : undefined;
   const eventLines = transmissionEventAnalysisLines(source, rootReliquariumNumber);
   const lines: TransmissionTranscriptLine[] = [
-    { text: `>> ACCESSING DATA RELIQUARIUM ${analysis.reliquariumNumber}`, section: "analysis", command: true },
     { text: `> Receiving locus: ${RECEIVING_LOCUS}`, section: "analysis" },
     { text: `> Operational theatre: ${OPERATIONAL_THEATRE}`, section: "analysis" },
     { text: "> Intended recipient: CHAPTER MASTER // LUNAR DRAGONS", section: "analysis" },
-    { text: `> Imperial clearance grade: ${analysis.clearanceGrade}`, section: "analysis" },
-    { text: `> Encryption protocol: ${analysis.encryptionProtocol}`, section: "analysis" },
     { text: `> Originator identification: ${source.agency.toUpperCase()} // ${analysis.identityState}`, section: "analysis" },
-    { text: `> Positional triangulation: ${analysis.triangulationState}`, section: "analysis" },
     { text: `> Probable origin: ${analysis.probableOriginLabel}`, section: "analysis" },
-    { text: `> Relay path: ${analysis.relayPathLabel}`, section: "analysis" },
     ...eventLines.map((text): TransmissionTranscriptLine => ({ text, section: "analysis" })),
     ...(source.received ? [{ text: `> Data-stamp: ${source.received}`, section: "analysis" as const }] : []),
     { text: `> Timestamp integrity: ${analysis.timestampIntegrityState}`, section: "analysis" },
-    { text: `> Warp exposure: ${analysis.warpExposureState}`, section: "analysis" },
     { text: `> Exload-communion attempts: ${romanNumeral(analysis.communionAttempts)}`, section: "analysis" },
-    { text: `> Data corruption query: ${formatCorruptionPercentage(analysis.corruptionPercentage)}`, section: "analysis", corruption: true },
-    { text: `> Data corruption pattern: ${analysis.corruptionPattern}`, section: "analysis" },
     { text: "", section: "analysis", gap: true },
     { text: TRANSMISSION_CONTENT_MARKER, section: "analysis", command: true },
     { text: `> Subject ident: ${source.subject}`, section: "analysis" },

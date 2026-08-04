@@ -56,7 +56,7 @@ export function TransmissionSignalAuspex({
   const signalState = eventLabels[0] ?? (fidelity >= 90 ? "SIGNAL COHERENT" : fidelity >= 70 ? "SIGNAL DEGRADED" : "SIGNAL COMPROMISED");
 
   return (
-    <details className="transmission-signal-auspex" open>
+    <details className="transmission-signal-auspex">
       <summary>
         <span><i aria-hidden="true" />SIGNAL AUSPEX // RELIQUARIUM {analysis.reliquariumNumber}</span>
         <b data-tone={eventLabels.length || fidelity < 70 ? "warning" : fidelity < 90 ? "partial" : "verified"}>{signalState}</b>

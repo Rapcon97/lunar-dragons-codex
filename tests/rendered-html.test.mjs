@@ -271,9 +271,14 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.doesNotMatch(helper, /Math\.random/);
   assert.match(helper, /RECEIVING_LOCUS = "LUNARIS"/);
   assert.match(helper, /OPERATIONAL_THEATRE = "NORTHERN NACHMUND APPROACHES"/);
-  assert.match(helper, /Imperial clearance grade:/);
-  assert.match(helper, /Encryption protocol:/);
+  assert.doesNotMatch(helper, /Imperial clearance grade:/);
+  assert.doesNotMatch(helper, /Encryption protocol:/);
   assert.match(helper, /Probable origin:/);
+  assert.doesNotMatch(helper, /Positional triangulation:/);
+  assert.doesNotMatch(helper, /> Relay path:/);
+  assert.doesNotMatch(helper, /> Warp exposure:/);
+  assert.doesNotMatch(helper, /\{ text: `> Data corruption query:/);
+  assert.doesNotMatch(helper, /\{ text: `> Data corruption pattern:/);
   assert.doesNotMatch(helper, /> Origin band:/);
   assert.match(helper, /line\.section === "content"/);
   assert.match(helper, /section: "analysis"/);
@@ -344,6 +349,8 @@ test("the shared transmission renderer exposes a responsive Signal Auspex", asyn
   assert.match(auspex, /ANOMALY REGISTER/);
   assert.match(auspex, /transmissionEventLabels\(event\)/);
   assert.match(auspex, /transmissionSignalFidelity\(analysis\)/);
+  assert.match(auspex, /<details className="transmission-signal-auspex">/);
+  assert.doesNotMatch(auspex, /<details className="transmission-signal-auspex" open>/);
   assert.match(styles, /\.transmission-signal-grid\s*\{[^}]*grid-template-columns:\s*1\.35fr repeat\(2,/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.transmission-signal-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });

@@ -315,7 +315,8 @@ test("the shared formatter produces identical Command and Relay transcripts", ()
   const commandTranscript = formatTransmissionTranscript(source());
   const relayTranscript = formatTransmissionTranscript({ ...source() });
   assert.deepEqual(commandTranscript, relayTranscript);
-  assert.equal(commandTranscript.lines[0].text, `>> ACCESSING DATA RELIQUARIUM ${commandTranscript.analysis.reliquariumNumber}`);
+  assert.doesNotMatch(commandTranscript.lines.map((line) => line.text).join("\n"), /ACCESSING DATA RELIQUARIUM/);
+  assert.ok(commandTranscript.lines.some((line) => line.text.startsWith("> Probable origin:")));
   assert.ok(commandTranscript.lines.some((line) => line.text === TRANSMISSION_CONTENT_MARKER));
 });
 
@@ -430,10 +431,9 @@ test("corruption is confined to body sections and trusted analysis remains exact
   const severeProfile = { ...formatted.analysis.corruption, percentage: 35 };
   const prepared = formatted.lines.map((line, index) => prepareTransmissionLine(line, severeProfile, index));
 
+  assert.ok(formatted.lines.every((line) => !line.corruption));
   formatted.lines.forEach((line, index) => {
-    if (line.corruption) {
-      assert.equal(prepared[index], "> Data corruption query: 35.00%");
-    } else if (line.section !== "content" || line.closing) {
+    if (line.section !== "content" || line.closing) {
       assert.equal(prepared[index], line.gap ? "\u00a0" : line.text);
     }
   });
