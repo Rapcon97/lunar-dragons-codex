@@ -312,7 +312,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(relaySection, /tabIndex=\{0\}/);
   assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*height:\s*clamp\([^}]*100dvh[^}]*\)[^}]*\}/s);
   assert.match(styles, /\.relay-terminal-rack-title strong\s*\{[^}]*font:\s*400 clamp\(1\.75rem,[^}]*white-space:\s*nowrap/s);
-  assert.match(styles, /\.relay-inbox-body > \.relay-data-stream\s*\{[^}]*max-width:\s*none[^}]*line-height:\s*1\.42/s);
+  assert.match(styles, /\.relay-inbox-body > \.relay-data-stream\s*\{[^}]*max-width:\s*none[^}]*line-height:\s*1\.3/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.relay-terminal-rack-title strong\s*\{[^}]*white-space:\s*normal/s);
   assert.match(styles, /\.relay-inbox-body\s*\{[^}]*overflow-y:\s*auto[^}]*scrollbar-gutter:\s*stable/s);
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);

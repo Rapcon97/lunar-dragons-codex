@@ -3061,7 +3061,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 }
 .relay-section-hero h1 { font-size: clamp(42px, 4.2vw, 66px); }
 .relay-inbox { gap: 0; }
-.relay-inbox-grid { grid-template-columns: minmax(320px, 32%) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+.relay-inbox-grid { grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
 .relay-terminal-rack {
   grid-column: 1 / -1;
   display: grid;
@@ -3119,19 +3119,19 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
     scroll-padding-block: 24px;
-    padding: clamp(14px, 1.6vh, 22px) clamp(2px, 1vw, 14px);
+    padding: clamp(8px, 1vh, 14px) clamp(2px, 1vw, 14px);
   }
   .relay-inbox-body > .relay-data-stream {
     width: 100%;
     max-width: none;
     font-size: clamp(var(--ui-text-11), .65rem + .15vw, var(--ui-text-12));
-    line-height: 1.42;
+    line-height: 1.3;
   }
   .relay-inbox-body .relay-data-stream p { padding-block: 0; }
   .relay-inbox-body .relay-data-stream .stream-command { padding-top: 3px; }
-  .relay-inbox-body .relay-data-stream .stream-gap { height: 10px; }
-  .relay-inbox-body .relay-data-stream .stream-closing { padding-top: 7px; }
-  .relay-inbox-body .relay-data-after-complete { padding-top: 14px; }
+  .relay-inbox-body .relay-data-stream .stream-gap { height: 7px; }
+  .relay-inbox-body .relay-data-stream .stream-closing { padding-top: 5px; }
+  .relay-inbox-body .relay-data-after-complete { padding-top: 10px; }
   .relay-inbox-body:focus-visible {
     outline: 1px solid #60765a;
     outline-offset: -1px;
