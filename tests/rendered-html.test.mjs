@@ -303,12 +303,17 @@ test("homepage and Relay share the deterministic accessible transmission rendere
     sectionPage.indexOf("function AstropathicRelaySection"),
     sectionPage.indexOf("const identityFields"),
   );
+  assert.match(sectionPage, /section === "relay" \? "relay-subpage"/);
+  assert.match(sectionPage, /section === "relay" \? "relay-section-hero"/);
   assert.match(relaySection, /className="relay-inbox-grid panel"/);
   assert.match(relaySection, /className="relay-terminal-rack"/);
   assert.doesNotMatch(relaySection, /LOCALITY: LUNARIS/);
   assert.match(relaySection, /aria-label="Active astropathic transmission"/);
   assert.match(relaySection, /tabIndex=\{0\}/);
   assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*height:\s*clamp\([^}]*100dvh[^}]*\)[^}]*\}/s);
+  assert.match(styles, /\.relay-terminal-rack-title strong\s*\{[^}]*font:\s*400 clamp\(1\.75rem,[^}]*white-space:\s*nowrap/s);
+  assert.match(styles, /\.relay-inbox-body > \.relay-data-stream\s*\{[^}]*max-width:\s*none[^}]*line-height:\s*1\.42/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.relay-terminal-rack-title strong\s*\{[^}]*white-space:\s*normal/s);
   assert.match(styles, /\.relay-inbox-body\s*\{[^}]*overflow-y:\s*auto[^}]*scrollbar-gutter:\s*stable/s);
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
 });

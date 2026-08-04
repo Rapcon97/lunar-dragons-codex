@@ -101,8 +101,8 @@ export default function SectionPage() {
           </div>
         </header>
 
-        <div className="subpage">
-          <section className="section-hero">
+        <div className={`subpage ${section === "relay" ? "relay-subpage" : ""}`}>
+          <section className={`section-hero ${section === "relay" ? "relay-section-hero" : ""}`}>
             <div>
               <p className="section-kicker">{info.kicker}</p>
               <h1>{info.title}</h1>

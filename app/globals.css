@@ -3050,15 +3050,25 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .relay-dialog-body h2 { color: #aabb9f; font-size: clamp(25px, 4vw, 41px); text-transform: uppercase; }
 .relay-dialog-body > p:last-child { color: #9eaf97; font-size: var(--ui-text-14); line-height: 1.75; }
 
+.relay-subpage {
+  max-width: 1760px;
+  padding: clamp(22px, 2.1vw, 40px) clamp(24px, 2.7vw, 52px);
+}
+.relay-section-hero {
+  gap: clamp(28px, 4vw, 64px);
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+}
+.relay-section-hero h1 { font-size: clamp(42px, 4.2vw, 66px); }
 .relay-inbox { gap: 0; }
-.relay-inbox-grid { grid-template-rows: auto minmax(0, 1fr); }
+.relay-inbox-grid { grid-template-columns: minmax(320px, 32%) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
 .relay-terminal-rack {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
-  min-height: 72px;
+  min-height: clamp(82px, 7.4vh, 106px);
   border-bottom: 1px solid #33402f;
   padding: 12px 20px;
   background: linear-gradient(90deg, rgba(6, 12, 7, .99), rgba(2, 6, 3, .99));
@@ -3070,14 +3080,19 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   align-items: baseline;
   gap: clamp(14px, 2vw, 28px);
 }
-.relay-terminal-rack-title span { color: #667b61; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .14em; }
-.relay-terminal-rack-title strong { color: #a9bca1; font: 400 clamp(var(--ui-text-15), 1.55vw, 22px) "Courier New", monospace; letter-spacing: .045em; }
+.relay-terminal-rack-title span { color: #667b61; font: var(--ui-text-9) "Courier New", monospace; letter-spacing: .14em; }
+.relay-terminal-rack-title strong {
+  color: #a9bca1;
+  font: 400 clamp(1.75rem, 1.2rem + .8vw, 2.55rem)/1.05 "Courier New", monospace;
+  letter-spacing: .045em;
+  white-space: nowrap;
+}
 
 /* Keep long relay transcripts inside a complete, independently scrollable reader. */
 @media (min-width: 701px) {
   .relay-inbox-grid {
-    height: clamp(32rem, calc(100dvh - var(--archive-terminal-height) - 27rem), 47.5rem);
-    min-height: 32rem;
+    height: clamp(36rem, calc(100dvh - var(--archive-terminal-height) - 15.75rem), 70rem);
+    min-height: 36rem;
   }
   .relay-inbox-list,
   .relay-inbox-reader {
@@ -3091,6 +3106,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   }
   .relay-inbox-reader {
     overflow: hidden;
+    padding: clamp(18px, 1.8vh, 26px) clamp(20px, 2.1vw, 38px) 18px;
   }
   .relay-inbox-reader > header {
     flex: 0 0 auto;
@@ -3103,7 +3119,19 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
     scroll-padding-block: 24px;
+    padding: clamp(14px, 1.6vh, 22px) clamp(2px, 1vw, 14px);
   }
+  .relay-inbox-body > .relay-data-stream {
+    width: 100%;
+    max-width: none;
+    font-size: clamp(var(--ui-text-11), .65rem + .15vw, var(--ui-text-12));
+    line-height: 1.42;
+  }
+  .relay-inbox-body .relay-data-stream p { padding-block: 0; }
+  .relay-inbox-body .relay-data-stream .stream-command { padding-top: 3px; }
+  .relay-inbox-body .relay-data-stream .stream-gap { height: 10px; }
+  .relay-inbox-body .relay-data-stream .stream-closing { padding-top: 7px; }
+  .relay-inbox-body .relay-data-after-complete { padding-top: 14px; }
   .relay-inbox-body:focus-visible {
     outline: 1px solid #60765a;
     outline-offset: -1px;
@@ -3111,13 +3139,18 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 }
 
 @media (max-width: 700px) {
+  .relay-subpage { padding: 18px 12px 26px; }
+  .relay-section-hero { margin-bottom: 14px; padding-bottom: 14px; }
+  .relay-section-hero h1 { font-size: clamp(36px, 10vw, 48px); }
+  .relay-section-hero > p { margin-top: 12px; font-size: var(--ui-text-13); }
   .relay-inbox-command { grid-template-columns: 38px minmax(0, 1fr); }
   .relay-terminal-ident { font-size: var(--ui-text-17); }
   .relay-inbox-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; max-height: none; overflow: visible; }
   .relay-terminal-rack { grid-template-columns: 28px minmax(0, 1fr); gap: 8px 12px; padding: 12px 14px; }
   .relay-terminal-rack-title { display: grid; gap: 4px; }
-  .relay-terminal-rack-title strong { font-size: var(--ui-text-14); }
+  .relay-terminal-rack-title strong { font-size: clamp(1.5rem, 7vw, 2rem); line-height: 1.08; white-space: normal; }
   .relay-terminal-rack .relay-inbox-status { grid-column: 2; justify-self: start; text-align: left; }
+  .relay-inbox-list { max-height: min(260px, 34dvh); }
   .relay-inbox-reader { min-height: 0; overflow: visible; }
   .relay-inbox-body { min-height: 0; overflow: visible; }
   .relay-inbox-body > .relay-terminal-content { font-size: var(--ui-text-11); }
