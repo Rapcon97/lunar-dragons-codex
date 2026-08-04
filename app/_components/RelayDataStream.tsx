@@ -12,6 +12,7 @@ import {
   type TransmissionSourceMetadata,
   type TransmissionTranscriptLine,
 } from "./relay-transmission";
+import { TransmissionSignalAuspex } from "./TransmissionSignalAuspex";
 
 export type RelayStreamLine = TransmissionTranscriptLine;
 
@@ -196,6 +197,7 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
         </button>
       )}
       <span className="relay-data-accessible">{accessibleTranscript}</span>
+      <TransmissionSignalAuspex analysis={analysis} event={source.event} />
       <div className="relay-data-visual" aria-hidden="true">
         {renderedLines.slice(0, presentedLines.length).map((text, index) => {
           const line = presentedLines[index];

@@ -325,6 +325,29 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
 });
 
+test("the shared transmission renderer exposes a responsive Signal Auspex", async () => {
+  const [stream, auspex, styles] = await Promise.all([
+    readFile("app/_components/RelayDataStream.tsx", "utf8"),
+    readFile("app/_components/TransmissionSignalAuspex.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(stream, /<TransmissionSignalAuspex analysis=\{analysis\} event=\{source\.event\} \/>/);
+  assert.match(auspex, /SIGNAL AUSPEX \/\/ RELIQUARIUM/);
+  assert.match(auspex, /PROBABLE ORIGIN/);
+  assert.match(auspex, /TRIANGULATION/);
+  assert.match(auspex, /CIPHER AUTHORITY/);
+  assert.match(auspex, /RELAY PATH/);
+  assert.match(auspex, /WARP EXPOSURE/);
+  assert.match(auspex, /SIGNAL LINEAGE/);
+  assert.match(auspex, /SIGNAL FIDELITY/);
+  assert.match(auspex, /ANOMALY REGISTER/);
+  assert.match(auspex, /transmissionEventLabels\(event\)/);
+  assert.match(auspex, /transmissionSignalFidelity\(analysis\)/);
+  assert.match(styles, /\.transmission-signal-grid\s*\{[^}]*grid-template-columns:\s*1\.35fr repeat\(2,/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.transmission-signal-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
+});
+
 test("Phase 3 origin actions share one controlled resolver and safe Intel focus", async () => {
   const [resolver, actions, renderer, home, sectionPage, styles] = await Promise.all([
     readFile("app/_components/transmission-origin.ts", "utf8"),
