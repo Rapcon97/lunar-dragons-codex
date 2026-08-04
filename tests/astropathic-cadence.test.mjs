@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  PHASE_4_EVENT_ACTIVATION_EPOCH,
   applyDailyAstropathicMessages,
   astropathicScheduleForDay,
   createDefaultArchiveData,
@@ -46,7 +47,7 @@ test("normal days schedule two to four messages with three-to-twelve-hour gaps",
   const { schedule } = findSchedule((candidate) => !candidate.quiet && candidate.burstCount === 0);
   assert.ok(schedule.messages.length >= 2 && schedule.messages.length <= 4);
 
-  const timestamps = schedule.messages.map((message) => Date.parse(message.receivedAt));
+  const timestamps = schedule.messages.map((message) => Date.parse(message.event?.nominalReceivedAt ?? message.receivedAt));
   for (let index = 1; index < timestamps.length; index += 1) {
     const gapMinutes = (timestamps[index] - timestamps[index - 1]) / 60_000;
     assert.ok(gapMinutes >= 180 && gapMinutes <= 720);
@@ -73,7 +74,9 @@ test("traffic bursts add one or two messages five to twenty-five minutes apart",
 
   for (const schedule of burstSchedules) {
     assert.ok(schedule.burstCount === 1 || schedule.burstCount === 2);
-    const timestamps = schedule.messages.map((message) => Date.parse(message.receivedAt));
+    const timestamps = schedule.messages
+      .map((message) => Date.parse(message.event?.nominalReceivedAt ?? message.receivedAt))
+      .sort((left, right) => left - right);
     const burstStart = timestamps.length - schedule.burstCount;
     for (let index = burstStart; index < timestamps.length; index += 1) {
       const gapMinutes = (timestamps[index] - timestamps[index - 1]) / 60_000;
@@ -147,6 +150,109 @@ test("notable transmissions remain fourteen to twenty-eight days apart", () => {
   }
 });
 
+test("Phase 4 activation epoch prevents retroactive historical events", () => {
+  const epochTime = Date.parse(PHASE_4_EVENT_ACTIVATION_EPOCH);
+  assert.equal(PHASE_4_EVENT_ACTIVATION_EPOCH, "2026-08-05T00:00:00.000Z");
+  for (let offset = 0; offset < 216; offset += 1) {
+    for (const message of astropathicScheduleForDay(dateAt(offset)).messages) {
+      assert.ok(Date.parse(message.receivedAt) < epochTime);
+      assert.equal(message.event, undefined);
+    }
+  }
+});
+
+test("Phase 4 event rarity is deterministic and remains within approved sparse bands", () => {
+  const counts = new Map();
+  let total = 0;
+  for (let offset = 0; offset < 4_000; offset += 1) {
+    const day = new Date(Date.UTC(2026, 7, 5 + offset, 12));
+    const first = astropathicScheduleForDay(day);
+    assert.deepEqual(first, astropathicScheduleForDay(new Date(day)));
+    for (const message of first.messages) {
+      total += 1;
+      for (const kind of message.event?.kinds ?? []) counts.set(kind, (counts.get(kind) ?? 0) + 1);
+    }
+  }
+  const rate = (kind) => (counts.get(kind) ?? 0) / total;
+  assert.ok(rate("delayed-arrival") >= 0.04 && rate("delayed-arrival") <= 0.06);
+  assert.ok(rate("failed-relay-node") >= 0.007 && rate("failed-relay-node") <= 0.013);
+  assert.ok(rate("contradictory-timestamp") >= 0.001 && rate("contradictory-timestamp") <= 0.004);
+  assert.ok(rate("future-dated") >= 0.0001 && rate("future-dated") <= 0.0015);
+});
+
+test("initial Phase 4 events never create child records or deferred event kinds", () => {
+  const allowed = new Set([
+    "delayed-arrival",
+    "out-of-order-arrival",
+    "failed-relay-node",
+    "contradictory-timestamp",
+    "future-dated",
+  ]);
+  for (let offset = 0; offset < 2_000; offset += 1) {
+    const day = new Date(Date.UTC(2026, 7, 5 + offset, 12));
+    const schedule = astropathicScheduleForDay(day);
+    assert.ok(schedule.messages.length <= 6);
+    assert.equal(new Set(schedule.messages.map((message) => message.id)).size, schedule.messages.length);
+    for (const message of schedule.messages) {
+      if (!message.event) continue;
+      assert.equal(message.event.rootTransmissionId, message.id);
+      assert.equal(message.event.parentTransmissionId, undefined);
+      assert.equal(message.event.fragment, undefined);
+      assert.ok(message.event.kinds.every((kind) => allowed.has(kind)));
+    }
+  }
+});
+
+test("delayed transmissions remain in-day and due-only delivery uses actual receivedAt", () => {
+  const { day, schedule } = findSchedule((candidate) => candidate.messages.some((message) => message.event?.kinds.includes("delayed-arrival")), 5_000);
+  const delayed = schedule.messages.find((message) => message.event?.kinds.includes("delayed-arrival"));
+  const nominal = Date.parse(delayed.event.nominalReceivedAt);
+  const actual = Date.parse(delayed.receivedAt);
+  assert.ok(actual > nominal);
+  assert.equal(new Date(actual).toISOString().slice(0, 10), new Date(nominal).toISOString().slice(0, 10));
+
+  const beforeActual = applyDailyAstropathicMessages(emptyArchive(), new Date(actual - 1));
+  assert.equal(beforeActual.archive.relayMessages.some((message) => message.id === delayed.id), false);
+  const whenDue = applyDailyAstropathicMessages(beforeActual.archive, new Date(actual));
+  assert.equal(whenDue.archive.relayMessages.some((message) => message.id === delayed.id), true);
+  assert.equal(whenDue.archive.relayMessages.find((message) => message.id === delayed.id)?.event?.rootTransmissionId, delayed.id);
+  assert.equal(day.toISOString().slice(0, 10), schedule.key);
+});
+
+test("out-of-order state is derived only from a same-day delayed transmission", () => {
+  const { schedule } = findSchedule((candidate) => candidate.messages.some((message) => message.event?.kinds.includes("out-of-order-arrival")), 10_000);
+  const sequenced = schedule.messages.find((message) => message.event?.kinds.includes("out-of-order-arrival"));
+  assert.ok(sequenced.event.kinds.includes("delayed-arrival"));
+  assert.equal(new Date(sequenced.receivedAt).toISOString().slice(0, 10), sequenced.event.nominalReceivedAt.slice(0, 10));
+  assert.ok(schedule.messages.some((candidate) =>
+    candidate.id !== sequenced.id &&
+    Date.parse(candidate.event?.nominalReceivedAt ?? candidate.receivedAt) > Date.parse(sequenced.event.nominalReceivedAt) &&
+    Date.parse(candidate.receivedAt) < Date.parse(sequenced.receivedAt),
+  ));
+});
+
+test("claimed timestamp anomalies never alter actual delivery eligibility", () => {
+  for (const kind of ["contradictory-timestamp", "future-dated"]) {
+    const { schedule } = findSchedule((candidate) => candidate.messages.some((message) => message.event?.kinds.includes(kind)), 15_000);
+    const message = schedule.messages.find((candidate) => candidate.event?.kinds.includes(kind));
+    const actual = Date.parse(message.receivedAt);
+    assert.equal(applyDailyAstropathicMessages(emptyArchive(), new Date(actual - 1)).archive.relayMessages.some((candidate) => candidate.id === message.id), false);
+    assert.equal(applyDailyAstropathicMessages(emptyArchive(), new Date(actual)).archive.relayMessages.some((candidate) => candidate.id === message.id), true);
+    if (kind === "future-dated") assert.ok(Date.parse(message.event.claimedAt) > actual);
+    if (kind === "contradictory-timestamp") assert.notEqual(message.event.claimedAt, message.event.conflictingClaimedAt);
+  }
+});
+
+test("repeated refreshes preserve one deterministic event record", () => {
+  const { day, schedule } = findSchedule((candidate) => candidate.messages.some((message) => message.event), 5_000);
+  const endOfDay = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 23, 59, 59));
+  const first = applyDailyAstropathicMessages(emptyArchive(), endOfDay);
+  const second = applyDailyAstropathicMessages(first.archive, endOfDay);
+  assert.equal(second.changed, false);
+  assert.deepEqual(second.archive.relayMessages, first.archive.relayMessages);
+  assert.equal(new Set(second.archive.relayMessages.map((message) => message.id)).size, schedule.messages.length);
+});
+
 test("valid optional transmission metadata survives normalization and JSON round-tripping", () => {
   const archive = createDefaultArchiveData();
   archive.relayMessages = [relayRecord({
@@ -209,6 +315,71 @@ test("invalid and empty transmission metadata is discarded without altering lega
   assert.equal("transmission" in normalized.relayMessages[0], false);
   assert.equal("transmission" in normalized.relayMessages[1], false);
   assert.deepEqual(normalized.relayMessages[0], legacy);
+});
+
+test("valid event metadata survives normalization and JSON round-tripping", () => {
+  const archive = createDefaultArchiveData();
+  archive.relayMessages = [relayRecord({
+    event: {
+      version: 1,
+      kinds: ["delayed-arrival", "out-of-order-arrival", "delayed-arrival"],
+      rootTransmissionId: " relay-normalization-fixture ",
+      parentTransmissionId: " future-parent ",
+      ordinal: 2,
+      nominalReceivedAt: "2026-08-03T13:25:00.000Z",
+      claimedAt: "2026-08-03T12:25:00.000Z",
+      conflictingClaimedAt: "2026-08-03T16:25:00.000Z",
+      fragment: { index: 2, total: 3, algorithmVersion: 1 },
+    },
+  })];
+  const normalized = normalizeArchiveData(JSON.parse(JSON.stringify(archive)));
+  assert.deepEqual(normalized.relayMessages[0].event, {
+    version: 1,
+    kinds: ["delayed-arrival", "out-of-order-arrival"],
+    rootTransmissionId: "relay-normalization-fixture",
+    parentTransmissionId: "future-parent",
+    ordinal: 2,
+    nominalReceivedAt: "2026-08-03T13:25:00.000Z",
+    claimedAt: "2026-08-03T12:25:00.000Z",
+    conflictingClaimedAt: "2026-08-03T16:25:00.000Z",
+    fragment: { index: 2, total: 3, algorithmVersion: 1 },
+  });
+  assert.deepEqual(
+    normalizeArchiveData(JSON.parse(JSON.stringify(normalized))).relayMessages[0].event,
+    normalized.relayMessages[0].event,
+  );
+});
+
+test("invalid event metadata fails closed without invalidating its legacy message", () => {
+  const archive = createDefaultArchiveData();
+  const legacy = relayRecord({ subject: "Legacy relay record" });
+  archive.relayMessages = [
+    legacy,
+    relayRecord({
+      id: "invalid-event",
+      event: {
+        version: 9,
+        kinds: ["teleport-arrival"],
+        rootTransmissionId: "",
+        nominalReceivedAt: "never",
+      },
+    }),
+    relayRecord({
+      id: "invalid-future-claim",
+      event: {
+        version: 1,
+        kinds: ["future-dated"],
+        rootTransmissionId: "invalid-future-claim",
+        nominalReceivedAt: "2026-08-03T14:25:00.000Z",
+        claimedAt: "not-a-timestamp",
+      },
+    }),
+  ];
+  const normalized = normalizeArchiveData(archive);
+  assert.deepEqual(normalized.relayMessages[0], legacy);
+  assert.equal(normalized.relayMessages[1].id, "invalid-event");
+  assert.equal(normalized.relayMessages[1].event, undefined);
+  assert.equal(normalized.relayMessages[2].event, undefined);
 });
 
 test("every finite generated template carries the approved explicit Phase 2 classification", () => {

@@ -1726,6 +1726,12 @@ a { color: inherit; text-decoration: none; }
 .relay-priority { min-width: 57px; border: 1px solid #354331; padding: 6px 7px; color: #64745f; font-size: var(--ui-text-6); letter-spacing: .12em; text-align: center; }
 .relay-priority.urgent, .relay-priority.primus { border-color: #633b35; color: #a7665e; }
 .relay-priority.sealed { border-color: #66513d; color: #917a5e; }
+.transmission-event-flags { display: flex; min-width: 0; flex-wrap: wrap; gap: 5px; }
+.transmission-event-flags b {
+  max-width: 100%; border: 1px solid #5a4334; padding: 3px 6px; overflow: hidden;
+  color: #a87a58; font: var(--ui-text-6) "Courier New", monospace; letter-spacing: .1em;
+  text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap;
+}
 .relay-empty { padding: 40px 0; color: #52614e; font-size: var(--ui-text-9); letter-spacing: .12em; }
 .archive-sync-placeholder { display: grid; min-height: 150px; margin: 0; place-items: center; color: #687961; font: var(--ui-text-10)/1.5 "Courier New", monospace; letter-spacing: .14em; text-align: center; }
 .astropathic-relay .archive-sync-placeholder { min-height: 220px; }

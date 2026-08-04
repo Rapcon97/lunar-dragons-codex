@@ -36,7 +36,7 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
   const [completedStreamKey, setCompletedStreamKey] = useState<string | null>(null);
   const transcript = useMemo(
     () => formatTransmissionTranscript(source),
-    [source.agency, source.body, source.id, source.preview, source.priority, source.received, source.receivedAt, source.subject],
+    [source.agency, source.body, source.event, source.id, source.preview, source.priority, source.received, source.receivedAt, source.subject, source.transmission],
   );
   const { analysis, lines: presentedLines } = transcript;
   const corruptionProfile = analysis.corruption;

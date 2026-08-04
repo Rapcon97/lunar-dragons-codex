@@ -44,6 +44,23 @@ test("the archive API withholds non-canon lore from non-admin viewers", async ()
   assert.match(source, /status: 401/);
 });
 
+test("Phase 4 event presentation is shared and relay persistence rejects stale writes", async () => {
+  const [home, sectionPage, stream, storage] = await Promise.all([
+    readFile("app/page.tsx", "utf8"),
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/_components/RelayDataStream.tsx", "utf8"),
+    readFile("storage/chapter-records.ts", "utf8"),
+  ]);
+  assert.match(home, /<TransmissionEventFlags event=\{message\.event\} \/>/);
+  assert.match(sectionPage, /<TransmissionEventFlags event=\{message\.event\} \/>/);
+  assert.match(home, /<RelayDataStream[\s\S]*source=\{selectedRelayMessage\}/);
+  assert.match(sectionPage, /<RelayDataStream[\s\S]*source=\{selected\}/);
+  assert.match(stream, /formatTransmissionTranscript\(source\)/);
+  assert.match(storage, /WHERE id = \? AND updated_at = \?/);
+  assert.match(storage, /readChapterArchiveAttempt\(relayWriteAttempt \+ 1\)/);
+  assert.match(storage, /MAX_RELAY_WRITE_ATTEMPTS = 3/);
+});
+
 test("the lore development dashboard requires admin capability and active Admin Mode", async () => {
   const [dashboard, sectionPage] = await Promise.all([
     readFile("app/_components/LoreDevelopmentDashboard.tsx", "utf8"),

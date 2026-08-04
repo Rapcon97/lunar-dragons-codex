@@ -120,6 +120,36 @@ export type AstropathicTransmissionMetadata = {
   timestampState?: TransmissionConfidenceState;
 };
 
+export type AstropathicEventKind =
+  | "delayed-arrival"
+  | "out-of-order-arrival"
+  | "partial-transmission"
+  | "recovered-fragment"
+  | "failed-relay-node"
+  | "duplicate-astropathic-echo"
+  | "contradictory-timestamp"
+  | "future-dated";
+
+export type AstropathicEventMetadata = {
+  version: 1;
+  kinds: AstropathicEventKind[];
+  rootTransmissionId: string;
+  parentTransmissionId?: string;
+  ordinal?: number;
+  nominalReceivedAt: string;
+  claimedAt?: string;
+  conflictingClaimedAt?: string;
+  fragment?: {
+    index: number;
+    total: number;
+    algorithmVersion: 1;
+  };
+};
+
+// Rollback note: releases predating Phase 4 ignore these optional fields and
+// may discard them on a later Relay write, while the underlying message record,
+// body, ID, cadence slot, and explicit Phase 2 metadata remain compatible.
+
 export type AstropathicMessage = {
   id: string;
   agency: string;
@@ -130,6 +160,7 @@ export type AstropathicMessage = {
   received: string;
   receivedAt: string;
   transmission?: AstropathicTransmissionMetadata;
+  event?: AstropathicEventMetadata;
 };
 
 export type BadgeMode = "badge" | "banner";
@@ -647,6 +678,109 @@ function hashText(value: string) {
   return hash >>> 0;
 }
 
+/**
+ * Phase 4 events begin with transmissions scheduled on or after this instant.
+ * Keeping the epoch after the release-115 baseline prevents persisted history
+ * from acquiring anomalies retroactively when a newer release reads it.
+ */
+export const PHASE_4_EVENT_ACTIVATION_EPOCH = "2026-08-05T00:00:00.000Z";
+
+const PHASE_4_EVENT_ACTIVATION_TIME = Date.parse(PHASE_4_EVENT_ACTIVATION_EPOCH);
+const PHASE_4_EVENT_SEED_VERSION = "relay-event:v1";
+
+function astropathicEventHash(messageId: string, salt: string) {
+  return hashText(`${PHASE_4_EVENT_SEED_VERSION}|${messageId}|${salt}`);
+}
+
+function eventTimestamp(messageId: string, salt: string, baseTime: number, minimumMinutes: number, maximumMinutes: number) {
+  const span = Math.max(0, maximumMinutes - minimumMinutes);
+  const minutes = minimumMinutes + (astropathicEventHash(messageId, salt) % (span + 1));
+  return new Date(baseTime + (minutes * RELAY_MINUTE_MS)).toISOString();
+}
+
+function planPrimaryAstropathicEvent(message: AstropathicMessage): AstropathicMessage {
+  const nominalTime = Date.parse(message.receivedAt);
+  if (!Number.isFinite(nominalTime) || nominalTime < PHASE_4_EVENT_ACTIVATION_TIME) return message;
+
+  // One deterministic roll assigns at most one primary event. Thresholds are
+  // intentionally sparse: future .05%, contradictory .2%, failure 1%, delay 5%.
+  const roll = astropathicEventHash(message.id, "primary-anomaly") % 100_000;
+  let kind: AstropathicEventKind | null = null;
+  if (roll < 50) kind = "future-dated";
+  else if (roll < 250) kind = "contradictory-timestamp";
+  else if (roll < 1_250) kind = "failed-relay-node";
+  else if (roll < 6_250) kind = "delayed-arrival";
+  if (!kind) return message;
+
+  const event: AstropathicEventMetadata = {
+    version: 1,
+    kinds: [kind],
+    rootTransmissionId: message.id,
+    nominalReceivedAt: message.receivedAt,
+  };
+
+  if (kind === "future-dated") {
+    event.claimedAt = eventTimestamp(message.id, "future-claim", nominalTime, 24 * 60, 30 * 24 * 60);
+  } else if (kind === "contradictory-timestamp") {
+    event.claimedAt = eventTimestamp(message.id, "contradictory-early", nominalTime, -(30 * 24 * 60), -60);
+    event.conflictingClaimedAt = eventTimestamp(message.id, "contradictory-late", nominalTime, 60, 30 * 24 * 60);
+  } else if (kind === "delayed-arrival") {
+    const endOfDay = Date.UTC(
+      new Date(nominalTime).getUTCFullYear(),
+      new Date(nominalTime).getUTCMonth(),
+      new Date(nominalTime).getUTCDate(),
+      23,
+      59,
+    );
+    const availableMinutes = Math.floor((endOfDay - nominalTime) / RELAY_MINUTE_MS);
+    if (availableMinutes <= 0) return message;
+    const minimumDelay = Math.min(30, availableMinutes);
+    const maximumDelay = Math.min(360, availableMinutes);
+    return {
+      ...message,
+      receivedAt: eventTimestamp(message.id, "same-day-delay", nominalTime, minimumDelay, maximumDelay),
+      event,
+    };
+  }
+
+  return { ...message, event };
+}
+
+/** Pure Phase 4B planner. It never creates records and never crosses a day. */
+export function planAstropathicTransmissionEvents(messages: readonly AstropathicMessage[]) {
+  const planned = messages.map(planPrimaryAstropathicEvent);
+  const nominalTimes = new Map(planned.map((message) => [
+    message.id,
+    Date.parse(message.event?.nominalReceivedAt ?? message.receivedAt),
+  ]));
+  const actualTimes = new Map(planned.map((message) => [message.id, Date.parse(message.receivedAt)]));
+
+  const sequenced = planned.map((message) => {
+    if (!message.event?.kinds.includes("delayed-arrival")) return message;
+    const nominalTime = nominalTimes.get(message.id) ?? Number.NaN;
+    const actualTime = actualTimes.get(message.id) ?? Number.NaN;
+    const overtaken = planned.some((candidate) => {
+      if (candidate.id === message.id) return false;
+      const candidateNominal = nominalTimes.get(candidate.id) ?? Number.NaN;
+      const candidateActual = actualTimes.get(candidate.id) ?? Number.NaN;
+      return candidateNominal > nominalTime && candidateActual < actualTime;
+    });
+    if (!overtaken) return message;
+    return {
+      ...message,
+      event: {
+        ...message.event,
+        kinds: [...message.event.kinds, "out-of-order-arrival"],
+      },
+    };
+  });
+
+  return sequenced.sort((left, right) => {
+    const timeDifference = Date.parse(left.receivedAt) - Date.parse(right.receivedAt);
+    return timeDifference || left.id.localeCompare(right.id);
+  });
+}
+
 function legacyLoreEntryParts(entry: string) {
   const separators = [" â€” ", " — ", " - "];
 
@@ -829,7 +963,7 @@ export function astropathicScheduleForDay(day: Date): AstropathicDailySchedule {
     .map(({ index }) => index);
   let normalTemplateIndex = 0;
 
-  const messages = scheduledMinutes.slice(0, count).map((minute, index): AstropathicMessage => {
+  const baseMessages = scheduledMinutes.slice(0, count).map((minute, index): AstropathicMessage => {
     const isNotableTransmission = notable && index === 0;
     const template = isNotableTransmission
       ? notableAstropathicMessageTemplates[hashText(`${key}:notable-template`) % notableAstropathicMessageTemplates.length]
@@ -848,6 +982,7 @@ export function astropathicScheduleForDay(day: Date): AstropathicDailySchedule {
       receivedAt: scheduledAt.toISOString(),
     };
   });
+  const messages = planAstropathicTransmissionEvents(baseMessages);
 
   return { key, quiet, burstCount, messages };
 }
@@ -1053,6 +1188,17 @@ const transmissionWarpExposures = [
   "EXTREMIS",
 ] as const satisfies readonly TransmissionWarpExposure[];
 
+const astropathicEventKinds = [
+  "delayed-arrival",
+  "out-of-order-arrival",
+  "partial-transmission",
+  "recovered-fragment",
+  "failed-relay-node",
+  "duplicate-astropathic-echo",
+  "contradictory-timestamp",
+  "future-dated",
+] as const satisfies readonly AstropathicEventKind[];
+
 function optionalTransmissionText(value: unknown, max: number) {
   if (typeof value !== "string") return undefined;
   const normalized = value.trim().slice(0, max);
@@ -1091,6 +1237,57 @@ function normalizeTransmissionMetadata(value: unknown): AstropathicTransmissionM
   if (timestampState) transmission.timestampState = timestampState;
 
   return Object.keys(transmission).length > 0 ? transmission : undefined;
+}
+
+function validEventTimestamp(value: unknown) {
+  const timestamp = optionalTransmissionText(value, 40);
+  return timestamp && Number.isFinite(Date.parse(timestamp)) ? new Date(timestamp).toISOString() : undefined;
+}
+
+function normalizeAstropathicEventMetadata(value: unknown): AstropathicEventMetadata | undefined {
+  const candidate = record(value);
+  if (candidate.version !== 1) return undefined;
+
+  const rootTransmissionId = optionalTransmissionText(candidate.rootTransmissionId, 120);
+  const nominalReceivedAt = validEventTimestamp(candidate.nominalReceivedAt);
+  const rawKinds = Array.isArray(candidate.kinds) ? candidate.kinds : [];
+  const kinds = [...new Set(rawKinds.filter(
+    (kind): kind is AstropathicEventKind => typeof kind === "string" && astropathicEventKinds.includes(kind as AstropathicEventKind),
+  ))];
+  if (!rootTransmissionId || !nominalReceivedAt || kinds.length === 0) return undefined;
+
+  const event: AstropathicEventMetadata = {
+    version: 1,
+    kinds,
+    rootTransmissionId,
+    nominalReceivedAt,
+  };
+  const parentTransmissionId = optionalTransmissionText(candidate.parentTransmissionId, 120);
+  const ordinal = typeof candidate.ordinal === "number" && Number.isInteger(candidate.ordinal) && candidate.ordinal >= 0 && candidate.ordinal <= 999
+    ? candidate.ordinal
+    : undefined;
+  const claimedAt = validEventTimestamp(candidate.claimedAt);
+  const conflictingClaimedAt = validEventTimestamp(candidate.conflictingClaimedAt);
+  const fragmentCandidate = record(candidate.fragment);
+  const fragment = fragmentCandidate.algorithmVersion === 1 &&
+    typeof fragmentCandidate.index === "number" && Number.isInteger(fragmentCandidate.index) && fragmentCandidate.index >= 1 && fragmentCandidate.index <= 16 &&
+    typeof fragmentCandidate.total === "number" && Number.isInteger(fragmentCandidate.total) && fragmentCandidate.total >= fragmentCandidate.index && fragmentCandidate.total <= 16
+      ? { index: fragmentCandidate.index, total: fragmentCandidate.total, algorithmVersion: 1 as const }
+      : undefined;
+
+  if (parentTransmissionId) event.parentTransmissionId = parentTransmissionId;
+  if (ordinal !== undefined) event.ordinal = ordinal;
+  if (claimedAt) event.claimedAt = claimedAt;
+  if (conflictingClaimedAt) event.conflictingClaimedAt = conflictingClaimedAt;
+  if (fragment) event.fragment = fragment;
+
+  // Timestamp anomaly flags fail closed when their supporting claims are bad.
+  event.kinds = event.kinds.filter((kind) => {
+    if (kind === "future-dated") return Boolean(event.claimedAt);
+    if (kind === "contradictory-timestamp") return Boolean(event.claimedAt && event.conflictingClaimedAt);
+    return true;
+  });
+  return event.kinds.length ? event : undefined;
 }
 
 export function normalizeArchiveData(value: unknown): ChapterArchiveData {
@@ -1221,6 +1418,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
           const candidate = record(item);
           const template = astropathicMessageTemplates.find((message) => message.subject === candidate.subject);
           const transmission = normalizeTransmissionMetadata(candidate.transmission);
+          const event = normalizeAstropathicEventMetadata(candidate.event);
           const preview = text(candidate.preview, "No readable message body was recovered.", 1200);
           const priority =
             candidate.priority === "PRIMUS" || candidate.priority === "ACTION" || candidate.priority === "URGENT" ||
@@ -1237,6 +1435,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
             received: text(candidate.received, "0.---.056.M42", 40),
             receivedAt: text(candidate.receivedAt, "", 40),
             ...(transmission ? { transmission } : {}),
+            ...(event ? { event } : {}),
           } satisfies AstropathicMessage;
         })
         .filter((message, index, messages) => messages.findIndex((candidate) => candidate.id === message.id) === index)

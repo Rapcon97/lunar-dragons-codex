@@ -9,6 +9,7 @@ import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboar
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream } from "../_components/RelayDataStream";
 import { SidebarNavigation } from "../_components/SidebarNavigation";
+import { TransmissionEventFlags } from "../_components/TransmissionEventFlags";
 import { TransmissionOriginActions } from "../_components/TransmissionOriginActions";
 import { resolveTransmissionOrigin } from "../_components/transmission-origin";
 import { useChapterArchive } from "../_hooks/useChapterArchive";
@@ -260,6 +261,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
               <span className="relay-inbox-item-copy">
                 <span><strong>{message.agency}</strong><time>{message.received}</time></span>
                 <b>{message.subject}</b>
+                <TransmissionEventFlags event={message.event} />
                 <small>&gt; {message.preview}</small>
               </span>
               <em className={`relay-priority ${message.priority.toLowerCase()}`}>{message.priority}</em>

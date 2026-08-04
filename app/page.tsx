@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAdminMode } from "./_components/AdminMode";
 import { RelayDataStream } from "./_components/RelayDataStream";
 import { SidebarNavigation } from "./_components/SidebarNavigation";
+import { TransmissionEventFlags } from "./_components/TransmissionEventFlags";
 import { TransmissionOriginActions } from "./_components/TransmissionOriginActions";
 import { useChapterArchive } from "./_hooks/useChapterArchive";
 import {
@@ -249,6 +250,7 @@ export default function Home() {
                   <div className="relay-message-copy">
                     <div><strong>&gt;&gt; {message.agency} // {message.priority}</strong><time>{message.received}</time></div>
                     <h3>&gt; {message.subject}</h3>
+                    <TransmissionEventFlags event={message.event} />
                     <p>&gt; {message.preview}</p>
                   </div>
                 </button>

@@ -18,6 +18,7 @@ import {
 
 const ARCHIVE_ID = "lunar-dragons";
 const MAX_LORE_WRITE_ATTEMPTS = 3;
+const MAX_RELAY_WRITE_ATTEMPTS = 3;
 
 type ArchiveRow = {
   identity: string;
@@ -266,7 +267,7 @@ export function mutateChapterLore<Value, Reason extends string>(
   });
 }
 
-export async function readChapterArchive(): Promise<ChapterArchiveData | null> {
+async function readChapterArchiveAttempt(relayWriteAttempt: number): Promise<ChapterArchiveData | null> {
   await ensureChapterArchiveTable();
 
   const row = await database()
@@ -324,21 +325,33 @@ export async function readChapterArchive(): Promise<ChapterArchiveData | null> {
     return archive;
   }
 
-  await database()
+  const relayWrite = await database()
     .prepare(
       `UPDATE chapter_archive
        SET relay_messages = ?, relay_last_generated_date = ?, updated_at = ?
-       WHERE id = ?`,
+       WHERE id = ? AND updated_at = ?`,
     )
     .bind(
       JSON.stringify(dailyRelay.archive.relayMessages),
       dailyRelay.archive.relayLastGeneratedDate,
       nextRevision(row.updated_at),
       ARCHIVE_ID,
+      row.updated_at,
     )
     .run();
 
+  if (Number(relayWrite.meta?.changes ?? 1) === 0) {
+    if (relayWriteAttempt + 1 < MAX_RELAY_WRITE_ATTEMPTS) {
+      return readChapterArchiveAttempt(relayWriteAttempt + 1);
+    }
+    throw new Error("Relay archive changed during deterministic refresh.");
+  }
+
   return dailyRelay.archive;
+}
+
+export async function readChapterArchive(): Promise<ChapterArchiveData | null> {
+  return readChapterArchiveAttempt(0);
 }
 
 export async function writeChapterArchive(value: unknown) {

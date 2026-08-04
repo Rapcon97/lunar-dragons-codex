@@ -25,6 +25,10 @@ import {
   transmissionCharacterDelay,
   transmissionClosing,
 } from "../app/_components/relay-transmission.ts";
+import {
+  transmissionEventAnalysisLines,
+  transmissionEventLabels,
+} from "../app/_components/transmission-event-presentation.ts";
 
 const source = (overrides = {}) => ({
   id: "relay-analysis-fixture",
@@ -36,6 +40,57 @@ const source = (overrides = {}) => ({
   received: "0.588.056.M42",
   receivedAt: "2026-08-03T14:25:00.000Z",
   ...overrides,
+});
+
+test("shared event presentation protects failed-node and delayed analysis fields", () => {
+  const fixture = source({
+    receivedAt: "2026-08-06T11:30:00.000Z",
+    event: {
+      version: 1,
+      kinds: ["delayed-arrival", "out-of-order-arrival", "failed-relay-node"],
+      rootTransmissionId: "relay-analysis-fixture",
+      nominalReceivedAt: "2026-08-06T09:00:00.000Z",
+    },
+  });
+  assert.deepEqual(transmissionEventLabels(fixture.event), ["DELAYED EXLOAD", "SEQUENCE ANOMALY", "RELAY FAILURE"]);
+  const eventLines = transmissionEventAnalysisLines(fixture);
+  assert.ok(eventLines.includes("> Delivery condition: DELAYED EXLOAD"));
+  assert.ok(eventLines.includes("> Sequence integrity: OUT-OF-ORDER ARRIVAL"));
+  assert.ok(eventLines.includes("> Relay-node condition: FAILED // NODE IDENT UNRECOVERED"));
+  assert.equal(eventLines.some((line) => /Vigil|Orison|Vesper|station/i.test(line)), false);
+
+  const formatted = formatTransmissionTranscript(fixture);
+  for (const line of formatted.lines.filter((candidate) => eventLines.includes(candidate.text))) {
+    assert.equal(line.section, "analysis");
+    assert.equal(prepareTransmissionLine(line, formatted.analysis.corruption, formatted.lines.indexOf(line)), line.text);
+  }
+});
+
+test("timestamp events remain protected metadata and force contradictory integrity", () => {
+  for (const [kind, event] of [
+    ["future-dated", {
+      version: 1,
+      kinds: ["future-dated"],
+      rootTransmissionId: "relay-analysis-fixture",
+      nominalReceivedAt: "2026-08-06T09:00:00.000Z",
+      claimedAt: "2026-08-19T09:00:00.000Z",
+    }],
+    ["contradictory-timestamp", {
+      version: 1,
+      kinds: ["contradictory-timestamp"],
+      rootTransmissionId: "relay-analysis-fixture",
+      nominalReceivedAt: "2026-08-06T09:00:00.000Z",
+      claimedAt: "2026-07-30T09:00:00.000Z",
+      conflictingClaimedAt: "2026-08-19T09:00:00.000Z",
+    }],
+  ]) {
+    const fixture = source({ event, transmission: { timestampState: "VERIFIED" } });
+    const formatted = formatTransmissionTranscript(fixture);
+    assert.equal(formatted.analysis.timestampIntegrityState, "CONTRADICTORY", kind);
+    const protectedLines = formatted.lines.filter((line) => /Claimed data-stamp|Conflicting data-stamp/.test(line.text));
+    assert.ok(protectedLines.length >= 1);
+    assert.ok(protectedLines.every((line) => line.section === "analysis"));
+  }
 });
 
 const originFixtures = [

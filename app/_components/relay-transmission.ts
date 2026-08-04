@@ -1,4 +1,5 @@
 import type {
+  AstropathicEventMetadata,
   AstropathicTransmissionMetadata,
   TransmissionConfidenceState,
   TransmissionMethod,
@@ -7,6 +8,7 @@ import type {
   TransmissionRouteClass,
   TransmissionWarpExposure,
 } from "../archive-data";
+import { transmissionEventAnalysisLines } from "./transmission-event-presentation.ts";
 
 export type TransmissionSourceMetadata = {
   id: string;
@@ -18,6 +20,7 @@ export type TransmissionSourceMetadata = {
   received?: string;
   receivedAt?: string;
   transmission?: AstropathicTransmissionMetadata;
+  event?: AstropathicEventMetadata;
 };
 
 export type TransmissionOriginBand = ArchiveTransmissionOriginBand;
@@ -314,6 +317,9 @@ function relayPathLabel(source: TransmissionSourceMetadata, originBand: Transmis
 }
 
 function timestampIntegrityState(source: TransmissionSourceMetadata, originBand: TransmissionOriginBand): AnalysisState {
+  if (source.event?.kinds.some((kind) => kind === "contradictory-timestamp" || kind === "future-dated")) {
+    return "CONTRADICTORY";
+  }
   const receivedAt = source.receivedAt?.trim() ?? "";
   if (!receivedAt) return source.received ? "PARTIAL" : "UNRECOVERED";
   if (/^\d{4}-\d{2}-\d{2}$/.test(receivedAt)) return "PARTIAL";
@@ -402,7 +408,9 @@ export function analyzeTransmission(source: TransmissionSourceMetadata): Transmi
     identityState: source.transmission?.identityState ?? identityState(source, originBand),
     triangulationState: source.transmission?.originState ?? triangulationState(source, originBand, originBasis),
     relayPathLabel: relayPathLabel(source, originBand, originBasis),
-    timestampIntegrityState: source.transmission?.timestampState ?? timestampIntegrityState(source, originBand),
+    timestampIntegrityState: source.event?.kinds.some((kind) => kind === "contradictory-timestamp" || kind === "future-dated")
+      ? timestampIntegrityState(source, originBand)
+      : source.transmission?.timestampState ?? timestampIntegrityState(source, originBand),
     warpExposureState: source.transmission?.warpExposure ?? warpExposureState(source, originBand),
     communionAttempts: deterministicInteger(source, "communion-attempts", minimumAttempts, maximumAttempts),
     corruptionPercentage,
@@ -480,6 +488,7 @@ export function formatTransmissionTranscript(source: TransmissionSourceMetadata)
   const body = source.body?.trim() || source.preview?.trim() || "TRANSMISSION BODY UNRECOVERED.";
   const bodyLines = body.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((line) => line.trim()).filter(Boolean) ?? [body];
   const closing = transmissionClosing(source, body);
+  const eventLines = transmissionEventAnalysisLines(source);
   const lines: TransmissionTranscriptLine[] = [
     { text: `>> ACCESSING DATA RELIQUARIUM ${analysis.reliquariumNumber}`, section: "analysis", command: true },
     { text: `> Receiving locus: ${RECEIVING_LOCUS}`, section: "analysis" },
@@ -491,6 +500,7 @@ export function formatTransmissionTranscript(source: TransmissionSourceMetadata)
     { text: `> Positional triangulation: ${analysis.triangulationState}`, section: "analysis" },
     { text: `> Probable origin: ${analysis.probableOriginLabel}`, section: "analysis" },
     { text: `> Relay path: ${analysis.relayPathLabel}`, section: "analysis" },
+    ...eventLines.map((text): TransmissionTranscriptLine => ({ text, section: "analysis" })),
     ...(source.received ? [{ text: `> Data-stamp: ${source.received}`, section: "analysis" as const }] : []),
     { text: `> Timestamp integrity: ${analysis.timestampIntegrityState}`, section: "analysis" },
     { text: `> Warp exposure: ${analysis.warpExposureState}`, section: "analysis" },
