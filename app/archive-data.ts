@@ -1,3 +1,5 @@
+import { transmissionBodyFragments } from "./transmission-fragments.ts";
+
 export type ChapterIdentity = {
   founding: string;
   lineage: string;
@@ -684,12 +686,20 @@ function hashText(value: string) {
  * from acquiring anomalies retroactively when a newer release reads it.
  */
 export const PHASE_4_EVENT_ACTIVATION_EPOCH = "2026-08-05T00:00:00.000Z";
+export const PHASE_4_DERIVED_EVENT_ACTIVATION_EPOCH = "2026-08-06T00:00:00.000Z";
 
 const PHASE_4_EVENT_ACTIVATION_TIME = Date.parse(PHASE_4_EVENT_ACTIVATION_EPOCH);
+const PHASE_4_DERIVED_EVENT_ACTIVATION_TIME = Date.parse(PHASE_4_DERIVED_EVENT_ACTIVATION_EPOCH);
 const PHASE_4_EVENT_SEED_VERSION = "relay-event:v1";
+const PHASE_4_DERIVED_EVENT_SEED_VERSION = "relay-event:v2";
 
 function astropathicEventHash(messageId: string, salt: string) {
   return hashText(`${PHASE_4_EVENT_SEED_VERSION}|${messageId}|${salt}`);
+}
+
+/** Stable Phase 4 derived-event seed. Do not change this serialized form. */
+export function astropathicDerivedEventHash(rootMessageId: string, eventSalt: string) {
+  return hashText(`${PHASE_4_DERIVED_EVENT_SEED_VERSION}|${rootMessageId}|${eventSalt}`);
 }
 
 function eventTimestamp(messageId: string, salt: string, baseTime: number, minimumMinutes: number, maximumMinutes: number) {
@@ -779,6 +789,219 @@ export function planAstropathicTransmissionEvents(messages: readonly Astropathic
     const timeDifference = Date.parse(left.receivedAt) - Date.parse(right.receivedAt);
     return timeDifference || left.id.localeCompare(right.id);
   });
+}
+
+type DerivedEventPriority = "delayed-base" | "recovered-fragment" | "duplicate-echo";
+
+type DerivedEventCandidate = {
+  message: AstropathicMessage;
+  fallbackRoot?: AstropathicMessage;
+  rootTransmissionId: string;
+  earliestAt: number;
+  deadlineAt: number;
+  priority: DerivedEventPriority;
+};
+
+type NominalRelayPlan = {
+  key: string;
+  quiet: boolean;
+  burstCount: number;
+  roots: AstropathicMessage[];
+  candidates: DerivedEventCandidate[];
+};
+
+function derivedEventTimestamp(
+  rootTransmissionId: string,
+  salt: string,
+  baseTime: number,
+  minimumMinutes: number,
+  maximumMinutes: number,
+) {
+  const span = Math.max(0, maximumMinutes - minimumMinutes);
+  const minutes = minimumMinutes + (astropathicDerivedEventHash(rootTransmissionId, salt) % (span + 1));
+  return baseTime + (minutes * RELAY_MINUTE_MS);
+}
+
+function fragmentPreview(fragment: string) {
+  return fragment.length <= 260 ? fragment : `${fragment.slice(0, 257).trimEnd()}...`;
+}
+
+function recoveredFragmentMessage(
+  root: AstropathicMessage,
+  fragmentBody: string,
+  index: number,
+  receivedAt: number,
+): AstropathicMessage {
+  return {
+    ...root,
+    id: `${root.id}~fragment~${String(index).padStart(2, "0")}`,
+    preview: fragmentPreview(fragmentBody),
+    body: fragmentBody,
+    received: imperialRelayDate(new Date(receivedAt)),
+    receivedAt: new Date(receivedAt).toISOString(),
+    event: {
+      version: 1,
+      kinds: ["recovered-fragment"],
+      rootTransmissionId: root.id,
+      parentTransmissionId: root.id,
+      ordinal: index,
+      nominalReceivedAt: root.receivedAt,
+      fragment: { index, total: 3, algorithmVersion: 1 },
+    },
+  };
+}
+
+function planDerivedEventsForRoot(root: AstropathicMessage) {
+  const nominalTime = Date.parse(root.receivedAt);
+  const roots: AstropathicMessage[] = [root];
+  const candidates: DerivedEventCandidate[] = [];
+  if (
+    root.event ||
+    root.id.endsWith("-notable") ||
+    !Number.isFinite(nominalTime) ||
+    nominalTime < PHASE_4_DERIVED_EVENT_ACTIVATION_TIME
+  ) return { roots, candidates };
+
+  // A single roll gives a root at most one new primary anomaly. Existing v1
+  // event probabilities are evaluated first and remain completely unchanged.
+  const roll = astropathicDerivedEventHash(root.id, "primary-anomaly") % 100_000;
+  if (roll < 1_000) {
+    const fragments = transmissionBodyFragments(root.body, root.id, 3);
+    if (fragments.length !== 3 || fragments.some((fragment) => !fragment)) return { roots, candidates };
+
+    const partialRoot: AstropathicMessage = {
+      ...root,
+      preview: fragmentPreview(fragments[0]),
+      event: {
+        version: 1,
+        kinds: ["partial-transmission"],
+        rootTransmissionId: root.id,
+        nominalReceivedAt: root.receivedAt,
+        fragment: { index: 1, total: 3, algorithmVersion: 1 },
+      },
+    };
+    roots[0] = partialRoot;
+
+    const secondAt = derivedEventTimestamp(root.id, "fragment-02-arrival", nominalTime, 4 * 60, 18 * 60);
+    const thirdAt = derivedEventTimestamp(root.id, "fragment-03-arrival", nominalTime, 20 * 60, 54 * 60);
+    candidates.push(
+      {
+        message: recoveredFragmentMessage(root, fragments[1], 2, secondAt),
+        fallbackRoot: root,
+        rootTransmissionId: root.id,
+        earliestAt: secondAt,
+        deadlineAt: nominalTime + (72 * 60 * RELAY_MINUTE_MS),
+        priority: "recovered-fragment",
+      },
+      {
+        message: recoveredFragmentMessage(root, fragments[2], 3, thirdAt),
+        fallbackRoot: root,
+        rootTransmissionId: root.id,
+        earliestAt: Math.max(thirdAt, secondAt + RELAY_MINUTE_MS),
+        deadlineAt: nominalTime + (72 * 60 * RELAY_MINUTE_MS),
+        priority: "recovered-fragment",
+      },
+    );
+  } else if (roll < 1_200) {
+    const echoAt = derivedEventTimestamp(root.id, "echo-01-arrival", nominalTime, 45, 6 * 60);
+    candidates.push({
+      message: {
+        ...root,
+        id: `${root.id}~echo~01`,
+        received: imperialRelayDate(new Date(echoAt)),
+        receivedAt: new Date(echoAt).toISOString(),
+        event: {
+          version: 1,
+          kinds: ["duplicate-astropathic-echo"],
+          rootTransmissionId: root.id,
+          parentTransmissionId: root.id,
+          ordinal: 1,
+          nominalReceivedAt: root.receivedAt,
+        },
+      },
+      rootTransmissionId: root.id,
+      earliestAt: echoAt,
+      deadlineAt: nominalTime + (72 * 60 * RELAY_MINUTE_MS),
+      priority: "duplicate-echo",
+    });
+  } else if (roll < 1_700) {
+    const nominalDate = new Date(nominalTime);
+    const nextDay = Date.UTC(
+      nominalDate.getUTCFullYear(),
+      nominalDate.getUTCMonth(),
+      nominalDate.getUTCDate() + 1,
+    );
+    const minimumMinutes = Math.max(1, Math.ceil((nextDay - nominalTime) / RELAY_MINUTE_MS) + 30);
+    const crossDayAt = derivedEventTimestamp(root.id, "cross-day-arrival", nominalTime, minimumMinutes, 72 * 60);
+    candidates.push({
+      message: {
+        ...root,
+        received: imperialRelayDate(new Date(crossDayAt)),
+        receivedAt: new Date(crossDayAt).toISOString(),
+        event: {
+          version: 1,
+          kinds: ["delayed-arrival"],
+          rootTransmissionId: root.id,
+          nominalReceivedAt: root.receivedAt,
+        },
+      },
+      fallbackRoot: root,
+      rootTransmissionId: root.id,
+      earliestAt: crossDayAt,
+      deadlineAt: nominalTime + (72 * 60 * RELAY_MINUTE_MS),
+      priority: "delayed-base",
+    });
+  }
+
+  return { roots, candidates };
+}
+
+function relayDayStart(timestamp: number) {
+  const date = new Date(timestamp);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+function assignCandidateTime(
+  candidate: DerivedEventCandidate,
+  occupancy: Map<string, number>,
+  capacityLimits: Map<string, number>,
+) {
+  const firstDay = relayDayStart(candidate.earliestAt);
+  const lastDay = relayDayStart(candidate.deadlineAt);
+  for (let day = firstDay; day <= lastDay; day += RELAY_DAY_MS) {
+    const key = dateKey(new Date(day));
+    if ((occupancy.get(key) ?? 0) >= (capacityLimits.get(key) ?? 6)) continue;
+    const proposedTime = day === firstDay
+      ? candidate.earliestAt
+      : day + (seededInteger(
+          `${PHASE_4_DERIVED_EVENT_SEED_VERSION}|${candidate.rootTransmissionId}|deferred-${candidate.priority}-${key}`,
+          15,
+          (24 * 60) - 15,
+        ) * RELAY_MINUTE_MS);
+    if (proposedTime > candidate.deadlineAt) continue;
+    occupancy.set(key, (occupancy.get(key) ?? 0) + 1);
+    return proposedTime;
+  }
+  return null;
+}
+
+function applyAssignedTime(message: AstropathicMessage, assignedTime: number) {
+  return {
+    ...message,
+    received: imperialRelayDate(new Date(assignedTime)),
+    receivedAt: new Date(assignedTime).toISOString(),
+  };
+}
+
+function lineageKey(message: AstropathicMessage) {
+  const event = message.event;
+  if (!event?.parentTransmissionId || event.ordinal === undefined) return null;
+  const kind = event.kinds.includes("recovered-fragment")
+    ? "recovered-fragment"
+    : event.kinds.includes("duplicate-astropathic-echo")
+      ? "duplicate-astropathic-echo"
+      : null;
+  return kind ? `${event.rootTransmissionId}|${kind}|${event.ordinal}` : null;
 }
 
 function legacyLoreEntryParts(entry: string) {
@@ -924,7 +1147,7 @@ function isNotableRelayDay(day: Date) {
   return notableDay === target;
 }
 
-export function astropathicScheduleForDay(day: Date): AstropathicDailySchedule {
+function nominalAstropathicPlanForDay(day: Date): NominalRelayPlan {
   const normalizedDay = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 12));
   const key = dateKey(normalizedDay);
   const quiet = hashText(`${key}:quiet-period`) % 1000 < 125;
@@ -982,9 +1205,142 @@ export function astropathicScheduleForDay(day: Date): AstropathicDailySchedule {
       receivedAt: scheduledAt.toISOString(),
     };
   });
-  const messages = planAstropathicTransmissionEvents(baseMessages);
+  const v1Roots = planAstropathicTransmissionEvents(baseMessages);
+  const roots: AstropathicMessage[] = [];
+  const candidates: DerivedEventCandidate[] = [];
+  for (const root of v1Roots) {
+    const planned = planDerivedEventsForRoot(root);
+    roots.push(...planned.roots);
+    candidates.push(...planned.candidates);
+  }
 
-  return { key, quiet, burstCount, messages };
+  return { key, quiet, burstCount, roots, candidates };
+}
+
+function markOutOfOrderDeliveries(messages: AstropathicMessage[]) {
+  const roots = messages.filter((message) => !message.event?.parentTransmissionId);
+  return messages.map((message) => {
+    if (!message.event?.kinds.includes("delayed-arrival") || message.event.kinds.includes("out-of-order-arrival")) {
+      return message;
+    }
+    const nominal = Date.parse(message.event.nominalReceivedAt);
+    const actual = Date.parse(message.receivedAt);
+    const overtaken = roots.some((candidate) => {
+      if (candidate.id === message.id) return false;
+      const candidateNominal = Date.parse(candidate.event?.nominalReceivedAt ?? candidate.receivedAt);
+      const candidateActual = Date.parse(candidate.receivedAt);
+      return candidateNominal > nominal && candidateActual < actual;
+    });
+    if (!overtaken) return message;
+    return {
+      ...message,
+      event: { ...message.event, kinds: [...message.event.kinds, "out-of-order-arrival"] },
+    };
+  });
+}
+
+/**
+ * Resolves the bounded seven-day Phase 4 window around one delivery day. The
+ * normal cadence always occupies capacity first; delayed roots, fragments,
+ * and echoes are then admitted in that order and deterministically deferred.
+ */
+export function astropathicScheduleForDay(day: Date): AstropathicDailySchedule {
+  const target = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 12));
+  const targetKey = dateKey(target);
+  const plans = Array.from({ length: 7 }, (_, index) => (
+    nominalAstropathicPlanForDay(new Date(target.getTime() + ((index - 3) * RELAY_DAY_MS)))
+  ));
+  const targetPlan = plans[3];
+  const rootsById = new Map<string, AstropathicMessage>();
+  const occupancy = new Map<string, number>();
+  const capacityLimits = new Map(plans.map((plan) => [plan.key, plan.quiet ? 1 : 6]));
+
+  for (const plan of plans) {
+    for (const root of plan.roots) {
+      rootsById.set(root.id, root);
+      const key = dateKey(new Date(Date.parse(root.event?.nominalReceivedAt ?? root.receivedAt)));
+      occupancy.set(key, (occupancy.get(key) ?? 0) + 1);
+    }
+  }
+
+  // Future roots reserve capacity, but future anomalies cannot affect an
+  // earlier day's published schedule before their nominal transmission exists.
+  const candidates = plans.slice(0, 4).flatMap((plan) => plan.candidates);
+  const delayedCandidates = candidates
+    .filter((candidate) => candidate.priority === "delayed-base")
+    .sort((left, right) => left.earliestAt - right.earliestAt || left.rootTransmissionId.localeCompare(right.rootTransmissionId));
+  const fragmentGroups = new Map<string, DerivedEventCandidate[]>();
+  const echoCandidates: DerivedEventCandidate[] = [];
+  for (const candidate of candidates) {
+    if (candidate.priority === "recovered-fragment") {
+      fragmentGroups.set(candidate.rootTransmissionId, [
+        ...(fragmentGroups.get(candidate.rootTransmissionId) ?? []),
+        candidate,
+      ]);
+    } else if (candidate.priority === "duplicate-echo") {
+      echoCandidates.push(candidate);
+    }
+  }
+  const derivedMessages: AstropathicMessage[] = [];
+
+  for (const candidate of delayedCandidates) {
+    const fallback = candidate.fallbackRoot!;
+    const nominalKey = dateKey(new Date(Date.parse(fallback.receivedAt)));
+    occupancy.set(nominalKey, Math.max(0, (occupancy.get(nominalKey) ?? 1) - 1));
+    const assigned = assignCandidateTime(candidate, occupancy, capacityLimits);
+    if (assigned === null) {
+      occupancy.set(nominalKey, (occupancy.get(nominalKey) ?? 0) + 1);
+      rootsById.set(fallback.id, fallback);
+    } else {
+      rootsById.set(fallback.id, applyAssignedTime(candidate.message, assigned));
+    }
+  }
+
+  const orderedFragmentGroups = [...fragmentGroups.entries()].sort(([left], [right]) => left.localeCompare(right));
+  for (const [rootTransmissionId, group] of orderedFragmentGroups) {
+    const snapshot = new Map(occupancy);
+    const assignedFragments: AstropathicMessage[] = [];
+    let previousAssigned = Number.NEGATIVE_INFINITY;
+    for (const candidate of group.sort((left, right) => (
+      (left.message.event?.ordinal ?? 0) - (right.message.event?.ordinal ?? 0)
+    ))) {
+      const constrained = { ...candidate, earliestAt: Math.max(candidate.earliestAt, previousAssigned + RELAY_MINUTE_MS) };
+      const assigned = assignCandidateTime(constrained, occupancy, capacityLimits);
+      if (assigned === null) {
+        assignedFragments.length = 0;
+        break;
+      }
+      previousAssigned = assigned;
+      assignedFragments.push(applyAssignedTime(candidate.message, assigned));
+    }
+    if (assignedFragments.length !== group.length) {
+      occupancy.clear();
+      for (const [key, value] of snapshot) occupancy.set(key, value);
+      const fallback = group[0]?.fallbackRoot;
+      if (fallback) rootsById.set(rootTransmissionId, fallback);
+    } else {
+      derivedMessages.push(...assignedFragments);
+    }
+  }
+
+  for (const candidate of echoCandidates.sort((left, right) => (
+    left.earliestAt - right.earliestAt || left.rootTransmissionId.localeCompare(right.rootTransmissionId)
+  ))) {
+    const assigned = assignCandidateTime(candidate, occupancy, capacityLimits);
+    if (assigned !== null) derivedMessages.push(applyAssignedTime(candidate.message, assigned));
+  }
+
+  const allMessages = markOutOfOrderDeliveries([...rootsById.values(), ...derivedMessages]);
+  const messages = allMessages
+    .filter((message) => dateKey(new Date(Date.parse(message.receivedAt))) === targetKey)
+    .sort((left, right) => Date.parse(left.receivedAt) - Date.parse(right.receivedAt) || left.id.localeCompare(right.id));
+
+  return {
+    key: targetKey,
+    quiet: targetPlan.quiet,
+    burstCount: targetPlan.burstCount,
+    messages,
+  };
 }
 
 export function applyDailyAstropathicMessages(value: ChapterArchiveData, now = new Date()) {
@@ -993,20 +1349,29 @@ export function applyDailyAstropathicMessages(value: ChapterArchiveData, now = n
   const todayKey = dateKey(today);
 
   const lastGenerated = dayFromKey(archive.relayLastGeneratedDate);
-  const firstDay = lastGenerated
-    ? dateKey(lastGenerated) === todayKey
-      ? today
-      : new Date(Math.max(lastGenerated.getTime() + RELAY_DAY_MS, today.getTime() - 29 * RELAY_DAY_MS))
+  const replayStart = now.getTime() >= PHASE_4_DERIVED_EVENT_ACTIVATION_TIME
+    ? new Date(today.getTime() - (3 * RELAY_DAY_MS))
     : today;
+  const cursorStart = lastGenerated && dateKey(lastGenerated) !== todayKey
+    ? new Date(Math.max(lastGenerated.getTime() + RELAY_DAY_MS, today.getTime() - (29 * RELAY_DAY_MS)))
+    : today;
+  const firstDay = cursorStart < replayStart ? cursorStart : replayStart;
   const knownIds = new Set(archive.relayMessages.map((message) => message.id));
+  const knownLineages = new Set(archive.relayMessages.map(lineageKey).filter((key): key is string => Boolean(key)));
   const generated: AstropathicMessage[] = [];
 
   for (let day = firstDay; day <= today; day = new Date(day.getTime() + RELAY_DAY_MS)) {
     for (const message of astropathicScheduleForDay(day).messages) {
       const scheduledTime = new Date(message.receivedAt).getTime();
-      if (scheduledTime <= now.getTime() && !knownIds.has(message.id)) {
+      const candidateLineage = lineageKey(message);
+      if (
+        scheduledTime <= now.getTime() &&
+        !knownIds.has(message.id) &&
+        (!candidateLineage || !knownLineages.has(candidateLineage))
+      ) {
         generated.push(message);
         knownIds.add(message.id);
+        if (candidateLineage) knownLineages.add(candidateLineage);
       }
     }
   }
@@ -1244,13 +1609,16 @@ function validEventTimestamp(value: unknown) {
   return timestamp && Number.isFinite(Date.parse(timestamp)) ? new Date(timestamp).toISOString() : undefined;
 }
 
-function normalizeAstropathicEventMetadata(value: unknown): AstropathicEventMetadata | undefined {
+function normalizeAstropathicEventMetadata(value: unknown, messageId: string): AstropathicEventMetadata | undefined {
   const candidate = record(value);
   if (candidate.version !== 1) return undefined;
 
   const rootTransmissionId = optionalTransmissionText(candidate.rootTransmissionId, 120);
   const nominalReceivedAt = validEventTimestamp(candidate.nominalReceivedAt);
   const rawKinds = Array.isArray(candidate.kinds) ? candidate.kinds : [];
+  if (rawKinds.some((kind) => typeof kind !== "string" || !astropathicEventKinds.includes(kind as AstropathicEventKind))) {
+    return undefined;
+  }
   const kinds = [...new Set(rawKinds.filter(
     (kind): kind is AstropathicEventKind => typeof kind === "string" && astropathicEventKinds.includes(kind as AstropathicEventKind),
   ))];
@@ -1287,6 +1655,35 @@ function normalizeAstropathicEventMetadata(value: unknown): AstropathicEventMeta
     if (kind === "contradictory-timestamp") return Boolean(event.claimedAt && event.conflictingClaimedAt);
     return true;
   });
+  const hasPartial = event.kinds.includes("partial-transmission");
+  const hasRecovered = event.kinds.includes("recovered-fragment");
+  const hasEcho = event.kinds.includes("duplicate-astropathic-echo");
+  if (
+    (Number(hasPartial) + Number(hasRecovered) + Number(hasEcho)) > 1 ||
+    ((hasPartial || hasRecovered || hasEcho) && event.kinds.length !== 1)
+  ) return undefined;
+  if (hasPartial && (
+    event.rootTransmissionId !== messageId ||
+    event.parentTransmissionId !== undefined ||
+    event.ordinal !== undefined ||
+    event.fragment?.index !== 1 ||
+    event.fragment?.total !== 3
+  )) return undefined;
+  if (hasRecovered && (
+    event.parentTransmissionId !== event.rootTransmissionId ||
+    event.ordinal === undefined ||
+    event.fragment?.index !== event.ordinal ||
+    event.fragment?.total !== 3 ||
+    event.ordinal < 2 ||
+    event.ordinal > 3 ||
+    messageId !== `${event.rootTransmissionId}~fragment~${String(event.ordinal).padStart(2, "0")}`
+  )) return undefined;
+  if (hasEcho && (
+    event.parentTransmissionId !== event.rootTransmissionId ||
+    event.ordinal !== 1 ||
+    event.fragment !== undefined ||
+    messageId !== `${event.rootTransmissionId}~echo~01`
+  )) return undefined;
   return event.kinds.length ? event : undefined;
 }
 
@@ -1418,7 +1815,8 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
           const candidate = record(item);
           const template = astropathicMessageTemplates.find((message) => message.subject === candidate.subject);
           const transmission = normalizeTransmissionMetadata(candidate.transmission);
-          const event = normalizeAstropathicEventMetadata(candidate.event);
+          const id = text(candidate.id, `relay-imported-${index}`, 120);
+          const event = normalizeAstropathicEventMetadata(candidate.event, id);
           const preview = text(candidate.preview, "No readable message body was recovered.", 1200);
           const priority =
             candidate.priority === "PRIMUS" || candidate.priority === "ACTION" || candidate.priority === "URGENT" ||
@@ -1426,7 +1824,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
               ? candidate.priority
               : "NOTICE";
           return {
-            id: text(candidate.id, `relay-imported-${index}`, 120),
+            id,
             agency: text(candidate.agency, "Imperial agency unverified", 160),
             subject: text(candidate.subject, "Transmission subject obscured", 240),
             preview,

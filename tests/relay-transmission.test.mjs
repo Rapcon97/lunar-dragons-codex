@@ -30,6 +30,7 @@ import {
   transmissionEventAnalysisLines,
   transmissionEventLabels,
 } from "../app/_components/transmission-event-presentation.ts";
+import { transmissionBodyFragments } from "../app/transmission-fragments.ts";
 
 const source = (overrides = {}) => ({
   id: "relay-analysis-fixture",
@@ -91,6 +92,83 @@ test("timestamp events remain protected metadata and force contradictory integri
     const protectedLines = formatted.lines.filter((line) => /Claimed data-stamp|Conflicting data-stamp/.test(line.text));
     assert.ok(protectedLines.length >= 1);
     assert.ok(protectedLines.every((line) => line.section === "analysis"));
+  }
+});
+
+test("partial and recovered transcripts expose only their assigned fragment with protected lineage", () => {
+  const body = "Choir alpha recovered the first sealed phrase. Choir beta restored the central warning. Choir gamma verified the final benediction.";
+  const fragments = transmissionBodyFragments(body, "fragment-root", 3);
+  const partial = source({
+    id: "fragment-root",
+    body,
+    preview: fragments[0],
+    event: {
+      version: 1,
+      kinds: ["partial-transmission"],
+      rootTransmissionId: "fragment-root",
+      nominalReceivedAt: "2026-08-08T12:00:00.000Z",
+      fragment: { index: 1, total: 3, algorithmVersion: 1 },
+    },
+  });
+  const partialTranscript = formatTransmissionTranscript(partial);
+  const partialText = partialTranscript.lines.map((line) => line.text).join("\n");
+  const partialBody = partialTranscript.lines
+    .filter((line) => line.section === "content" && !line.closing)
+    .map((line) => line.text.replace(/^>\s?/, ""))
+    .join(" ");
+  assert.deepEqual(transmissionEventLabels(partial.event), ["PARTIAL TRANSMISSION", "FRAGMENT I/III"]);
+  assert.match(partialText, /Exload integrity: PARTIAL TRANSMISSION/);
+  assert.equal(partialBody, fragments[0]);
+  assert.doesNotMatch(partialText, new RegExp(fragments[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.doesNotMatch(partialText, new RegExp(fragments[2].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+
+  const recovered = source({
+    id: "fragment-root~fragment~02",
+    body: fragments[1],
+    preview: fragments[1],
+    event: {
+      version: 1,
+      kinds: ["recovered-fragment"],
+      rootTransmissionId: "fragment-root",
+      parentTransmissionId: "fragment-root",
+      ordinal: 2,
+      nominalReceivedAt: "2026-08-08T12:00:00.000Z",
+      fragment: { index: 2, total: 3, algorithmVersion: 1 },
+    },
+  });
+  const recoveredTranscript = formatTransmissionTranscript(recovered);
+  const recoveredText = recoveredTranscript.lines.map((line) => line.text).join("\n");
+  const recoveredBody = recoveredTranscript.lines
+    .filter((line) => line.section === "content" && !line.closing)
+    .map((line) => line.text.replace(/^>\s?/, ""))
+    .join(" ");
+  assert.deepEqual(transmissionEventLabels(recovered.event), ["RECOVERED FRAGMENT II/III"]);
+  assert.match(recoveredText, /Exload integrity: RECOVERED FRAGMENT II\/III/);
+  assert.match(recoveredText, /> ROOT TRANSMISSION: 056\/\/[0-9]{6}/);
+  assert.equal(recoveredBody, fragments[1]);
+  assert.doesNotMatch(recoveredText, new RegExp(fragments[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+});
+
+test("echo presentation identifies intentional repeated content without corrupting lineage fields", () => {
+  const echo = source({
+    id: "echo-root~echo~01",
+    event: {
+      version: 1,
+      kinds: ["duplicate-astropathic-echo"],
+      rootTransmissionId: "echo-root",
+      parentTransmissionId: "echo-root",
+      ordinal: 1,
+      nominalReceivedAt: "2026-08-08T12:00:00.000Z",
+    },
+  });
+  assert.deepEqual(transmissionEventLabels(echo.event), ["ASTROPATHIC ECHO"]);
+  const formatted = formatTransmissionTranscript(echo);
+  const protectedLines = formatted.lines.filter((line) => /ASTROPATHIC ECHO|ROOT TRANSMISSION/.test(line.text));
+  assert.equal(protectedLines.length, 2);
+  assert.ok(protectedLines.every((line) => line.section === "analysis"));
+  for (const line of protectedLines) {
+    const index = formatted.lines.indexOf(line);
+    assert.equal(prepareTransmissionLine(line, { ...formatted.analysis.corruption, percentage: 35 }, index), line.text);
   }
 });
 

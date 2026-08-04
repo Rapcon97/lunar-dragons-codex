@@ -6,6 +6,7 @@ const EVENT_LABELS: Partial<Record<AstropathicEventKind, string>> = {
   "failed-relay-node": "RELAY FAILURE",
   "contradictory-timestamp": "CHRONO-CONTRADICTION",
   "future-dated": "FUTURE-DATED SOURCE CLAIM",
+  "duplicate-astropathic-echo": "ASTROPATHIC ECHO",
 };
 
 type EventPresentationSource = {
@@ -20,11 +21,19 @@ function terminalTimestamp(value: string | undefined) {
 
 export function transmissionEventLabels(event?: AstropathicEventMetadata) {
   if (!event) return [];
-  return event.kinds.flatMap((kind) => EVENT_LABELS[kind] ? [EVENT_LABELS[kind]!] : []);
+  return event.kinds.flatMap((kind) => {
+    if (kind === "partial-transmission" && event.fragment) {
+      return ["PARTIAL TRANSMISSION", `FRAGMENT ${romanNumeral(event.fragment.index)}/${romanNumeral(event.fragment.total)}`];
+    }
+    if (kind === "recovered-fragment" && event.fragment) {
+      return [`RECOVERED FRAGMENT ${romanNumeral(event.fragment.index)}/${romanNumeral(event.fragment.total)}`];
+    }
+    return EVENT_LABELS[kind] ? [EVENT_LABELS[kind]!] : [];
+  });
 }
 
 /** Shared protected event readout for Command and dedicated Relay streams. */
-export function transmissionEventAnalysisLines(source: EventPresentationSource) {
+export function transmissionEventAnalysisLines(source: EventPresentationSource, rootReliquariumNumber?: string) {
   const event = source.event;
   if (!event) return [];
   const kinds = new Set(event.kinds);
@@ -44,6 +53,21 @@ export function transmissionEventAnalysisLines(source: EventPresentationSource) 
   if (kinds.has("future-dated")) {
     lines.push(`> Claimed data-stamp: ${terminalTimestamp(event.claimedAt)} // FUTURE-DATED SOURCE CLAIM`);
   }
+  if (kinds.has("partial-transmission") && event.fragment) {
+    lines.push("> Exload integrity: PARTIAL TRANSMISSION");
+    lines.push(`> Fragment register: ${romanNumeral(event.fragment.index)}/${romanNumeral(event.fragment.total)}`);
+  }
+  if (kinds.has("recovered-fragment") && event.fragment) {
+    lines.push(`> Exload integrity: RECOVERED FRAGMENT ${romanNumeral(event.fragment.index)}/${romanNumeral(event.fragment.total)}`);
+    if (rootReliquariumNumber) lines.push(`> ROOT TRANSMISSION: ${rootReliquariumNumber}`);
+  }
+  if (kinds.has("duplicate-astropathic-echo")) {
+    lines.push("> Signal condition: ASTROPATHIC ECHO // REPEATED CONTENT");
+    if (rootReliquariumNumber) lines.push(`> ROOT TRANSMISSION: ${rootReliquariumNumber}`);
+  }
   return lines;
 }
 
+function romanNumeral(value: number) {
+  return ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][value - 1] ?? String(value);
+}

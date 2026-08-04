@@ -8,6 +8,7 @@ import type {
   TransmissionRouteClass,
   TransmissionWarpExposure,
 } from "../archive-data";
+import { transmissionBodyFragment } from "../transmission-fragments.ts";
 import { transmissionEventAnalysisLines } from "./transmission-event-presentation.ts";
 
 export type TransmissionSourceMetadata = {
@@ -153,8 +154,15 @@ export function hashTransmissionValue(value: string) {
   return hash >>> 0;
 }
 
-function analysisHash(source: Pick<TransmissionSourceMetadata, "id">, salt: string) {
-  return hashTransmissionValue(`relay-analysis:v1|${source.id}|${salt}`);
+function analysisHash(
+  source: Pick<TransmissionSourceMetadata, "id"> & Partial<Pick<TransmissionSourceMetadata, "event">>,
+  salt: string,
+) {
+  const event = source.event;
+  const analysisId = event?.kinds.includes("recovered-fragment")
+    ? event.rootTransmissionId
+    : source.id;
+  return hashTransmissionValue(`relay-analysis:v1|${analysisId}|${salt}`);
 }
 
 function metadataText(source: TransmissionSourceMetadata) {
@@ -388,14 +396,18 @@ function derivedCorruptionPercentage(
   ).toFixed(2));
 }
 
+export function transmissionReliquariumNumber(source: TransmissionSourceMetadata) {
+  const receivedYear = source.received?.match(/\.([0-9]{3})\.M4[12]/i)?.[1] ?? "056";
+  const reliquariumSuffix = String(analysisHash(source, "reliquarium-number") % 1_000_000).padStart(6, "0");
+  return `${receivedYear}//${reliquariumSuffix}`;
+}
+
 export function analyzeTransmission(source: TransmissionSourceMetadata): TransmissionAnalysis {
   const { originBand, originBasis } = classifyTransmissionOriginDetail(source);
   const grade = clearanceGrade(source);
   const protocol = encryptionProtocol(source);
   const corruptionPercentage = derivedCorruptionPercentage(source, originBand, grade, protocol);
   const [minimumAttempts, maximumAttempts] = COMMUNION_ATTEMPT_RANGES[originBand];
-  const receivedYear = source.received?.match(/\.([0-9]{3})\.M4[12]/i)?.[1] ?? "056";
-  const reliquariumSuffix = String(analysisHash(source, "reliquarium-number") % 1_000_000).padStart(6, "0");
   const corruption: TransmissionCorruptionProfile = {
     band: ORIGIN_TO_CORRUPTION_BAND[originBand],
     percentage: corruptionPercentage,
@@ -403,7 +415,7 @@ export function analyzeTransmission(source: TransmissionSourceMetadata): Transmi
   };
 
   return {
-    reliquariumNumber: `${receivedYear}//${reliquariumSuffix}`,
+    reliquariumNumber: transmissionReliquariumNumber(source),
     originBand,
     originRegion: source.transmission?.originRegion ?? originRegion(originBand),
     ...(source.transmission?.originLocationId ? { originLocationId: source.transmission.originLocationId } : {}),
@@ -502,10 +514,25 @@ function romanNumeral(value: number) {
 
 export function formatTransmissionTranscript(source: TransmissionSourceMetadata): FormattedTransmissionTranscript {
   const analysis = analyzeTransmission(source);
-  const body = source.body?.trim() || source.preview?.trim() || "TRANSMISSION BODY UNRECOVERED.";
+  const storedBody = source.body?.trim() || source.preview?.trim() || "TRANSMISSION BODY UNRECOVERED.";
+  const body = source.event?.kinds.includes("partial-transmission") && source.event.fragment
+    ? transmissionBodyFragment(
+        storedBody,
+        source.event.rootTransmissionId,
+        source.event.fragment.index,
+        source.event.fragment.total,
+      ) || "TRANSMISSION FRAGMENT UNRECOVERED."
+    : storedBody;
   const bodyLines = body.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((line) => line.trim()).filter(Boolean) ?? [body];
   const closing = transmissionClosing(source, body);
-  const eventLines = transmissionEventAnalysisLines(source);
+  const rootReliquariumNumber = source.event?.parentTransmissionId
+    ? transmissionReliquariumNumber({
+        ...source,
+        id: source.event.rootTransmissionId,
+        event: undefined,
+      })
+    : undefined;
+  const eventLines = transmissionEventAnalysisLines(source, rootReliquariumNumber);
   const lines: TransmissionTranscriptLine[] = [
     { text: `>> ACCESSING DATA RELIQUARIUM ${analysis.reliquariumNumber}`, section: "analysis", command: true },
     { text: `> Receiving locus: ${RECEIVING_LOCUS}`, section: "analysis" },
