@@ -197,8 +197,9 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
       )}
       <span className="relay-data-accessible">{accessibleTranscript}</span>
       <div className="relay-data-visual" aria-hidden="true">
-        {renderedLines.map((text, index) => {
+        {renderedLines.slice(0, presentedLines.length).map((text, index) => {
           const line = presentedLines[index];
+          if (!line) return null;
           return (
             <p
               className={`${line.command ? "stream-command " : ""}${line.section === "content" ? "stream-content " : ""}${line.section === "analysis" ? "stream-analysis " : ""}${line.section === "terminal-footer" ? "stream-terminal-footer " : ""}${line.closing ? "stream-closing " : ""}${line.blessing ? "stream-blessing " : ""}${line.gap ? "stream-gap" : ""}`}

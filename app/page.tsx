@@ -277,6 +277,7 @@ export default function Home() {
                     afterComplete={<TransmissionOriginActions intel={data.sectorIntel} source={selectedRelayMessage} />}
                     ariaLabel={selectedRelayMessage.subject}
                     className="command-relay-data-stream"
+                    key={selectedRelayMessage.id}
                     source={selectedRelayMessage}
                     streamKey={selectedRelayMessage.id}
                   />

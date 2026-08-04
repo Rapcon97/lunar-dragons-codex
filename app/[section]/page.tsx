@@ -102,13 +102,15 @@ export default function SectionPage() {
         </header>
 
         <div className={`subpage ${section === "relay" ? "relay-subpage" : ""}`}>
-          <section className={`section-hero ${section === "relay" ? "relay-section-hero" : ""}`}>
-            <div>
-              <p className="section-kicker">{info.kicker}</p>
-              <h1>{info.title}</h1>
-            </div>
-            <p>{info.description}</p>
-          </section>
+          {section !== "relay" && (
+            <section className="section-hero">
+              <div>
+                <p className="section-kicker">{info.kicker}</p>
+                <h1>{info.title}</h1>
+              </div>
+              <p>{info.description}</p>
+            </section>
+          )}
           {section === "chapter" && (
             <ChapterSection
               canEdit={isAdminMode}
@@ -247,7 +249,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
           <div className="relay-terminal-ident" aria-hidden="true">&gt;&gt;</div>
           <div className="relay-terminal-rack-title">
             <span>DATA RELIQUARIUM 056//ASTROPATHICA</span>
-            <strong>VOX-MISSIVE RECOVERY</strong>
+            <strong>ASTROPATHIC EXLOAD TERMINAL</strong>
           </div>
           <div className="relay-inbox-status"><i /><span>EXLOAD LINK ACTIVE</span><b>{messages.length} MISSIVES COGITATED</b></div>
         </header>
@@ -287,6 +289,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
                 <RelayDataStream
                   afterComplete={<TransmissionOriginActions intel={intel} source={selected} />}
                   ariaLabel={selected.subject}
+                  key={selected.id}
                   source={selected}
                   streamKey={selected.id}
                 />

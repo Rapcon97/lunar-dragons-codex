@@ -225,8 +225,8 @@ test("homepage and Relay share the deterministic accessible transmission rendere
     readFile("app/globals.css", "utf8"),
   ]);
 
-  assert.match(home, /<RelayDataStream[\s\S]*source=\{selectedRelayMessage\}[\s\S]*streamKey=\{selectedRelayMessage\.id\}/);
-  assert.match(sectionPage, /<RelayDataStream[\s\S]*source=\{selected\}[\s\S]*streamKey=\{selected\.id\}/);
+  assert.match(home, /<RelayDataStream[\s\S]*key=\{selectedRelayMessage\.id\}[\s\S]*source=\{selectedRelayMessage\}[\s\S]*streamKey=\{selectedRelayMessage\.id\}/);
+  assert.match(sectionPage, /<RelayDataStream[\s\S]*key=\{selected\.id\}[\s\S]*source=\{selected\}[\s\S]*streamKey=\{selected\.id\}/);
   assert.doesNotMatch(home, /COMMAND-LINK|commandRelayLines|lines=\{commandRelayLines\}/);
   assert.doesNotMatch(sectionPage, /056\/\/329652|dataStreamLines|lines=\{dataStreamLines\}/);
   assert.match(home, /document\.body\.style\.overflow = "hidden"/);
@@ -250,6 +250,8 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(renderer, /formatCorruptionPercentage\(currentPercentage\)/);
   assert.match(renderer, /completedStreamKey === streamKey/);
   assert.match(renderer, /setCompletedStreamKey\(streamKey\)/);
+  assert.match(renderer, /renderedLines\.slice\(0, presentedLines\.length\)/);
+  assert.match(renderer, /if \(!line\) return null/);
   assert.match(renderer, />\s*COMPLETE EXLOAD\s*</);
 
   assert.match(helper, /export const TRANSMISSION_TIMING/);
@@ -304,7 +306,9 @@ test("homepage and Relay share the deterministic accessible transmission rendere
     sectionPage.indexOf("const identityFields"),
   );
   assert.match(sectionPage, /section === "relay" \? "relay-subpage"/);
-  assert.match(sectionPage, /section === "relay" \? "relay-section-hero"/);
+  assert.match(sectionPage, /section !== "relay"/);
+  assert.match(relaySection, /ASTROPATHIC EXLOAD TERMINAL/);
+  assert.doesNotMatch(relaySection, /VOX-MISSIVE RECOVERY/);
   assert.match(relaySection, /className="relay-inbox-grid panel"/);
   assert.match(relaySection, /className="relay-terminal-rack"/);
   assert.doesNotMatch(relaySection, /LOCALITY: LUNARIS/);
