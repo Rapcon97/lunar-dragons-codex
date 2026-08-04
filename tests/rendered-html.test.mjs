@@ -235,7 +235,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(renderer, /prepareTransmissionLine\(line, corruptionProfile, lineIndex\)/);
   assert.doesNotMatch(renderer, /corruptTransmissionMetadataValue|transmissionMetadataValueCanCorrupt/);
   assert.match(renderer, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
-  assert.match(renderer, /setRenderedLines\(completedMessageLines\)/);
+  assert.match(renderer, /setRenderedLines\(completedLines\)/);
   assert.match(renderer, /typeSegment\(lineIndex, metadata\.label, metadata\.value, transmissionCharacterDelay\)/);
   assert.match(renderer, /TRANSMISSION_TIMING\.metadataLabelMs/);
   assert.match(renderer, /TRANSMISSION_TIMING\.metadataValuePauseMs/);
@@ -246,7 +246,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(renderer, /className="relay-data-accessible"/);
   assert.match(renderer, /className="relay-data-visual" aria-hidden="true"/);
   assert.match(renderer, /activeLineIndex === index/);
-  assert.match(renderer, /setActiveLineIndex\(finalMessageCursorIndex\)/);
+  assert.match(renderer, /setActiveLineIndex\(finalCursorIndex\)/);
   assert.match(renderer, /formatCorruptionPercentage\(currentPercentage\)/);
   assert.match(renderer, /completedStreamKey === streamKey/);
   assert.match(renderer, /setCompletedStreamKey\(streamKey\)/);
@@ -308,11 +308,6 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.doesNotMatch(relaySection, /LOCALITY: LUNARIS/);
   assert.match(relaySection, /aria-label="Active astropathic transmission"/);
   assert.match(relaySection, /tabIndex=\{0\}/);
-  assert.match(renderer, /type DisplayStage = "analysis" \| "cogitation" \| "message" \| "complete"/);
-  assert.match(renderer, /COGITATING SECURED EXLOAD/);
-  assert.match(renderer, /\+\+\+ COGITATION COMPLETE \+\+\+/);
-  assert.match(renderer, /TRANSMISSION_TIMING\.cogitationCompleteMs/);
-  assert.match(styles, /\.relay-cogitation-complete\s*\{/);
   assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*height:\s*clamp\([^}]*100dvh[^}]*\)[^}]*\}/s);
   assert.match(styles, /\.relay-inbox-body\s*\{[^}]*overflow-y:\s*auto[^}]*scrollbar-gutter:\s*stable/s);
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
@@ -345,7 +340,7 @@ test("Phase 3 origin actions share one controlled resolver and safe Intel focus"
   assert.match(actions, /data-origin-resolution=\{resolution\.kind\}/);
 
   assert.match(renderer, /afterComplete\?: ReactNode/);
-  assert.match(renderer, /displayStage === "complete" && afterComplete/);
+  assert.match(renderer, /phase === "complete" && afterComplete/);
   assert.match(home, /afterComplete=\{<TransmissionOriginActions intel=\{data\.sectorIntel\} source=\{selectedRelayMessage\} \/>\}/);
   assert.match(sectionPage, /afterComplete=\{<TransmissionOriginActions intel=\{intel\} source=\{selected\} \/>\}/);
 

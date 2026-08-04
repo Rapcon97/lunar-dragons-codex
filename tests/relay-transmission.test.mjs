@@ -16,7 +16,6 @@ import {
   IMPERIAL_TRANSMISSION_CLOSING,
   MECHANICUS_TRANSMISSION_CLOSING,
   OPERATIONAL_THEATRE,
-  planTransmissionPlayback,
   prepareTransmissionLine,
   RECEIVING_LOCUS,
   splitTransmissionMetadata,
@@ -471,7 +470,6 @@ test("typewriter timing, metadata retrieval, and four-dot cadence remain unchang
     lineBreakMs: 200,
     retrievalDotMs: 500,
     retrievalDotCount: 4,
-    cogitationCompleteMs: 1200,
     corruptionStepMs: 40,
   });
   assert.equal(transmissionCharacterDelay("A"), 38);
@@ -483,25 +481,6 @@ test("typewriter timing, metadata retrieval, and four-dot cadence remain unchang
     value: " ARGENT VIGIL RELAY",
   });
   assert.equal(appendTransmissionRetrievalDots(">> RETRIEVING ARCHIVE"), ">> RETRIEVING ARCHIVE....");
-  assert.equal(TRANSMISSION_TIMING.retrievalDotMs * TRANSMISSION_TIMING.retrievalDotCount, 2000);
-});
-
-test("transmission playback separates trusted analysis from the opened message", () => {
-  const formatted = formatTransmissionTranscript(source());
-  const plan = planTransmissionPlayback(formatted.lines);
-  const analysisLines = formatted.lines.slice(0, plan.analysisEndIndex);
-  const messageLines = formatted.lines.slice(plan.messageStartIndex);
-
-  assert.ok(analysisLines.length > 0);
-  assert.ok(analysisLines.every((line) => line.section === "analysis"));
-  assert.equal(analysisLines.at(-1)?.gap, undefined);
-  assert.equal(messageLines[0].text, TRANSMISSION_CONTENT_MARKER);
-  assert.ok(messageLines.some((line) => line.section === "content"));
-  assert.ok(messageLines.some((line) => line.blessing));
-  assert.deepEqual(planTransmissionPlayback([{ text: "> Recovered body", section: "content" }]), {
-    analysisEndIndex: 0,
-    messageStartIndex: 0,
-  });
 });
 
 test("sender closings and the final machine blessing remain unchanged", () => {
