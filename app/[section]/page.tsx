@@ -89,7 +89,7 @@ export default function SectionPage() {
     <main className="app-shell">
       <SidebarNavigation activeHref={`/${section}`} />
 
-      <section className="workspace">
+      <section className={`workspace ${section === "relay" ? "relay-workspace" : ""}`.trim()}>
         <header className="topbar">
           <div>
             <p className="eyebrow">The Lunar Dragons · {info.code}</p>
