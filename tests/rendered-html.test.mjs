@@ -324,8 +324,9 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(styles, /\.relay-subpage\s*\{[^}]*padding:\s*clamp\([^}]*\) clamp\([^}]*\) 0/s);
   assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.archive-mode:has\(\.relay-workspace\)\s*\{[^}]*height:\s*100dvh[^}]*overflow:\s*hidden[^}]*padding-bottom:\s*0/s);
   assert.match(styles, /\.workspace\.relay-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\)[^}]*overflow:\s*hidden/s);
-  assert.match(styles, /\.relay-workspace \.relay-subpage\s*\{[^}]*height:\s*100%[^}]*min-height:\s*0[^}]*display:\s*flex/s);
-  assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*height:\s*100%[^}]*min-height:\s*0/s);
+  assert.match(styles, /\.relay-workspace \.relay-subpage\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none[^}]*height:\s*100%[^}]*min-height:\s*0[^}]*display:\s*flex[^}]*margin:\s*0[^}]*padding:\s*clamp\(14px, 1\.25vw, 24px\) clamp\(16px, 1\.4vw, 28px\) 0/s);
+  assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*min-height:\s*0/s);
+  assert.match(styles, /\.relay-inbox-grid\s*\{[^}]*border-bottom-color:\s*#42563e[^}]*box-shadow:\s*inset 0 -3px/s);
   assert.match(styles, /\.relay-terminal-rack-title strong\s*\{[^}]*font:\s*400 clamp\(1\.75rem,[^}]*white-space:\s*nowrap/s);
   assert.match(styles, /\.relay-inbox-body > \.relay-data-stream\s*\{[^}]*max-width:\s*none[^}]*line-height:\s*1\.3/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.relay-terminal-rack-title strong\s*\{[^}]*white-space:\s*normal/s);
