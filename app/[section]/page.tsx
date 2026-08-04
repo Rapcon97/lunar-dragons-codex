@@ -242,12 +242,15 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
   const selected = messages.find((message) => message.id === selectedId) ?? messages[0];
   return (
     <section className="relay-inbox" aria-label="Astropathic Relay sanctum">
-      <header className="panel relay-inbox-command">
-        <div className="relay-terminal-ident" aria-hidden="true">&gt;&gt;</div>
-        <div><p className="section-kicker">Data Reliquarium 056//ASTROPATHICA</p><h2>Vox-Missive Recovery</h2><small>LOCALITY: LUNARIS · ARGENT VIGIL COMMAND INFOSANCTUM</small></div>
-        <div className="relay-inbox-status"><i /><span>EXLOAD LINK ACTIVE</span><b>{messages.length} MISSIVES COGITATED</b></div>
-      </header>
       <div className="relay-inbox-grid panel">
+        <header className="relay-terminal-rack">
+          <div className="relay-terminal-ident" aria-hidden="true">&gt;&gt;</div>
+          <div className="relay-terminal-rack-title">
+            <span>DATA RELIQUARIUM 056//ASTROPATHICA</span>
+            <strong>VOX-MISSIVE RECOVERY</strong>
+          </div>
+          <div className="relay-inbox-status"><i /><span>EXLOAD LINK ACTIVE</span><b>{messages.length} MISSIVES COGITATED</b></div>
+        </header>
         <div className="relay-inbox-list" aria-label="Preserved soul-signals">
           <header><span>VOX-MISSIVE INDEX</span><b>{Math.min(2, messages.length)} NEW SIGNALS</b></header>
           {messages.length ? messages.map((message, index) => (

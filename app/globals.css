@@ -3050,6 +3050,28 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .relay-dialog-body h2 { color: #aabb9f; font-size: clamp(25px, 4vw, 41px); text-transform: uppercase; }
 .relay-dialog-body > p:last-child { color: #9eaf97; font-size: var(--ui-text-14); line-height: 1.75; }
 
+.relay-inbox { gap: 0; }
+.relay-inbox-grid { grid-template-rows: auto minmax(0, 1fr); }
+.relay-terminal-rack {
+  grid-column: 1 / -1; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  min-height: 72px; border-bottom: 1px solid #33402f; padding: 12px 20px;
+  background: linear-gradient(90deg, rgba(6, 12, 7, .99), rgba(2, 6, 3, .99));
+  box-shadow: inset 0 -18px 35px rgba(38, 74, 34, .045);
+}
+.relay-terminal-rack-title { min-width: 0; display: flex; align-items: baseline; gap: clamp(14px, 2vw, 28px); }
+.relay-terminal-rack-title span { color: #667b61; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .14em; }
+.relay-terminal-rack-title strong { color: #a9bca1; font: 400 clamp(var(--ui-text-15), 1.55vw, 22px) "Courier New", monospace; letter-spacing: .045em; }
+.relay-cogitation-pending { clear: both; margin-top: 26px !important; color: var(--relay-command-color) !important; }
+.relay-cogitation-complete {
+  min-height: clamp(260px, 48vh, 430px); display: grid; place-content: center; justify-items: center; gap: 13px;
+  border: 1px solid rgba(80, 103, 74, .42); padding: 28px; text-align: center;
+  background: radial-gradient(circle, rgba(75, 118, 64, .13), transparent 58%);
+  box-shadow: inset 0 0 80px rgba(35, 75, 31, .1);
+}
+.relay-cogitation-complete span { color: #b7c9ad; font: 700 clamp(var(--ui-text-16), 2vw, 24px) "Courier New", monospace; letter-spacing: .1em; text-shadow: 0 0 13px rgba(122, 173, 105, .32); }
+.relay-cogitation-complete b { color: #839b7b; font: 400 var(--ui-text-10) "Courier New", monospace; letter-spacing: .16em; }
+.relay-cogitation-complete small { color: #5f745a; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .13em; }
+
 /* Keep long relay transcripts inside a complete, independently scrollable reader. */
 @media (min-width: 701px) {
   .relay-inbox-grid {
@@ -3059,7 +3081,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .relay-inbox-list,
   .relay-inbox-reader {
     min-height: 0;
-    height: 100%;
+    height: auto;
   }
   .relay-inbox-list {
     max-height: none;
@@ -3090,7 +3112,11 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 @media (max-width: 700px) {
   .relay-inbox-command { grid-template-columns: 38px minmax(0, 1fr); }
   .relay-terminal-ident { font-size: var(--ui-text-17); }
-  .relay-inbox-grid { grid-template-columns: 1fr; height: auto; max-height: none; overflow: visible; }
+  .relay-inbox-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; max-height: none; overflow: visible; }
+  .relay-terminal-rack { grid-template-columns: 28px minmax(0, 1fr); gap: 8px 12px; padding: 12px 14px; }
+  .relay-terminal-rack-title { display: grid; gap: 4px; }
+  .relay-terminal-rack-title strong { font-size: var(--ui-text-14); }
+  .relay-terminal-rack .relay-inbox-status { grid-column: 2; justify-self: start; text-align: left; }
   .relay-inbox-reader { min-height: 0; overflow: visible; }
   .relay-inbox-body { min-height: 0; overflow: visible; }
   .relay-inbox-body > .relay-terminal-content { font-size: var(--ui-text-11); }

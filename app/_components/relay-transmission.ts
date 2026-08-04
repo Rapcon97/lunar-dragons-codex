@@ -80,6 +80,11 @@ export type FormattedTransmissionTranscript = {
   lines: TransmissionTranscriptLine[];
 };
 
+export type TransmissionPlaybackPlan = {
+  analysisEndIndex: number;
+  messageStartIndex: number;
+};
+
 export const RECEIVING_LOCUS = "LUNARIS";
 export const OPERATIONAL_THEATRE = "NORTHERN NACHMUND APPROACHES";
 export const TRANSMISSION_CONTENT_MARKER = ">> VOX-MISSIVE CONTENT // EXLOAD FOLLOWS";
@@ -93,6 +98,7 @@ export const TRANSMISSION_TIMING = {
   lineBreakMs: 200,
   retrievalDotMs: 500,
   retrievalDotCount: 4,
+  cogitationCompleteMs: 1200,
   corruptionStepMs: 40,
 } as const;
 
@@ -442,6 +448,17 @@ export function transmissionCharacterDelay(character: string) {
 
 export function appendTransmissionRetrievalDots(text: string, count = TRANSMISSION_TIMING.retrievalDotCount) {
   return `${text}${".".repeat(count)}`;
+}
+
+export function planTransmissionPlayback(lines: readonly TransmissionTranscriptLine[]): TransmissionPlaybackPlan {
+  const messageStartIndex = lines.findIndex((line) => line.text === TRANSMISSION_CONTENT_MARKER);
+  if (messageStartIndex < 0) {
+    return { analysisEndIndex: 0, messageStartIndex: 0 };
+  }
+
+  let analysisEndIndex = messageStartIndex;
+  while (analysisEndIndex > 0 && lines[analysisEndIndex - 1].gap) analysisEndIndex -= 1;
+  return { analysisEndIndex, messageStartIndex };
 }
 
 export function splitTransmissionMetadata(text: string) {
