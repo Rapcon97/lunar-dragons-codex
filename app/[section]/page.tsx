@@ -275,7 +275,12 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
                 <div><p className="section-kicker">Exload transcript · clearance granted</p><small>&gt;&gt; COGITATOR HANDSHAKE CONFIRMED</small></div>
                 <span className={`relay-priority ${selected.priority.toLowerCase()}`}>{selected.priority}</span>
               </header>
-              <div className="relay-inbox-body">
+              <div
+                className="relay-inbox-body"
+                role="region"
+                aria-label="Active astropathic transmission"
+                tabIndex={0}
+              >
                 <RelayDataStream
                   afterComplete={<TransmissionOriginActions intel={intel} source={selected} />}
                   ariaLabel={selected.subject}

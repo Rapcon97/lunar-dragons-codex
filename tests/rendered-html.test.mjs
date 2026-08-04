@@ -304,6 +304,10 @@ test("homepage and Relay share the deterministic accessible transmission rendere
     sectionPage.indexOf("const identityFields"),
   );
   assert.match(relaySection, /className="relay-inbox-grid panel"/);
+  assert.match(relaySection, /aria-label="Active astropathic transmission"/);
+  assert.match(relaySection, /tabIndex=\{0\}/);
+  assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*height:\s*clamp\([^}]*100dvh[^}]*\)[^}]*\}/s);
+  assert.match(styles, /\.relay-inbox-body\s*\{[^}]*overflow-y:\s*auto[^}]*scrollbar-gutter:\s*stable/s);
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
 });
 

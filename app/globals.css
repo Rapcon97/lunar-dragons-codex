@@ -3050,10 +3050,49 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .relay-dialog-body h2 { color: #aabb9f; font-size: clamp(25px, 4vw, 41px); text-transform: uppercase; }
 .relay-dialog-body > p:last-child { color: #9eaf97; font-size: var(--ui-text-14); line-height: 1.75; }
 
+/* Keep long relay transcripts inside a complete, independently scrollable reader. */
+@media (min-width: 701px) {
+  .relay-inbox-grid {
+    height: clamp(32rem, calc(100dvh - var(--archive-terminal-height) - 27rem), 47.5rem);
+    min-height: 32rem;
+  }
+  .relay-inbox-list,
+  .relay-inbox-reader {
+    min-height: 0;
+    height: 100%;
+  }
+  .relay-inbox-list {
+    max-height: none;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .relay-inbox-reader {
+    overflow: hidden;
+  }
+  .relay-inbox-reader > header {
+    flex: 0 0 auto;
+  }
+  .relay-inbox-body {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scroll-padding-block: 24px;
+  }
+  .relay-inbox-body:focus-visible {
+    outline: 1px solid #60765a;
+    outline-offset: -1px;
+  }
+}
+
 @media (max-width: 700px) {
   .relay-inbox-command { grid-template-columns: 38px minmax(0, 1fr); }
   .relay-terminal-ident { font-size: var(--ui-text-17); }
-  .relay-inbox-grid { grid-template-columns: 1fr; }
+  .relay-inbox-grid { grid-template-columns: 1fr; height: auto; max-height: none; overflow: visible; }
+  .relay-inbox-reader { min-height: 0; overflow: visible; }
+  .relay-inbox-body { min-height: 0; overflow: visible; }
   .relay-inbox-body > .relay-terminal-content { font-size: var(--ui-text-11); }
   .relay-terminal-content p { grid-template-columns: 28px 13px minmax(0, 1fr); padding: 8px 7px; }
   .relay-inbox-body > .relay-data-stream { font-size: var(--ui-text-12); line-height: 1.58; }
