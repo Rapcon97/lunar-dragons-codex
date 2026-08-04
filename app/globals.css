@@ -3093,7 +3093,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 
 .relay-subpage {
   max-width: 1760px;
-  padding: clamp(22px, 2.1vw, 40px) clamp(24px, 2.7vw, 52px);
+  padding: clamp(22px, 2.1vw, 40px) clamp(24px, 2.7vw, 52px) 0;
 }
 .relay-section-hero {
   gap: clamp(28px, 4vw, 64px);
@@ -3132,7 +3132,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 /* Keep long relay transcripts inside a complete, independently scrollable reader. */
 @media (min-width: 701px) {
   .relay-inbox-grid {
-    height: clamp(36rem, calc(100dvh - var(--archive-terminal-height) - 15.75rem), 70rem);
+    height: max(36rem, calc(100dvh - var(--archive-terminal-height) - 8.25rem));
     min-height: 36rem;
   }
   .relay-inbox-list,

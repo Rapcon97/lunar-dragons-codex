@@ -312,6 +312,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   );
   assert.match(sectionPage, /section === "relay" \? "relay-subpage"/);
   assert.match(sectionPage, /section !== "relay"/);
+  assert.match(sectionPage, /section !== "relay" && \([\s\S]*?<footer><span>THE LUNAR DRAGONS/s);
   assert.match(relaySection, /ASTROPATHIC EXLOAD TERMINAL/);
   assert.doesNotMatch(relaySection, /VOX-MISSIVE RECOVERY/);
   assert.match(relaySection, /className="relay-inbox-grid panel"/);
@@ -319,7 +320,8 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.doesNotMatch(relaySection, /LOCALITY: LUNARIS/);
   assert.match(relaySection, /aria-label="Active astropathic transmission"/);
   assert.match(relaySection, /tabIndex=\{0\}/);
-  assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*height:\s*clamp\([^}]*100dvh[^}]*\)[^}]*\}/s);
+  assert.match(styles, /\.relay-subpage\s*\{[^}]*padding:\s*clamp\([^}]*\) clamp\([^}]*\) 0/s);
+  assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*height:\s*max\(36rem, calc\(100dvh - var\(--archive-terminal-height\) - 8\.25rem\)\)[^}]*\}/s);
   assert.match(styles, /\.relay-terminal-rack-title strong\s*\{[^}]*font:\s*400 clamp\(1\.75rem,[^}]*white-space:\s*nowrap/s);
   assert.match(styles, /\.relay-inbox-body > \.relay-data-stream\s*\{[^}]*max-width:\s*none[^}]*line-height:\s*1\.3/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.relay-terminal-rack-title strong\s*\{[^}]*white-space:\s*normal/s);

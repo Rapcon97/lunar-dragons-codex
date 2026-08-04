@@ -140,7 +140,9 @@ export default function SectionPage() {
             />
           )}
         </div>
-        <footer><span>THE LUNAR DRAGONS · THE ARGENT VIGIL</span><span>Reclaim what has been lost. Guard the passage.</span></footer>
+        {section !== "relay" && (
+          <footer><span>THE LUNAR DRAGONS · THE ARGENT VIGIL</span><span>Reclaim what has been lost. Guard the passage.</span></footer>
+        )}
       </section>
     </main>
   );
