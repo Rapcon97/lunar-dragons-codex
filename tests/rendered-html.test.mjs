@@ -531,5 +531,15 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
   assert.match(archiveData, /Founding trust · physical form sealed/);
   assert.match(archiveData, /relic\.name !== "Ancient chassis unrecorded"/);
   assert.match(styles, /\.lunaris-recognition-plate\s*\{/);
+  assert.match(sectionPage, /lunaris-hero-metrics/);
+  assert.match(sectionPage, /setVisualPreview\("recognition"\)/);
+  assert.match(sectionPage, /setVisualPreview\("blueprint"\)/);
+  assert.match(sectionPage, /OPEN COMPLETE RECOGNITION PLATE/);
+  assert.match(sectionPage, /OPEN COMPLETE SCHEMA/);
+  assert.match(styles, /\.lunaris-vessel-art img\s*\{[^}]*object-fit:\s*cover/s);
+  assert.match(styles, /\.lunaris-recognition-layout\s*\{[^}]*grid-template-columns:/s);
+  assert.match(styles, /\.lunaris-recognition-viewport img\s*\{[^}]*object-fit:\s*cover/s);
+  assert.match(styles, /\.lunaris-dimensions-plate img\s*\{[^}]*object-fit:\s*cover/s);
+  assert.match(styles, /\.lunaris-media-previewer\s*\{/);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lunaris-recognition-plate > header\s*\{[^}]*flex-direction:\s*column/s);
 });

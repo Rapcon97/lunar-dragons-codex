@@ -151,6 +151,7 @@ export default function SectionPage() {
 }
 
 function LunarisSection() {
+  const [visualPreview, setVisualPreview] = useState<"recognition" | "blueprint" | null>(null);
   const armament = [
     ["Prow weapons", "Two heavy bombardment cannon batteries", "Eight torpedo tubes", "Conventional torpedoes", "Specialist torpedoes", "Astartes boarding torpedoes"],
     ["Broadsides", "Heavy macro-cannon decks", "Auxiliary macro batteries", "Limited lance emplacements"],
@@ -177,12 +178,44 @@ function LunarisSection() {
     "056.M42 · current Chapter roll verified: Bearer of the First Stone · The Argent Spear",
   ];
 
+  const visualArchive = visualPreview === "recognition"
+    ? {
+        title: "Imperial Navy Recognition Plate",
+        code: "NAVIS/RECOG/056.M42/LUNARIS",
+        src: "/lunaris-recognition-plate.png",
+        alt: "Complete Imperial recognition datasheet for the Lunaris",
+      }
+    : {
+        title: "Mechanicus Structural Blueprint",
+        code: "PAL-17/Θ · LD-MK.XII-77A",
+        src: "/lunaris-dimensions.png",
+        alt: "Complete Mechanicus technical blueprint of the Lunaris",
+      };
+
+  useEffect(() => {
+    if (!visualPreview) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setVisualPreview(null);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [visualPreview]);
+
   return (
+    <>
     <div className="lunaris-dossier">
       <section className="panel lunaris-command-plate">
         <div className="lunaris-vessel-art">
           <img src="/lunaris-flagship.png" alt="The Lunaris, heavy command battle barge and flagship of the Lunar Dragons" />
-          <span aria-hidden="true">IDENTIFICATION LOCK · LUNAR DRAGONS NAVIS PRAETORIA</span>
+          <span aria-hidden="true">IDENTIFICATION LOCK · NAVIS PRAETORIA</span>
         </div>
         <div className="lunaris-title-block">
           <p className="section-kicker">Serialis Imperialis · 008.M42/DR-017-A</p>
@@ -191,6 +224,11 @@ function LunarisSection() {
           <p>Heavy Command Battle Barge and mobile headquarters of the Lunar Dragons. Command vessel of the Nachmund Reclamation and the Argent Vigil Crusade.</p>
         </div>
         <aside><span>AUTHENTICATED</span><b>VERIFIED</b><small>LORD COMMANDER EYES ONLY</small></aside>
+        <div className="lunaris-hero-metrics" aria-label="Lunaris primary dimensions">
+          <span><small>LENGTH</small><b>12.3 KM</b></span>
+          <span><small>MAXIMUM BEAM</small><b>3.8 KM</b></span>
+          <span><small>VERTICAL DRAFT</small><b>1.6 KM</b></span>
+        </div>
       </section>
 
       <section className="panel lunaris-recognition-plate">
@@ -198,10 +236,22 @@ function LunarisSection() {
           <div><p className="section-kicker">Imperial Navy recognition datasheet</p><h3>Authenticated exterior and strategic profile</h3></div>
           <span>056.M42 · CURRENT CHAPTER ROLL</span>
         </header>
-        <figure>
-          <img src="/lunaris-recognition-plate.png" alt="Imperial recognition datasheet for the Lunaris showing its exterior, dimensions, armament and embarked strength" />
-          <figcaption>ARCHIVAL PLATE · OFFICIAL RECOGNITION REFERENCE</figcaption>
-        </figure>
+        <div className="lunaris-recognition-layout">
+          <button className="lunaris-recognition-viewport" type="button" onClick={() => setVisualPreview("recognition")}>
+            <img src="/lunaris-recognition-plate.png" alt="Cropped Imperial recognition view of the Lunaris" />
+            <span>OPEN COMPLETE RECOGNITION PLATE</span>
+          </button>
+          <div className="lunaris-recognition-extract">
+            <p className="section-kicker">Recognition extract · authenticated</p>
+            <p>The vessel is identified by its monumental armoured prow, elongated structural spine and fortress-like command citadel. The approved Lunar Dragons heraldry remains the sole authoritative ship badge.</p>
+            <dl>
+              <div><dt>SERVICE DESIGNATION</dt><dd>Heavy Command Battle Barge</dd></div>
+              <div><dt>PROVENANCE</dt><dd>Authenticated ancient structure · layered reconstruction</dd></div>
+              <div><dt>CHAPTER CUSTODY</dt><dd>Since the Ultima Founding</dd></div>
+              <div><dt>AUTHORITY</dt><dd>Current recognition plate · 056.M42</dd></div>
+            </dl>
+          </div>
+        </div>
       </section>
 
       <section className="lunaris-profile-grid">
@@ -224,8 +274,12 @@ function LunarisSection() {
         <article className="panel lunaris-scale">
           <p className="section-kicker">Mechanicus structural blueprint</p>
           <figure className="lunaris-dimensions-plate">
-            <img src="/lunaris-dimensions.png" alt="Mechanicus technical blueprint of the Lunaris with broadside, dorsal, ventral and sectional views" />
-            <figcaption>PAL-17/Θ · PROVISIONAL STRUCTURAL SCHEMA</figcaption>
+            <button type="button" onClick={() => setVisualPreview("blueprint")} aria-label="Open the complete Mechanicus structural blueprint">
+              <img src="/lunaris-dimensions.png" alt="Cropped Mechanicus blueprint showing the principal profiles of the Lunaris" />
+              <span className="lunaris-blueprint-axis" aria-hidden="true"><i /><b>STRUCTURAL SPINE · AUTHENTICATED</b><i /></span>
+              <span className="lunaris-blueprint-open">OPEN COMPLETE SCHEMA</span>
+            </button>
+            <figcaption>PAL-17/Θ · LD-MK.XII-77A · STRUCTURAL EXTRACT</figcaption>
           </figure>
           <div className="lunaris-measure"><span>PROW</span><i /><strong>12.3 KM</strong><i /><span>STERN</span></div>
           <dl>
@@ -253,6 +307,34 @@ function LunarisSection() {
         <article className="panel lunaris-honours"><p className="section-kicker">Authenticated service record</p><ul>{serviceRecord.map((record) => <li key={record}>{record}</li>)}</ul><p className="lunaris-symbolism">The Argent Spear · The First Home · Bearer of the First Stone · The Unfinished Foundation</p></article>
       </section>
     </div>
+
+    {visualPreview && (
+      <div
+        className="archive-previewer-backdrop"
+        role="presentation"
+        onMouseDown={(event) => {
+          if (event.currentTarget === event.target) setVisualPreview(null);
+        }}
+      >
+        <section className="archive-previewer facsimile lunaris-media-previewer" role="dialog" aria-modal="true" aria-labelledby="lunaris-media-title">
+          <header>
+            <div>
+              <p className="section-kicker">Navis Praetoria · authenticated visual archive</p>
+              <h2 id="lunaris-media-title">{visualArchive.title}</h2>
+            </div>
+            <div className="archive-previewer-controls">
+              <span>{visualArchive.code}</span>
+              <button type="button" autoFocus onClick={() => setVisualPreview(null)} aria-label="Close visual archive">CLOSE ×</button>
+            </div>
+          </header>
+          <div className="archive-previewer-body">
+            <img src={visualArchive.src} alt={visualArchive.alt} />
+          </div>
+          <footer><span>ESC TO CLOSE</span><span>ARCHIVAL IMAGE · UNALTERED SOURCE PLATE</span></footer>
+        </section>
+      </div>
+    )}
+    </>
   );
 }
 
