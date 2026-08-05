@@ -864,6 +864,78 @@ function CompaniesSection({
   );
 }
 
+const preliminarySurveyContacts = [
+  {
+    id: "AUGUR-PRIMUS",
+    label: "PRIMARY STAR",
+    classification: "LOW-BURNING YELLOW-ORANGE",
+    detail: "Magnetically violent corona; periodic long-range augur blindness.",
+    kind: "star",
+    x: 43,
+    y: 43,
+  },
+  {
+    id: "RETURN-I",
+    label: "INNER BODY",
+    classification: "SCORCHED · AIRLESS",
+    detail: "Broken iron and vitrified stone; no present habitation detected.",
+    kind: "scorched",
+    x: 31,
+    y: 34,
+  },
+  {
+    id: "RETURN-II",
+    label: "INDUSTRIAL RETURN",
+    classification: "POISONED · WORKED",
+    detail: "Excavated surface, ruined orbital structures, and no stable power response.",
+    kind: "industrial",
+    x: 34,
+    y: 63,
+  },
+  {
+    id: "RETURN-III",
+    label: "INHABITED WORLD",
+    classification: "HABITABLE · SIGNAL DEGRADED",
+    detail: "Human-scale ruins, agriculture, artificial light, and archaic low-power vox traffic.",
+    kind: "inhabited",
+    x: 61,
+    y: 32,
+  },
+  {
+    id: "RETURN-IV",
+    label: "OUTER GIANT",
+    classification: "STORM-BANDED · MULTIPLE MOONS",
+    detail: "Massive outer-system giant surrounded by moons and a broad debris field.",
+    kind: "giant",
+    x: 73,
+    y: 66,
+  },
+  {
+    id: "RETURN-IV-A",
+    label: "MOON COMPLEX",
+    classification: "ARTIFICIAL STRUCTURES · FAINT POWER",
+    detail: "Possible anchorage and salvage refuge; active defences cannot be excluded.",
+    kind: "moon",
+    x: 78,
+    y: 56,
+  },
+] as const;
+
+const initialSurveyConditions = [
+  "Translation occurred deep within the local gravity well.",
+  "No reliable Astronomican fix or recognised Imperial beacon answers.",
+  "No confirmed transponder from the missing crusade force is detected.",
+  "No hostile capital vessel is presently within weapons range.",
+] as const;
+
+const initialSurveyPriorities = [
+  "Restore dependable short-range augurs and stabilise the Lunaris.",
+  "Search for crusade vessels elsewhere within the system.",
+  "Resolve the moon complex before committing to approach.",
+  "Decode the northern-hemisphere planetary transmission.",
+  "Locate fuel, repair material, concealment, and defensible anchorage.",
+] as const;
+
 function SectorIntelSection({
   canEdit,
   intel,
@@ -969,6 +1041,7 @@ function SectorIntelSection({
     ? resolveTransmissionOrigin(display, { originLocationId, originState: "CONFIRMED" })
     : null;
   const selectedWorld = selectedWorldIndex === null ? null : display.worlds[selectedWorldIndex] ?? null;
+  const showPreliminarySurvey = display.worlds.length === 0;
   const surveyAuthority = display.survey.authority === "ratified"
     ? "RATIFIED OPERATIONAL INTELLIGENCE"
     : display.survey.authority === "review"
@@ -1048,6 +1121,22 @@ function SectorIntelSection({
               <span className="trailing">LOCAL TRAILING</span>
               <i className="corner-nw" /><i className="corner-ne" /><i className="corner-sw" /><i className="corner-se" />
             </div>
+            {showPreliminarySurvey && (
+              <>
+                <div className="preliminary-debris-belt" aria-hidden="true"><i /><i /><i /></div>
+                {preliminarySurveyContacts.map((contact) => (
+                  <div
+                    aria-label={`${contact.label}; ${contact.classification}; provisional unverified augur return`}
+                    className={`preliminary-survey-contact ${contact.kind}`}
+                    key={contact.id}
+                    role="img"
+                    style={{ left: `${contact.x}%`, top: `${contact.y}%` }}
+                  >
+                    <i /><b>{contact.id}</b><small>{contact.label}</small>
+                  </div>
+                ))}
+              </>
+            )}
             {showEmpyricInterference && <div className="sector-rift" aria-hidden="true"><i /><i /><i /></div>}
             {plottedOrigin?.kind === "exact" && (
               <div className="sector-origin-fix" role="status">
@@ -1109,9 +1198,9 @@ function SectorIntelSection({
             </div>
             {!display.worlds.length && (
               <div className="survey-void-state">
-                <span>NO RELIABLE CELESTIAL SOLUTION</span>
+                <span>INITIAL AUSPEX PICTURE · DRAFT ONLY</span>
                 <b>{display.survey.systemDesignation}</b>
-                <p>Long-range augurs return empyric noise. No star, world, station, or translation route has yet been entered into the sanctioned local register.</p>
+                <p>Six provisional returns and an outer debris belt are visible. Names, orbital solutions, allegiance, and navigable routes remain unverified.</p>
               </div>
             )}
             <span className="map-compass" aria-hidden="true">N<br />✦</span>
@@ -1184,7 +1273,7 @@ function SectorIntelSection({
       )}
 
       <nav className="intel-register-tabs" aria-label="Intelligence registers">
-        <button className={activeRegister === "systems" ? "active" : ""} onClick={() => setActiveRegister("systems")}><span>01</span>SYSTEM SURVEY <b>{display.worlds.length}</b></button>
+        <button className={activeRegister === "systems" ? "active" : ""} onClick={() => setActiveRegister("systems")}><span>01</span>SYSTEM SURVEY <b>{display.worlds.length}V · {showPreliminarySurvey ? preliminarySurveyContacts.length : 0}R</b></button>
         <button className={activeRegister === "contacts" ? "active" : ""} onClick={() => setActiveRegister("contacts")}><span>02</span>CONTACTS <b>{display.factions.length}</b></button>
         <button className={activeRegister === "mandate" ? "active" : ""} onClick={() => setActiveRegister("mandate")}><span>03</span>CRUSADE MANDATE <b>{display.directives.length}</b></button>
         <button className={activeRegister === "taxonomy" ? "active" : ""} onClick={() => setActiveRegister("taxonomy")}><span>04</span>CLASSIFICATION INDEX <b>113</b></button>
@@ -1225,7 +1314,27 @@ function SectorIntelSection({
                   <span>{String(index + 1).padStart(2, "0")}</span><div><b>{world.name}</b><small>{world.classification}</small></div><em>{world.status}</em><i>›</i>
                 </button>
               ))}
-              {!display.worlds.length && <div className="intel-empty-register"><b>NO VERIFIED SYSTEM RECORDS</b><p>The Lunaris has not yet produced a reliable celestial solution. New locations will enter this register only after cartographic verification.</p></div>}
+              {!display.worlds.length && (
+                <div className="preliminary-survey-register">
+                  <header>
+                    <div><span>DRAFT DEVELOPMENT RECORD</span><h3>Initial auspex picture</h3></div>
+                    <strong>NO VERIFIED SYSTEM RECORDS</strong>
+                    <p>The Lunaris appears to have arrived alone within an unidentified system. These returns are schematic sensor classifications, not named or sanctioned cartographic objects.</p>
+                  </header>
+                  <div className="preliminary-contact-grid">
+                    {preliminarySurveyContacts.map((contact) => (
+                      <article key={contact.id}>
+                        <span>{contact.id}</span><b>{contact.label}</b><small>{contact.classification}</small><p>{contact.detail}</p>
+                      </article>
+                    ))}
+                  </div>
+                  <div className="preliminary-survey-briefs">
+                    <section><h4>FIRST SURVEY CONDITIONS</h4><ul>{initialSurveyConditions.map((condition) => <li key={condition}>{condition}</li>)}</ul></section>
+                    <section><h4>IMMEDIATE COMMAND PRIORITIES</h4><ol>{initialSurveyPriorities.map((priority) => <li key={priority}>{priority}</li>)}</ol></section>
+                  </div>
+                  <footer>SYSTEM NAME · BODY NAMES · POPULATION · ALLEGIANCE · CHRONOLOGY · THREAT IDENTITIES // UNRESOLVED</footer>
+                </div>
+              )}
             </div>
           )}
           {isEditing && <div className="warp-lane-editor">

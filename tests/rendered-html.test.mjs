@@ -526,6 +526,24 @@ test("Sector Intel uses the green Imperial chart frame without fabricating map r
   assert.doesNotMatch(sectionPage, /intel-chart-(?:depth|boundaries|frame)[\s\S]{0,300}(?:Vigil IX|Orison|Veil Anchor 7)/);
 });
 
+test("the unidentified-system draft renders only provisional non-navigable auspex returns", async () => {
+  const [sectionPage, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  for (const signal of ["AUGUR-PRIMUS", "RETURN-I", "RETURN-II", "RETURN-III", "RETURN-IV", "RETURN-IV-A"]) {
+    assert.match(sectionPage, new RegExp(`id: "${signal}"`));
+  }
+  assert.match(sectionPage, /showPreliminarySurvey = display\.worlds\.length === 0/);
+  assert.match(sectionPage, /DRAFT DEVELOPMENT RECORD/);
+  assert.match(sectionPage, /Names, orbital solutions, allegiance, and navigable routes remain unverified/);
+  assert.match(sectionPage, /className=\{`preliminary-survey-contact \$\{contact\.kind\}`\}/);
+  assert.doesNotMatch(sectionPage, /preliminarySurveyContacts\.map[\s\S]{0,700}(?:CartographyTransitionLink|href=|onClick=)/);
+  assert.match(styles, /\.preliminary-survey-contact\s*\{[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.preliminary-contact-grid,\.preliminary-survey-briefs\s*\{\s*grid-template-columns:\s*1fr;/s);
+});
+
 test("the Lunaris dossier uses the sealed canon profile and current visual archive", async () => {
   const [sectionPage, archiveData, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
