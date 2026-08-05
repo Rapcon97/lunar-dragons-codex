@@ -509,6 +509,23 @@ test("Phase 3 origin actions share one controlled resolver and safe Intel focus"
   assert.match(styles, /\.sector-origin-fix/);
 });
 
+test("Sector Intel uses the green Imperial chart frame without fabricating map records", async () => {
+  const [sectionPage, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(sectionPage, /className="intel-chart-depth" aria-hidden="true"/);
+  assert.match(sectionPage, /className="intel-chart-boundaries" aria-hidden="true"/);
+  assert.match(sectionPage, /className="intel-chart-frame" aria-hidden="true"/);
+  assert.match(sectionPage, /RELATIVE SPINWARD/);
+  assert.match(sectionPage, /LOCAL TRAILING/);
+  assert.match(styles, /\.sector-map-grid\s*\{[\s\S]*background-size:\s*2\.5% 2\.5%, 2\.5% 2\.5%, 10% 10%, 10% 10%;/s);
+  assert.match(styles, /\.intel-chart-frame\s*\{[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.intel-chart-frame > \.trailing\s*\{\s*display:\s*none;/s);
+  assert.doesNotMatch(sectionPage, /intel-chart-(?:depth|boundaries|frame)[\s\S]{0,300}(?:Vigil IX|Orison|Veil Anchor 7)/);
+});
+
 test("the Lunaris dossier uses the sealed canon profile and current visual archive", async () => {
   const [sectionPage, archiveData, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),

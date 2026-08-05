@@ -2348,8 +2348,16 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .intel-layer-controls { display: flex; flex-wrap: wrap; justify-content: end; gap: 6px; }
 .intel-layer-controls button { color: #52634e; background: #030603; border: 1px solid #31402e; padding: 8px 10px; cursor: pointer; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .1em; }
 .intel-layer-controls button.active { color: #9aad90; border-color: #63785c; background: #0b130b; box-shadow: inset 2px 0 #7f9975; }
-.intel-survey-map { min-height: 620px; }
-.intel-survey-map::after { content: ""; position: absolute; inset: 10%; z-index: -1; border: 1px dashed rgba(103,130,94,.17); border-radius: 50%; box-shadow: 0 0 90px rgba(57,89,52,.08); }
+.intel-survey-map {
+  min-height: 620px;
+  outline: 1px solid rgba(116,145,104,.16);
+  outline-offset: -7px;
+}
+.intel-survey-map::after {
+  content: ""; position: absolute; inset: 11% 13%; z-index: 0; pointer-events: none;
+  border: 1px dashed rgba(117,151,105,.2); border-radius: 50%;
+  box-shadow: 0 0 90px rgba(57,89,52,.08), inset 0 0 55px rgba(65,109,59,.04);
+}
 .sector-world { appearance: none; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .sector-world.selected > i { border-color: #c0d2b7; transform: scale(1.25); box-shadow: 0 0 0 7px rgba(128,159,117,.13),0 0 22px rgba(129,174,115,.55); }
 .lunaris-locus-marker { position: absolute; z-index: 4; left: 50%; top: 54%; width: 0; height: 0; color: #a1b596; font-family: "Courier New",monospace; }
@@ -2421,26 +2429,71 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .intel-map-panel > header > span { color: #455640; font: var(--ui-text-7) "Courier New",monospace; letter-spacing: .13em; }
 .sector-map {
   position: relative; isolation: isolate; min-height: 510px; overflow: hidden;
-  border: 1px solid rgba(88,117,79,.42);
+  border: 1px solid rgba(113,143,101,.58);
   background:
-    radial-gradient(circle at 48% 48%, rgba(90,147,86,.16), transparent 3%),
-    radial-gradient(circle at 28% 30%, rgba(109,141,98,.08), transparent 20%),
-    radial-gradient(circle at 76% 70%, rgba(77,39,35,.16), transparent 23%), #020502;
-  box-shadow: inset 0 0 80px rgba(0,0,0,.86), 0 0 28px rgba(37,84,39,.08);
+    radial-gradient(ellipse at 49% 48%, rgba(103,168,94,.2), transparent 4%),
+    radial-gradient(ellipse at 25% 28%, rgba(73,125,67,.16), transparent 25%),
+    radial-gradient(ellipse at 76% 67%, rgba(34,82,39,.14), transparent 28%),
+    linear-gradient(135deg, rgba(8,22,10,.9), rgba(2,6,3,.96) 48%, rgba(5,15,7,.9));
+  box-shadow:
+    inset 0 0 0 4px rgba(2,6,3,.9),
+    inset 0 0 0 5px rgba(101,132,92,.16),
+    inset 0 0 110px rgba(0,0,0,.88),
+    0 0 28px rgba(37,84,39,.1);
 }
 .sector-map::before {
-  content: ""; position: absolute; inset: 0; z-index: -2; opacity: .62;
-  background-image: radial-gradient(circle, rgba(160,187,147,.6) 0 1px, transparent 1.4px), radial-gradient(circle, rgba(84,121,78,.5) 0 1px, transparent 1.3px);
-  background-position: 0 0, 17px 29px; background-size: 47px 53px, 71px 67px;
+  content: ""; position: absolute; inset: 0; z-index: -2; opacity: .72;
+  background-image:
+    radial-gradient(circle, rgba(181,210,166,.72) 0 1px, transparent 1.35px),
+    radial-gradient(circle, rgba(99,151,90,.56) 0 1px, transparent 1.3px),
+    radial-gradient(circle, rgba(123,165,111,.42) 0 .8px, transparent 1.2px);
+  background-position: 0 0, 17px 29px, 41px 11px;
+  background-size: 47px 53px, 71px 67px, 89px 83px;
+}
+.intel-chart-depth {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .82;
+  background:
+    radial-gradient(circle at 9% 18%, rgba(180,220,164,.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 17% 72%, rgba(120,179,106,.78) 0 1px, transparent 2.2px),
+    radial-gradient(circle at 31% 13%, rgba(159,205,145,.74) 0 1.2px, transparent 2.5px),
+    radial-gradient(circle at 39% 83%, rgba(107,166,96,.72) 0 1px, transparent 2.1px),
+    radial-gradient(circle at 58% 18%, rgba(174,217,159,.74) 0 1px, transparent 2.4px),
+    radial-gradient(circle at 68% 79%, rgba(100,158,91,.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 21%, rgba(153,204,140,.76) 0 1.2px, transparent 2.6px),
+    radial-gradient(circle at 91% 58%, rgba(115,176,102,.68) 0 1px, transparent 2px),
+    radial-gradient(ellipse at 52% 55%, rgba(40,89,43,.16), transparent 42%),
+    linear-gradient(112deg, transparent 12%, rgba(71,119,64,.05) 29%, transparent 48%, rgba(63,103,57,.05) 72%, transparent 88%);
+  filter: drop-shadow(0 0 5px rgba(111,171,101,.16));
 }
 .sector-map-grid {
-  position: absolute; inset: 0; z-index: -1; opacity: .24;
-  background: linear-gradient(rgba(94,124,85,.24) 1px, transparent 1px), linear-gradient(90deg, rgba(94,124,85,.24) 1px, transparent 1px);
-  background-size: 12.5% 12.5%;
+  position: absolute; inset: 0; z-index: -1; opacity: .52;
+  background-image:
+    linear-gradient(rgba(91,126,83,.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91,126,83,.16) 1px, transparent 1px),
+    linear-gradient(rgba(113,150,101,.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(113,150,101,.18) 1px, transparent 1px);
+  background-size: 2.5% 2.5%, 2.5% 2.5%, 10% 10%, 10% 10%;
 }
 .sector-map-grid::before, .sector-map-grid::after { content: ""; position: absolute; border: 1px solid rgba(100,137,91,.24); border-radius: 50%; }
 .sector-map-grid::before { width: 260px; height: 260px; left: calc(48% - 130px); top: calc(48% - 130px); }
 .sector-map-grid::after { width: 400px; height: 400px; left: calc(48% - 200px); top: calc(48% - 200px); border-style: dashed; }
+.intel-chart-boundaries { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; opacity: .43; }
+.intel-chart-boundaries i { position: absolute; border: 1px solid rgba(128,159,116,.45); box-shadow: 0 0 10px rgba(70,112,63,.06); transform: rotate(-8deg) skewX(-7deg); }
+.intel-chart-boundaries i:nth-child(1) { left: -5%; top: 16%; width: 42%; height: 44%; }
+.intel-chart-boundaries i:nth-child(2) { left: 31%; top: -12%; width: 39%; height: 49%; transform: rotate(7deg) skewX(11deg); }
+.intel-chart-boundaries i:nth-child(3) { right: -7%; bottom: 7%; width: 44%; height: 43%; transform: rotate(-11deg) skewX(8deg); }
+.intel-chart-frame { position: absolute; inset: 11px; z-index: 5; pointer-events: none; border: 1px solid rgba(123,154,111,.34); }
+.intel-chart-frame::before,.intel-chart-frame::after { content: ""; position: absolute; left: 50%; width: 1px; height: 14px; background: #718669; transform: translateX(-50%); opacity: .7; }
+.intel-chart-frame::before { top: -1px; }
+.intel-chart-frame::after { bottom: -1px; }
+.intel-chart-frame > span { position: absolute; z-index: 1; color: #5f7359; background: rgba(3,8,4,.92); border-inline: 1px solid #465640; padding: 4px 12px; font: var(--ui-text-5) "Courier New",monospace; letter-spacing: .16em; white-space: nowrap; }
+.intel-chart-frame > .spinward { left: 50%; top: -12px; transform: translateX(-50%); }
+.intel-chart-frame > .trailing { left: 50%; bottom: -12px; transform: translateX(-50%); }
+.intel-chart-frame > i { position: absolute; width: 21px; height: 21px; border-color: #82967a; opacity: .75; }
+.intel-chart-frame > .corner-nw { left: -1px; top: -1px; border-left: 2px solid; border-top: 2px solid; }
+.intel-chart-frame > .corner-ne { right: -1px; top: -1px; border-right: 2px solid; border-top: 2px solid; }
+.intel-chart-frame > .corner-sw { left: -1px; bottom: -1px; border-left: 2px solid; border-bottom: 2px solid; }
+.intel-chart-frame > .corner-se { right: -1px; bottom: -1px; border-right: 2px solid; border-bottom: 2px solid; }
 .sector-rift { position: absolute; right: 5%; bottom: 7%; width: 36%; height: 34%; opacity: .42; filter: drop-shadow(0 0 16px rgba(117,44,40,.24)); transform: rotate(-13deg); }
 .sector-rift::before, .sector-rift::after, .sector-rift i {
   content: ""; position: absolute; inset: 40% 0 auto; height: 1px;
@@ -2503,9 +2556,9 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .sector-origin-fix span, .sector-origin-fix small { color: #6c8066; font-size: var(--ui-text-7); letter-spacing: .12em; }
 .sector-origin-fix b { color: #b7cbaa; font-size: var(--ui-text-11); font-weight: 400; letter-spacing: .08em; }
 .world-1 > i { width: 19px; height: 19px; left: -10px; top: -10px; border-width: 2px; }
-.map-compass { position: absolute; right: 19px; top: 16px; color: #52694e; text-align: center; font: var(--ui-text-8)/1.5 "Courier New",monospace; letter-spacing: .15em; }
-.map-scale { position: absolute; left: 18px; bottom: 14px; color: #3f5140; border-top: 1px solid #52694e; width: 120px; padding-top: 5px; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .12em; }
-.intel-map-legend { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 13px; }
+.map-compass { position: absolute; z-index: 6; right: 24px; top: 22px; color: #789170; text-align: center; text-shadow: 0 0 8px rgba(121,169,109,.3); font: var(--ui-text-8)/1.5 "Courier New",monospace; letter-spacing: .15em; }
+.map-scale { position: absolute; z-index: 6; left: 24px; bottom: 22px; color: #52664e; border-top: 1px solid #667d5f; width: 150px; padding-top: 5px; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .12em; }
+.intel-map-legend { display: flex; flex-wrap: wrap; gap: 15px 22px; margin-top: 10px; border: 1px solid #2d3b2a; padding: 12px 15px; background: linear-gradient(90deg,rgba(8,14,8,.92),rgba(3,7,4,.96)); box-shadow: inset 3px 0 #53664e; }
 .intel-map-legend span { color: #4d5f49; font: var(--ui-text-7) "Courier New",monospace; letter-spacing: .1em; text-transform: uppercase; }
 .intel-map-legend i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #7f9876; }
 .intel-map-legend i.contested { background: #a7774c; }
@@ -2916,6 +2969,10 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .intel-layer-controls { width: 100%; justify-content: start; }
   .intel-layer-controls button { flex: 1; }
   .intel-survey-map { min-height: 510px; }
+  .intel-chart-frame > .trailing { display: none; }
+  .intel-chart-frame > span { max-width: calc(100% - 64px); overflow: hidden; text-overflow: ellipsis; }
+  .intel-chart-boundaries { opacity: .3; }
+  .map-scale { left: 20px; bottom: 19px; width: 112px; }
   .lunaris-locus-marker { top: 48%; }
   .lunaris-locus-marker b,.lunaris-locus-marker small { left: 0; transform: translateX(-50%); text-align: center; }
   .lunaris-locus-marker b { top: 31px; }

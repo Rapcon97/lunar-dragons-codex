@@ -1040,7 +1040,14 @@ function SectorIntelSection({
             </div>
           </header>
           <div className={`sector-map intel-survey-map${showEmpyricInterference ? " empyric-active" : ""}`} aria-label={`Localized map of ${display.subsectorName}`}>
+            <div className="intel-chart-depth" aria-hidden="true" />
             <div className="sector-map-grid" aria-hidden="true" />
+            <div className="intel-chart-boundaries" aria-hidden="true"><i /><i /><i /></div>
+            <div className="intel-chart-frame" aria-hidden="true">
+              <span className="spinward">RELATIVE SPINWARD</span>
+              <span className="trailing">LOCAL TRAILING</span>
+              <i className="corner-nw" /><i className="corner-ne" /><i className="corner-sw" /><i className="corner-se" />
+            </div>
             {showEmpyricInterference && <div className="sector-rift" aria-hidden="true"><i /><i /><i /></div>}
             {plottedOrigin?.kind === "exact" && (
               <div className="sector-origin-fix" role="status">
