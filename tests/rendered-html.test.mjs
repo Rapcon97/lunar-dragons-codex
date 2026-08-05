@@ -149,36 +149,40 @@ test("the terminal footer unifies viewer controls and the live chronometer", asy
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.archive-terminal-footer/);
 });
 
-test("shared interface typography uses the 125 percent readability scale", async () => {
+test("shared interface typography uses one semantic readability scale", async () => {
   const styles = await readFile("app/globals.css", "utf8");
 
-  const expectedScale = {
-    5: "6.25px",
-    6: "7.5px",
-    7: "8.75px",
-    8: "10px",
-    9: "11.25px",
-    10: "12.5px",
-    11: "13.75px",
-    12: "15px",
-    13: "16.25px",
-    14: "17.5px",
-    15: "18.75px",
-    16: "20px",
-    17: "21.25px",
-    18: "22.5px",
+  const expectedRoles = {
+    ornament: ".625rem",
+    micro: ".6875rem",
+    meta: ".75rem",
+    label: ".8125rem",
+    control: ".875rem",
+    terminal: ".9375rem",
+    "body-small": "1rem",
+    body: "1.125rem",
+    lead: "1.25rem",
+    title: "1.5rem",
   };
 
-  for (const [level, size] of Object.entries(expectedScale)) {
-    assert.match(styles, new RegExp(`--ui-text-${level}:\\s*${size.replace(".", "\\.")}`));
+  for (const [role, size] of Object.entries(expectedRoles)) {
+    assert.match(styles, new RegExp(`--type-${role}:\\s*${size.replace(".", "\\.")}`));
+  }
+
+  const expectedAliases = {
+    5: "ornament", 6: "micro", 7: "meta", 8: "label", 9: "control",
+    10: "terminal", 11: "body-small", 12: "body-small", 13: "body",
+    14: "body", 15: "body", 16: "lead", 17: "lead", 18: "title",
+  };
+  for (const [level, role] of Object.entries(expectedAliases)) {
+    assert.match(styles, new RegExp(`--ui-text-${level}:\\s*var\\(--type-${role}\\)`));
   }
 
   assert.match(styles, /body\s*\{[^}]*font-size:\s*var\(--ui-text-15\)/s);
-  assert.match(styles, /\.nav-item small\s*\{[^}]*font-size:\s*var\(--ui-text-9\)[^}]*white-space:\s*nowrap/s);
-  assert.match(styles, /\.archive-terminal-prompt > div\s*\{[^}]*font-size:\s*var\(--ui-text-10\)/s);
-  assert.match(styles, /\.timeline p\s*\{[^}]*font-size:\s*var\(--ui-text-14\)/s);
-  assert.match(styles, /\.guest-user-form input\s*\{[^}]*font:\s*var\(--ui-text-11\)/s);
-  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.entry-form\s*\{[^}]*flex-direction:\s*column/s);
+  assert.match(styles, /\.workspace\s*\{[^}]*font-size:\s*var\(--type-body\)/s);
+  assert.match(styles, /\.workspace :is\(input, textarea, select\)\s*\{[^}]*font-size:\s*var\(--type-body-small\)/s);
+  assert.match(styles, /\.relay-data-stream,[\s\S]*\.chronicle-record-content\s*\{[^}]*font-size:\s*var\(--type-body-small\)/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.workspace :is\(input, textarea, select\)\s*\{\s*font-size:\s*1rem;/s);
 
   assert.match(styles, /\.nav-icon\s*\{[^}]*width:\s*26px;[^}]*height:\s*26px/s);
   assert.match(styles, /\.crest-shield b\s*\{[^}]*font-size:\s*13px/s);

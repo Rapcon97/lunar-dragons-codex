@@ -11,20 +11,33 @@
   --line: rgba(107, 130, 91, .18);
   --actual-sidebar-width: 82px;
   --archive-terminal-height: 62px;
-  --ui-text-5: 6.25px;
-  --ui-text-6: 7.5px;
-  --ui-text-7: 8.75px;
-  --ui-text-8: 10px;
-  --ui-text-9: 11.25px;
-  --ui-text-10: 12.5px;
-  --ui-text-11: 13.75px;
-  --ui-text-12: 15px;
-  --ui-text-13: 16.25px;
-  --ui-text-14: 17.5px;
-  --ui-text-15: 18.75px;
-  --ui-text-16: 20px;
-  --ui-text-17: 21.25px;
-  --ui-text-18: 22.5px;
+  /* Semantic archive typography. Numeric aliases remain for compatibility
+     with the established component styling while collapsing it onto a
+     readable, predictable set of roles. */
+  --type-ornament: .625rem;
+  --type-micro: .6875rem;
+  --type-meta: .75rem;
+  --type-label: .8125rem;
+  --type-control: .875rem;
+  --type-terminal: .9375rem;
+  --type-body-small: 1rem;
+  --type-body: 1.125rem;
+  --type-lead: 1.25rem;
+  --type-title: 1.5rem;
+  --ui-text-5: var(--type-ornament);
+  --ui-text-6: var(--type-micro);
+  --ui-text-7: var(--type-meta);
+  --ui-text-8: var(--type-label);
+  --ui-text-9: var(--type-control);
+  --ui-text-10: var(--type-terminal);
+  --ui-text-11: var(--type-body-small);
+  --ui-text-12: var(--type-body-small);
+  --ui-text-13: var(--type-body);
+  --ui-text-14: var(--type-body);
+  --ui-text-15: var(--type-body);
+  --ui-text-16: var(--type-lead);
+  --ui-text-17: var(--type-lead);
+  --ui-text-18: var(--type-title);
 }
 
 /* Administratum planetary classification archive */
@@ -3824,4 +3837,160 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     padding: 16px 0 0;
   }
   .chronicle-reader-scroll > .decree-record .decree-actions button { width: 100%; }
+}
+
+/* Unified archive typography -------------------------------------------------
+   Essential information never uses the ornamental scale. Display lettering,
+   sigils and decorative numerals retain their deliberately oversized forms. */
+.workspace {
+  font-size: var(--type-body);
+  line-height: 1.55;
+}
+
+.workspace :is(input, textarea, select) {
+  font-size: var(--type-body-small);
+  line-height: 1.5;
+}
+
+.eyebrow,
+.section-kicker,
+.panel-heading > span,
+.settings-card > span,
+.field-card > span,
+.record-card > span,
+.relic-card > span,
+.intel-section-heading > span,
+.intel-map-panel > header > span {
+  font-size: var(--type-control);
+  line-height: 1.45;
+  letter-spacing: .14em;
+}
+
+.workspace :is(
+  .section-hero > p,
+  .command-hero-copy > p:not(.section-kicker),
+  .decree-copy > p,
+  .settings-card > p:not(.section-kicker),
+  .deployment-brief > p:not(.section-kicker),
+  .planet-archive-heading > div > p:last-child,
+  .planetary-title > p:last-child,
+  .planetary-assessment > p:last-of-type,
+  .lore-development-heading > div:first-child > p:last-child
+) {
+  font-size: var(--type-body);
+  line-height: 1.68;
+}
+
+.workspace :is(
+  .timeline p,
+  .record-card p,
+  .relic-card p,
+  .faction-card p,
+  .planet-type-card p,
+  .system-summary,
+  .planetary-summary
+) {
+  font-size: var(--type-body-small);
+  line-height: 1.6;
+}
+
+.workspace :is(
+  .panel-heading h2,
+  .settings-section-heading h2,
+  .intel-section-heading h2,
+  .planetary-assessment h2,
+  .orbital-siblings h2,
+  .system-register h2,
+  .system-signal-brief h2
+) {
+  font-size: clamp(1.4rem, 1.25rem + .35vw, 1.75rem);
+  line-height: 1.18;
+}
+
+.workspace :is(
+  .seal-button,
+  .text-button,
+  .upload-button,
+  .remove-badge,
+  .entry-form button,
+  .strength-link,
+  .command-dossier > a,
+  .settings-card button,
+  .quick-entry button,
+  .edit-actions button,
+  .transmission-origin-actions a
+) {
+  font-size: var(--type-control);
+  line-height: 1.4;
+  letter-spacing: .1em;
+}
+
+/* Terminal prose uses one stable rhythm across Command, Relay and Chronicles. */
+.relay-data-stream,
+.command-relay-data-stream,
+.relay-inbox-body > .relay-data-stream,
+.relay-dialog-body > .command-relay-data-stream,
+.relay-terminal-content,
+.chronicle-record-content {
+  font-size: var(--type-body-small) !important;
+  line-height: 1.68 !important;
+}
+
+.relay-terminal-log,
+.transmission-signal-auspex,
+.transmission-origin-actions,
+.chronicle-record-path,
+.chronicle-record-signifiers,
+.chronicle-record-footer,
+.chronicle-exload-index > header,
+.chronicle-exload-reader > header {
+  font-size: var(--type-meta);
+  line-height: 1.5;
+}
+
+.chronicle-index-copy strong,
+.relay-inbox-item-copy > b,
+.relay-message-copy h3 {
+  font-size: var(--type-body-small);
+  line-height: 1.45;
+}
+
+.chronicle-index-copy small,
+.chronicle-index-copy em,
+.relay-inbox-item-copy strong,
+.relay-inbox-item-copy time,
+.relay-message-copy strong,
+.relay-message-copy time {
+  font-size: var(--type-meta);
+  line-height: 1.4;
+  letter-spacing: .08em;
+}
+
+/* Shared chrome stays compact, but no operational control is microscopic. */
+.nav-item small { font-size: .7rem; }
+.archive-terminal-prompt > div,
+.archive-terminal-prompt strong { font-size: var(--type-meta); }
+.archive-terminal-prompt small,
+.archive-terminal-auth,
+.archive-terminal-readout small,
+.imperial-chronometer > span,
+.imperial-chronometer > small { font-size: var(--type-ornament); }
+.archive-terminal-readout strong,
+.archive-terminal-controls button,
+.archive-terminal-controls a { font-size: var(--type-meta); }
+.imperial-chronometer > strong { font-size: var(--type-label); }
+
+@media (max-width: 700px) {
+  .workspace { font-size: var(--type-body-small); }
+  .workspace :is(input, textarea, select) { font-size: 1rem; }
+  .archive-terminal-auth,
+  .archive-terminal-readout small,
+  .imperial-chronometer > span,
+  .imperial-chronometer > small { font-size: var(--type-ornament); }
+  .archive-terminal-readout strong,
+  .archive-terminal-controls button,
+  .archive-terminal-controls a,
+  .archive-terminal-prompt strong { font-size: var(--type-micro); }
+  .chronicle-index-copy small,
+  .chronicle-index-copy em { white-space: normal; }
 }
