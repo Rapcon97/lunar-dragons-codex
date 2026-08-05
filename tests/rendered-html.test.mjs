@@ -538,6 +538,8 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
   assert.match(sectionPage, /OPEN COMPLETE SCHEMA/);
   assert.match(sectionPage, /useRef<HTMLDialogElement>\(null\)/);
   assert.match(sectionPage, /dialog\.showModal\(\)/);
+  assert.match(sectionPage, /visualPreviewBody\.current\.scrollTop = 0/);
+  assert.match(sectionPage, /focus\(\{ preventScroll: true \}\)/);
   assert.match(sectionPage, /className="lunaris-media-dialog"/);
   assert.match(styles, /\.lunaris-vessel-art img\s*\{[^}]*object-fit:\s*cover/s);
   assert.match(styles, /\.lunaris-vessel-art img\s*\{[^}]*brightness\(\.86\)/s);
@@ -545,6 +547,7 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
   assert.match(styles, /\.lunaris-recognition-viewport img\s*\{[^}]*object-fit:\s*cover/s);
   assert.match(styles, /\.lunaris-dimensions-plate img\s*\{[^}]*object-fit:\s*cover/s);
   assert.match(styles, /\.lunaris-media-dialog\s*\{[^}]*position:\s*fixed;[^}]*100dvh/s);
+  assert.match(styles, /\.lunaris-media-dialog\[open\]\s*\{[^}]*display:\s*flex;[^}]*align-items:\s*center;[^}]*justify-content:\s*center/s);
   assert.match(styles, /\.lunaris-media-dialog::backdrop/);
   assert.match(styles, /\.lunaris-recognition-extract dt\s*\{[^}]*--type-control/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lunaris-recognition-plate > header\s*\{[^}]*flex-direction:\s*column/s);

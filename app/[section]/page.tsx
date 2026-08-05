@@ -153,6 +153,7 @@ export default function SectionPage() {
 function LunarisSection() {
   const [visualPreview, setVisualPreview] = useState<"recognition" | "blueprint" | null>(null);
   const visualPreviewDialog = useRef<HTMLDialogElement>(null);
+  const visualPreviewBody = useRef<HTMLDivElement>(null);
   const armament = [
     ["Prow weapons", "Two heavy bombardment cannon batteries", "Eight torpedo tubes", "Conventional torpedoes", "Specialist torpedoes", "Astartes boarding torpedoes"],
     ["Broadsides", "Heavy macro-cannon decks", "Auxiliary macro batteries", "Limited lance emplacements"],
@@ -197,7 +198,11 @@ function LunarisSection() {
     const dialog = visualPreviewDialog.current;
     if (!dialog) return;
 
-    if (visualPreview && !dialog.open) dialog.showModal();
+    if (visualPreview && !dialog.open) {
+      if (visualPreviewBody.current) visualPreviewBody.current.scrollTop = 0;
+      dialog.showModal();
+      dialog.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+    }
     if (!visualPreview && dialog.open) dialog.close();
   }, [visualPreview]);
 
@@ -318,10 +323,10 @@ function LunarisSection() {
           </div>
           <div className="archive-previewer-controls">
             <span>{visualArchive.code}</span>
-            <button type="button" autoFocus onClick={() => setVisualPreview(null)} aria-label="Close visual archive">CLOSE ×</button>
+            <button type="button" onClick={() => setVisualPreview(null)} aria-label="Close visual archive">CLOSE ×</button>
           </div>
         </header>
-        <div className="archive-previewer-body">
+        <div ref={visualPreviewBody} className="archive-previewer-body">
           <img src={visualArchive.src} alt={visualArchive.alt} />
         </div>
         <footer><span>ESC TO CLOSE</span><span>ARCHIVAL IMAGE · UNALTERED SOURCE PLATE</span></footer>
