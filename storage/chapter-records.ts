@@ -16,7 +16,9 @@ import {
   type OptimisticResult,
 } from "./optimistic-write";
 import {
+  proposeLoreDraftReturn,
   proposeLorePublication,
+  type LoreDraftReturnReason,
   type LorePublicationReason,
 } from "../app/lore-publication";
 
@@ -277,6 +279,15 @@ export function publishReviewLoreEntry(
 ): Promise<OptimisticResult<{ entry: LoreEntry }, LorePublicationReason>> {
   return mutateChapterLore((current) =>
     proposeLorePublication(current, id, expectedUpdatedAt, Date.now()),
+  );
+}
+
+export function returnCanonLoreEntryToDraft(
+  id: string,
+  expectedUpdatedAt: number,
+): Promise<OptimisticResult<{ entry: LoreEntry }, LoreDraftReturnReason>> {
+  return mutateChapterLore((current) =>
+    proposeLoreDraftReturn(current, id, expectedUpdatedAt, Date.now()),
   );
 }
 

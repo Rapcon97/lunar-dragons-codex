@@ -75,22 +75,25 @@ export function LoreDevelopmentDashboard({
   isAdminMode: boolean;
   onPublished: () => Promise<void>;
 }) {
-  const [publishingId, setPublishingId] = useState("");
+  const [transitioningId, setTransitioningId] = useState("");
   const [publicationStatus, setPublicationStatus] = useState("");
 
   if (!canAdmin || !isAdminMode) return null;
 
-  async function publishEntry(entry: LoreEntry) {
+  async function transitionEntry(entry: LoreEntry, target: "canon" | "draft") {
+    const publishing = target === "canon";
     const confirmed = window.confirm(
-      `Publish "${entry.title || "Untitled archival record"}" as established canon?\n\nThis record will become visible in the public Chronicles.`,
+      publishing
+        ? `Publish "${entry.title || "Untitled archival record"}" as established canon?\n\nThis record will become visible in the public Chronicles.`
+        : `Return "${entry.title || "Untitled archival record"}" to draft?\n\nThis record will be removed from the public Chronicles.`,
     );
     if (!confirmed) return;
 
-    setPublishingId(entry.id);
+    setTransitioningId(entry.id);
     setPublicationStatus("");
     try {
       const response = await fetch(
-        `/api/admin/lore/${encodeURIComponent(entry.id)}/publish`,
+        `/api/admin/lore/${encodeURIComponent(entry.id)}/${publishing ? "publish" : "draft"}`,
         {
           method: "POST",
           headers: {
@@ -109,13 +112,17 @@ export function LoreDevelopmentDashboard({
       }
 
       await onPublished();
-      setPublicationStatus(`CANON SEALED // ${result.entry.title}`);
+      setPublicationStatus(
+        publishing
+          ? `CANON SEALED // ${result.entry.title}`
+          : `DRAFT RESTORED // ${result.entry.title}`,
+      );
     } catch (error) {
       setPublicationStatus(
         error instanceof Error ? error.message : "The lore record could not be published.",
       );
     } finally {
-      setPublishingId("");
+      setTransitioningId("");
     }
   }
 
@@ -224,19 +231,33 @@ export function LoreDevelopmentDashboard({
                       <div className="lore-record-complete">
                         <span>COMPLETE ARCHIVAL CONTENT</span>
                         <p>{entry.content}</p>
-                        {entry.status === "review" && (
-                          <div className="lore-record-publication">
+                        {(entry.status === "review" || entry.status === "canon") && (
+                          <div
+                            className="lore-record-publication"
+                            data-action={entry.status === "review" ? "publish" : "draft"}
+                          >
                             <span>
-                              CANON PROMOTION REQUIRES EXPLICIT ADMINISTRATOR JUDGEMENT
+                              {entry.status === "review"
+                                ? "CANON PROMOTION REQUIRES EXPLICIT ADMINISTRATOR JUDGEMENT"
+                                : "RETURNING THIS RECORD TO DRAFT REMOVES IT FROM PUBLIC CHRONICLES"}
                             </span>
                             <button
                               type="button"
-                              disabled={Boolean(publishingId)}
-                              onClick={() => void publishEntry(entry)}
+                              disabled={Boolean(transitioningId)}
+                              onClick={() =>
+                                void transitionEntry(
+                                  entry,
+                                  entry.status === "review" ? "canon" : "draft",
+                                )
+                              }
                             >
-                              {publishingId === entry.id
-                                ? "SEALING RECORD..."
-                                : "PUBLISH TO CANON"}
+                              {transitioningId === entry.id
+                                ? entry.status === "review"
+                                  ? "SEALING RECORD..."
+                                  : "UNSEALING RECORD..."
+                                : entry.status === "review"
+                                  ? "PUBLISH TO CANON"
+                                  : "RETURN TO DRAFT"}
                             </button>
                           </div>
                         )}

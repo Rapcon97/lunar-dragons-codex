@@ -3,6 +3,7 @@ import type { ChapterLoreState } from "../storage/chapter-records";
 import type { OptimisticProposal } from "../storage/optimistic-write";
 
 export type LorePublicationReason = "not-found" | "not-review" | "stale";
+export type LoreDraftReturnReason = "not-found" | "not-canon" | "stale";
 
 function loreEntryToTimeline(entry: LoreEntry) {
   const date = entry.date.trim();
@@ -43,6 +44,53 @@ export function proposeLorePublication(
   const entries = current.entries.includes(timelineEntry)
     ? [...current.entries]
     : [...current.entries, timelineEntry];
+
+  return {
+    ok: true,
+    state: { ...current, loreEntries, entries },
+    value: { entry },
+  };
+}
+
+export function proposeLoreDraftReturn(
+  current: ChapterLoreState,
+  id: string,
+  expectedUpdatedAt: number,
+  now: number,
+): OptimisticProposal<
+  ChapterLoreState,
+  { entry: LoreEntry },
+  LoreDraftReturnReason
+> {
+  const index = current.loreEntries.findIndex((entry) => entry.id === id);
+  if (index === -1) return { ok: false, reason: "not-found" };
+
+  const existing = current.loreEntries[index];
+  if (existing.status !== "canon") {
+    return { ok: false, reason: "not-canon" };
+  }
+  if (existing.updatedAt !== expectedUpdatedAt) {
+    return { ok: false, reason: "stale" };
+  }
+
+  const entry: LoreEntry = {
+    ...existing,
+    status: "draft",
+    updatedAt: Math.max(now, existing.updatedAt + 1),
+  };
+  const loreEntries = [...current.loreEntries];
+  loreEntries[index] = entry;
+
+  const timelineEntry = loreEntryToTimeline(existing);
+  const remainsCanonElsewhere = current.loreEntries.some(
+    (candidate, candidateIndex) =>
+      candidateIndex !== index &&
+      candidate.status === "canon" &&
+      loreEntryToTimeline(candidate) === timelineEntry,
+  );
+  const entries = remainsCanonElsewhere
+    ? [...current.entries]
+    : current.entries.filter((candidate) => candidate !== timelineEntry);
 
   return {
     ok: true,

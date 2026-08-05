@@ -62,10 +62,11 @@ test("Phase 4 event presentation is shared and relay persistence rejects stale w
 });
 
 test("the lore development dashboard requires admin capability and active Admin Mode", async () => {
-  const [dashboard, sectionPage, publicationRoute, publicationDomain] = await Promise.all([
+  const [dashboard, sectionPage, publicationRoute, draftRoute, publicationDomain] = await Promise.all([
     readFile("app/_components/LoreDevelopmentDashboard.tsx", "utf8"),
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/api/admin/lore/[id]/publish/route.ts", "utf8"),
+    readFile("app/api/admin/lore/[id]/draft/route.ts", "utf8"),
     readFile("app/lore-publication.ts", "utf8"),
   ]);
 
@@ -91,6 +92,9 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.doesNotMatch(sectionPage, /RESET SHARED RECORDS|Reset shared archive|onReset=/);
   assert.match(dashboard, /entry\.status === "review"/);
   assert.match(dashboard, /PUBLISH TO CANON/);
+  assert.match(dashboard, /RETURN TO DRAFT/);
+  assert.match(dashboard, /entry\.status === "review" \|\| entry\.status === "canon"/);
+  assert.match(dashboard, /removed from the public Chronicles/);
   assert.match(dashboard, /window\.confirm/);
   assert.match(dashboard, /"x-lunar-admin-mode": "active"/);
   assert.match(publicationRoute, /getArchiveAdmin\(\)/);
@@ -98,9 +102,16 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.match(publicationRoute, /x-lunar-admin-mode/);
   assert.match(publicationRoute, /publishReviewLoreEntry/);
   assert.doesNotMatch(publicationRoute, /DELETE|resetChapterArchive|GPT_API_KEY/);
+  assert.match(draftRoute, /getArchiveAdmin\(\)/);
+  assert.match(draftRoute, /isSameOriginRequest\(request\)/);
+  assert.match(draftRoute, /x-lunar-admin-mode/);
+  assert.match(draftRoute, /returnCanonLoreEntryToDraft/);
+  assert.doesNotMatch(draftRoute, /DELETE|resetChapterArchive|GPT_API_KEY/);
   assert.match(publicationDomain, /existing\.status !== "review"/);
   assert.match(publicationDomain, /existing\.updatedAt !== expectedUpdatedAt/);
   assert.match(publicationDomain, /status: "canon"/);
+  assert.match(publicationDomain, /existing\.status !== "canon"/);
+  assert.match(publicationDomain, /status: "draft"/);
   assert.match(publicationDomain, /\.\.\.existing/);
 });
 
