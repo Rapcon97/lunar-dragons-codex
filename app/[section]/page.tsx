@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAdminMode } from "../_components/AdminMode";
 import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
@@ -153,6 +152,7 @@ export default function SectionPage() {
 
 function LunarisSection() {
   const [visualPreview, setVisualPreview] = useState<"recognition" | "blueprint" | null>(null);
+  const visualPreviewDialog = useRef<HTMLDialogElement>(null);
   const armament = [
     ["Prow weapons", "Two heavy bombardment cannon batteries", "Eight torpedo tubes", "Conventional torpedoes", "Specialist torpedoes", "Astartes boarding torpedoes"],
     ["Broadsides", "Heavy macro-cannon decks", "Auxiliary macro batteries", "Limited lance emplacements"],
@@ -194,20 +194,11 @@ function LunarisSection() {
       };
 
   useEffect(() => {
-    if (!visualPreview) return;
+    const dialog = visualPreviewDialog.current;
+    if (!dialog) return;
 
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setVisualPreview(null);
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
+    if (visualPreview && !dialog.open) dialog.showModal();
+    if (!visualPreview && dialog.open) dialog.close();
   }, [visualPreview]);
 
   return (
@@ -309,33 +300,33 @@ function LunarisSection() {
       </section>
     </div>
 
-    {visualPreview && createPortal(
-      <div
-        className="archive-previewer-backdrop"
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.currentTarget === event.target) setVisualPreview(null);
-        }}
-      >
-        <section className="archive-previewer facsimile lunaris-media-previewer" role="dialog" aria-modal="true" aria-labelledby="lunaris-media-title">
-          <header>
-            <div>
-              <p className="section-kicker">Navis Praetoria · authenticated visual archive</p>
-              <h2 id="lunaris-media-title">{visualArchive.title}</h2>
-            </div>
-            <div className="archive-previewer-controls">
-              <span>{visualArchive.code}</span>
-              <button type="button" autoFocus onClick={() => setVisualPreview(null)} aria-label="Close visual archive">CLOSE ×</button>
-            </div>
-          </header>
-          <div className="archive-previewer-body">
-            <img src={visualArchive.src} alt={visualArchive.alt} />
+    <dialog
+      ref={visualPreviewDialog}
+      className="lunaris-media-dialog"
+      aria-labelledby="lunaris-media-title"
+      onCancel={() => setVisualPreview(null)}
+      onClose={() => setVisualPreview(null)}
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) setVisualPreview(null);
+      }}
+    >
+      <section className="archive-previewer facsimile lunaris-media-previewer">
+        <header>
+          <div>
+            <p className="section-kicker">Navis Praetoria · authenticated visual archive</p>
+            <h2 id="lunaris-media-title">{visualArchive.title}</h2>
           </div>
-          <footer><span>ESC TO CLOSE</span><span>ARCHIVAL IMAGE · UNALTERED SOURCE PLATE</span></footer>
-        </section>
-      </div>,
-      document.body,
-    )}
+          <div className="archive-previewer-controls">
+            <span>{visualArchive.code}</span>
+            <button type="button" autoFocus onClick={() => setVisualPreview(null)} aria-label="Close visual archive">CLOSE ×</button>
+          </div>
+        </header>
+        <div className="archive-previewer-body">
+          <img src={visualArchive.src} alt={visualArchive.alt} />
+        </div>
+        <footer><span>ESC TO CLOSE</span><span>ARCHIVAL IMAGE · UNALTERED SOURCE PLATE</span></footer>
+      </section>
+    </dialog>
     </>
   );
 }

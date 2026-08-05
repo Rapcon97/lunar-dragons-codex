@@ -1862,7 +1862,13 @@ a { color: inherit; text-decoration: none; }
 .lunaris-blueprint-axis i { height: 1px; background: rgba(121, 153, 111, .68); }
 .lunaris-blueprint-open { position: absolute; z-index: 4; right: 13px; bottom: 13px; border: 1px solid #53644d; padding: 8px 10px; color: #a5b79b; background: rgba(3, 8, 4, .9); font: var(--type-control) "Courier New", monospace; letter-spacing: .11em; }
 .lunaris-dimensions-plate figcaption { margin-top: 9px; color: #65775f; font: var(--type-meta) "Courier New", monospace; letter-spacing: .12em; text-align: right; }
-.lunaris-media-previewer { position: relative; width: min(1320px, calc(100vw - 24px)); height: min(920px, calc(100dvh - 24px)); border-color: #56684f; }
+.lunaris-media-dialog {
+  position: fixed; inset: 0; width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0;
+  box-sizing: border-box; border: 0; padding: clamp(12px, 3vw, 38px); overflow: hidden; color: inherit; background: transparent;
+}
+.lunaris-media-dialog[open] { display: grid; place-items: center; }
+.lunaris-media-dialog::backdrop { background: rgba(1, 4, 2, .92); backdrop-filter: blur(6px); }
+.lunaris-media-previewer { position: relative; width: min(1320px, 100%); height: min(920px, 100%); border-color: #56684f; }
 .lunaris-media-previewer > header { border-bottom-color: #40503b; background: linear-gradient(90deg, rgba(19, 34, 19, .72), rgba(4, 8, 5, .98)); }
 .lunaris-media-previewer h2 { color: #a6b69c; }
 .lunaris-media-previewer .archive-previewer-body { background: radial-gradient(circle, rgba(45, 67, 41, .12), transparent 62%), #020402; }
@@ -2782,6 +2788,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .decree-actions { grid-column: 1 / -1; min-width: 0; justify-items: stretch; border-left: 0; border-top: 1px solid rgba(121, 92, 62, .3); padding: 14px 0 0; }
   .decree-actions button { text-align: center; }
   .archive-previewer-backdrop { padding: 8px; }
+  .lunaris-media-dialog { padding: 8px; }
   .archive-previewer { height: calc(100dvh - 16px); }
   .archive-previewer > header { align-items: flex-start; padding: 13px; }
   .archive-previewer-controls { align-items: flex-end; flex-direction: column-reverse; gap: 7px; }
