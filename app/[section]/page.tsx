@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAdminMode } from "../_components/AdminMode";
+import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
@@ -125,7 +126,7 @@ export default function SectionPage() {
           {section === "chronicles" && (
             <ChroniclesSection
               canEdit={isAdminMode}
-              entries={data.loreEntries.filter((entry) => entry.status === "canon")}
+              entries={chronicleEntriesForViewer(data.loreEntries, canAdmin, isAdminMode)}
               legacyEntries={data.entries}
               onSave={(value) => saveSection("entries", value)}
             />
@@ -1122,6 +1123,17 @@ function ChroniclesSection({
   const [selectedId, setSelectedId] = useState("decree");
   const [isComposing, setIsComposing] = useState(false);
   const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
+  const statusCounts = entries.reduce(
+    (counts, entry) => ({ ...counts, [entry.status]: counts[entry.status] + 1 }),
+    { draft: 0, review: 0, canon: 0, retconned: 0 } as Record<LoreEntry["status"], number>,
+  );
+
+  function statusReadout(entry: LoreEntry) {
+    if (entry.status === "canon") return "CANON · SEALED";
+    if (entry.status === "review") return "REVIEW · AWAITING JUDGMENT";
+    if (entry.status === "retconned") return "RETCONNED · SUPERSEDED";
+    return "DRAFT · UNSEALED";
+  }
 
   useEffect(() => {
     if (selectedId !== "decree" && !entries.some((entry) => entry.id === selectedId)) {
@@ -1159,9 +1171,13 @@ function ChroniclesSection({
           <span>ADEPTUS ASTARTES · ANNALIS SANCTUM</span>
           <h1 id="chronicle-exload-title">CHRONICLE EXLOAD TERMINAL</h1>
         </div>
-        <div className="chronicle-exload-status" aria-label={`${entries.length} canon records, archive link active`}>
+        <div className="chronicle-exload-status" aria-label={canEdit ? `${entries.length} development records across all lore statuses, archive link active` : `${entries.length} canon records, archive link active`}>
           <span><i /> ARCHIVE LINK ACTIVE</span>
-          <strong>{String(entries.length).padStart(2, "0")} CANON RECORDS</strong>
+          <strong>
+            {canEdit
+              ? `D${String(statusCounts.draft).padStart(2, "0")} · R${String(statusCounts.review).padStart(2, "0")} · C${String(statusCounts.canon).padStart(2, "0")} · X${String(statusCounts.retconned).padStart(2, "0")}`
+              : `${String(entries.length).padStart(2, "0")} CANON RECORDS`}
+          </strong>
           {canEdit && <button type="button" onClick={() => setIsComposing((current) => !current)}>{isComposing ? "CLOSE SEALING RITE" : "SEAL NEW RECORD"}</button>}
         </div>
       </header>
@@ -1181,9 +1197,9 @@ function ChroniclesSection({
       )}
 
       <div className="chronicle-exload-grid">
-        <aside className="chronicle-exload-index" aria-label="Canonical Chronicle record index">
+        <aside className="chronicle-exload-index" aria-label={canEdit ? "Structured lore development record index" : "Canonical Chronicle record index"}>
           <header>
-            <span>SEALED RECORD INDEX</span>
+            <span>{canEdit ? "LORE DEVELOPMENT INDEX" : "SEALED RECORD INDEX"}</span>
             <small>{entries.length + 1} RETRIEVABLE OBJECTS</small>
           </header>
           <div className="chronicle-index-scroll">
@@ -1212,12 +1228,12 @@ function ChroniclesSection({
                 <span className="chronicle-index-number">{String(index + 1).padStart(2, "0")}</span>
                 <span className="chronicle-index-copy">
                   <small>{entry.date || "DATE UNRECORDED"} · {entry.category}</small>
-                  <strong>{entry.title || "Untitled canonical record"}</strong>
-                  <em>{entry.id.startsWith("legacy-") ? "LEGACY ARCHIVE INDEX" : "STRUCTURED ARCHIVE RECORD"}</em>
+                  <strong>{entry.title || "Untitled archive record"}</strong>
+                  <em className={`chronicle-index-status status-${entry.status}`}>{entry.status.toUpperCase()} · {entry.id.startsWith("legacy-") ? "LEGACY INDEX" : "STRUCTURED RECORD"}</em>
                 </span>
               </button>
             )) : (
-              <p className="chronicle-index-empty">NO CANONICAL DEEDS HAVE YET BEEN ENTERED UNDER SEAL.</p>
+              <p className="chronicle-index-empty">{canEdit ? "NO STRUCTURED LORE RECORDS ARE AVAILABLE." : "NO CANONICAL DEEDS HAVE YET BEEN ENTERED UNDER SEAL."}</p>
             )}
           </div>
         </aside>
@@ -1226,7 +1242,7 @@ function ChroniclesSection({
           <header className={selectedEntry ? "record-active" : undefined}>
             <div className="chronicle-reader-heading">
               <span>ACTIVE EXLOAD</span>
-              <strong>{selectedId === "decree" ? "INSTRUMENTUM IMPERIALIS" : "CANONICAL CHRONICLE RECORD"}</strong>
+              <strong>{selectedId === "decree" ? "INSTRUMENTUM IMPERIALIS" : canEdit ? "STRUCTURED LORE RECORD" : "CANONICAL CHRONICLE RECORD"}</strong>
             </div>
             {selectedEntry && (
               <div className="chronicle-reader-record-meta">
@@ -1234,18 +1250,18 @@ function ChroniclesSection({
                 <div className="chronicle-record-signifiers">
                   <span>DATE <strong>{selectedEntry.date || "UNRECORDED"}</strong></span>
                   <span>CLASS <strong>{selectedEntry.category.toUpperCase()}</strong></span>
-                  <span>STATUS <strong>CANON · SEALED</strong></span>
+                  <span>STATUS <strong className={`status-${selectedEntry.status}`}>{statusReadout(selectedEntry)}</strong></span>
                 </div>
               </div>
             )}
-            <small>READ AUTHORITY · ARCHIVE VIEW</small>
+            <small>{canEdit ? "ADMIN AUTHORITY · DEVELOPMENT VIEW" : "READ AUTHORITY · ARCHIVE VIEW"}</small>
           </header>
           <div className="chronicle-reader-scroll" tabIndex={0}>
             {selectedId === "decree" ? (
               <DecreeRecord />
             ) : selectedEntry ? (
               <section className="chronicle-record-sheet" aria-labelledby={`chronicle-record-${selectedEntry.id}`}>
-                <h2 id={`chronicle-record-${selectedEntry.id}`}>{selectedEntry.title || "Untitled canonical record"}</h2>
+                <h2 id={`chronicle-record-${selectedEntry.id}`}>{selectedEntry.title || "Untitled archive record"}</h2>
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
                 <p className="chronicle-record-content">{selectedEntry.content}</p>
                 <footer className="chronicle-record-footer">

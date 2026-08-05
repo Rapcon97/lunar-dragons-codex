@@ -3602,6 +3602,14 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   text-transform: uppercase;
   white-space: nowrap;
 }
+.chronicle-index-copy .chronicle-index-status.status-draft,
+.chronicle-record-signifiers .status-draft { color: #b39866; }
+.chronicle-index-copy .chronicle-index-status.status-review,
+.chronicle-record-signifiers .status-review { color: #c09657; }
+.chronicle-index-copy .chronicle-index-status.status-canon,
+.chronicle-record-signifiers .status-canon { color: #8fa783; }
+.chronicle-index-copy .chronicle-index-status.status-retconned,
+.chronicle-record-signifiers .status-retconned { color: #9b5d59; }
 .chronicle-index-copy strong {
   display: -webkit-box;
   overflow: hidden;

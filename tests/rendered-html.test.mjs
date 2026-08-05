@@ -115,7 +115,7 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.match(publicationDomain, /\.\.\.existing/);
 });
 
-test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () => {
+test("the Chronicle uses a full-workspace canon-only Exload Terminal with an admin development view", async () => {
   const [sectionPage, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/globals.css", "utf8"),
@@ -123,14 +123,18 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () 
 
   assert.match(sectionPage, /section === "chronicles" \? "chronicles-workspace"/);
   assert.match(sectionPage, /section === "chronicles" \? "chronicles-subpage"/);
-  assert.match(sectionPage, /entries=\{data\.loreEntries\.filter\(\(entry\) => entry\.status === "canon"\)\}/);
+  assert.match(sectionPage, /chronicleEntriesForViewer\(data\.loreEntries, canAdmin, isAdminMode\)/);
+  assert.match(sectionPage, /LORE DEVELOPMENT INDEX/);
+  assert.match(sectionPage, /DRAFT · UNSEALED/);
+  assert.match(sectionPage, /REVIEW · AWAITING JUDGMENT/);
+  assert.match(sectionPage, /RETCONNED · SUPERSEDED/);
   assert.doesNotMatch(sectionPage, /isAdminMode \? data\.entries : canonChronicleEntries/);
   assert.match(sectionPage, /CHRONICLE EXLOAD TERMINAL/);
   assert.match(sectionPage, /SEALED RECORD INDEX/);
   assert.match(sectionPage, /<DecreeRecord \/>/);
   assert.match(sectionPage, /selectedEntry\.content/);
   assert.match(sectionPage, /entry\.id\.startsWith\("legacy-"\)/);
-  assert.match(sectionPage, /STATUS <strong>CANON · SEALED<\/strong>/);
+  assert.match(sectionPage, /statusReadout\(selectedEntry\)/);
   assert.match(sectionPage, /<header className=\{selectedEntry \? "record-active" : undefined\}>[\s\S]*className="chronicle-reader-record-meta"[\s\S]*READ AUTHORITY · ARCHIVE VIEW[\s\S]*<\/header>/);
   assert.match(sectionPage, /chronicle-reader-record-meta[\s\S]*chronicle-record-path[\s\S]*chronicle-record-signifiers/);
 

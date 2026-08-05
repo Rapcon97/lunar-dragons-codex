@@ -5,6 +5,7 @@ import {
   proposeLoreDraftReturn,
   proposeLorePublication,
 } from "../app/lore-publication.ts";
+import { chronicleEntriesForViewer } from "../app/chronicle-visibility.ts";
 
 function reviewState() {
   return {
@@ -137,4 +138,26 @@ test("draft return retains a shared timeline line while another canon record use
   const proposal = proposeLoreDraftReturn(current, canon.id, 200, 500);
   assert.equal(proposal.ok, true);
   if (proposal.ok) assert.equal(proposal.state.entries.length, 1);
+});
+
+test("Chronicles exposes non-canon lore only to administrators in active Admin Mode", () => {
+  const entries = [
+    { id: "draft", status: "draft" },
+    { id: "review", status: "review" },
+    { id: "canon", status: "canon" },
+    { id: "retconned", status: "retconned" },
+  ];
+
+  assert.deepEqual(
+    chronicleEntriesForViewer(entries, true, false).map((entry) => entry.id),
+    ["canon"],
+  );
+  assert.deepEqual(
+    chronicleEntriesForViewer(entries, true, true).map((entry) => entry.id),
+    ["draft", "review", "canon", "retconned"],
+  );
+  assert.deepEqual(
+    chronicleEntriesForViewer(entries, false, true).map((entry) => entry.id),
+    ["canon"],
+  );
 });
