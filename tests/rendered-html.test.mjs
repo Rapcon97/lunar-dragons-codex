@@ -458,12 +458,14 @@ test("the shared transmission renderer exposes a responsive Signal Auspex", asyn
 });
 
 test("Phase 3 origin actions share one controlled resolver and safe Intel focus", async () => {
-  const [resolver, actions, renderer, home, sectionPage, styles] = await Promise.all([
+  const [resolver, actions, renderer, home, sectionPage, systemPage, planetPage, styles] = await Promise.all([
     readFile("app/_components/transmission-origin.ts", "utf8"),
     readFile("app/_components/TransmissionOriginActions.tsx", "utf8"),
     readFile("app/_components/RelayDataStream.tsx", "utf8"),
     readFile("app/page.tsx", "utf8"),
     readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/intel/system/[system]/page.tsx", "utf8"),
+    readFile("app/intel/system/[system]/planet/[planet]/page.tsx", "utf8"),
     readFile("app/globals.css", "utf8"),
   ]);
 
@@ -494,6 +496,12 @@ test("Phase 3 origin actions share one controlled resolver and safe Intel focus"
   assert.match(sectionPage, /plottedOrigin\.parentSystemIndex === index/);
   assert.match(sectionPage, /data-origin-focus=\{isOriginFocus \? plottedOrigin\.canonicalId : undefined\}/);
   assert.match(sectionPage, /aria-current=\{isOriginFocus \? "location" : undefined\}/);
+
+  assert.match(systemPage, /SYSTEM RECORD UNAVAILABLE/);
+  assert.match(planetPage, /ORBITAL RECORD UNAVAILABLE/);
+  assert.doesNotMatch(systemPage, /\?\? data\.sectorIntel\.worlds\[0\]/);
+  assert.doesNotMatch(planetPage, /\?\? data\.sectorIntel\.worlds\[0\]/);
+  assert.doesNotMatch(planetPage, /\?\? system\.bodies\[0\]/);
 
   assert.match(styles, /\.transmission-origin-actions nav\s*\{[^}]*flex-wrap:\s*wrap/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.transmission-origin-actions\s*\{[^}]*flex-direction:\s*column/s);

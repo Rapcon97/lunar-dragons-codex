@@ -103,7 +103,7 @@ export default function SectionPage() {
         </header>
 
         <div className={`subpage ${section === "relay" ? "relay-subpage" : section === "chronicles" ? "chronicles-subpage" : usesArchiveBoundary ? "archive-boundary-subpage" : ""}`}>
-          {section !== "relay" && section !== "chronicles" && (
+          {section !== "relay" && section !== "chronicles" && section !== "intel" && (
             <section className="section-hero">
               <div>
                 <p className="section-kicker">{info.kicker}</p>
@@ -878,13 +878,24 @@ function SectorIntelSection({
   const [draft, setDraft] = useState<SectorIntel>(intel);
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState("");
+  const [selectedWorldIndex, setSelectedWorldIndex] = useState<number | null>(null);
+  const [activeRegister, setActiveRegister] = useState<"systems" | "contacts" | "mandate" | "taxonomy">("systems");
+  const [showWarpLanes, setShowWarpLanes] = useState(true);
+  const [showEmpyricInterference, setShowEmpyricInterference] = useState(true);
 
   useEffect(() => {
     if (!isEditing) setDraft(intel);
   }, [intel, isEditing]);
 
-  function updateField(field: keyof Omit<SectorIntel, "worlds" | "factions" | "directives" | "warpLanes">, value: string) {
+  function updateField(field: keyof Omit<SectorIntel, "worlds" | "factions" | "directives" | "warpLanes" | "survey">, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateSurvey(field: keyof SectorIntel["survey"], value: string) {
+    setDraft((current) => ({
+      ...current,
+      survey: { ...current.survey, [field]: value },
+    }));
   }
 
   function updateWorld(index: number, field: keyof SectorIntel["worlds"][number], value: string) {
@@ -925,6 +936,25 @@ function SectorIntelSection({
     }));
   }
 
+  function removeWorld(index: number) {
+    setDraft((current) => ({
+      ...current,
+      worlds: current.worlds.filter((_, worldIndex) => worldIndex !== index),
+      warpLanes: current.warpLanes
+        .filter((lane) => lane.from !== index && lane.to !== index)
+        .map((lane) => ({
+          ...lane,
+          from: lane.from > index ? lane.from - 1 : lane.from,
+          to: lane.to > index ? lane.to - 1 : lane.to,
+        })),
+    }));
+    setSelectedWorldIndex((current) => {
+      if (current === null) return null;
+      if (current === index) return null;
+      return current > index ? current - 1 : current;
+    });
+  }
+
   async function saveIntel() {
     if (await onSave(draft)) {
       setIsEditing(false);
@@ -938,13 +968,48 @@ function SectorIntelSection({
   const plottedOrigin = originLocationId
     ? resolveTransmissionOrigin(display, { originLocationId, originState: "CONFIRMED" })
     : null;
+  const selectedWorld = selectedWorldIndex === null ? null : display.worlds[selectedWorldIndex] ?? null;
+  const surveyAuthority = display.survey.authority === "ratified"
+    ? "RATIFIED OPERATIONAL INTELLIGENCE"
+    : display.survey.authority === "review"
+      ? "INTELLIGENCE UNDER REVIEW"
+      : "DRAFT OPERATIONAL PREMISE";
+
+  useEffect(() => {
+    if (plottedOrigin?.kind === "exact") setSelectedWorldIndex(plottedOrigin.parentSystemIndex);
+  }, [plottedOrigin?.kind, plottedOrigin?.kind === "exact" ? plottedOrigin.parentSystemIndex : -1]);
+
+  useEffect(() => {
+    if (selectedWorldIndex !== null && selectedWorldIndex >= display.worlds.length) setSelectedWorldIndex(null);
+  }, [display.worlds.length, selectedWorldIndex]);
 
   return (
     <div className={isEditing ? "sector-intel editing" : "sector-intel"}>
+      <section className="panel intel-theatre-header">
+        <div className="intel-theatre-seal" aria-hidden="true"><span>III</span></div>
+        <div className="intel-theatre-title">
+          <p className="section-kicker">Adeptus Astartes · Tactica Siderea</p>
+          <h1>Argent Vigil Intelligence</h1>
+          <p>{display.sectorName} · local cartographic reconstruction</p>
+        </div>
+        <div className={`intel-authority-badge ${display.survey.authority}`}>
+          <span>RECORD AUTHORITY</span>
+          <b>{surveyAuthority}</b>
+          <small>NOT ESTABLISHED CHRONICLE CANON</small>
+        </div>
+      </section>
+
+      <section className="intel-status-matrix" aria-label="Current operational state">
+        <article><span>RECEIVING LOCUS</span><b>{display.survey.receivingLocus}</b><small>VESSEL FIX · LOCAL ORIGIN UNKNOWN</small></article>
+        <article><span>LOCAL SYSTEM</span><b>{display.survey.systemDesignation}</b><small>NO SANCTIONED CARTOGRAPHIC NAME</small></article>
+        <article><span>NAVIGATIONAL FIX</span><b>{display.survey.cartographicConfidence}</b><small>{display.survey.probableRegion}</small></article>
+        <article><span>COMMUNION STATUS</span><b>{display.survey.communications}</b><small>{display.astropathicDate}</small></article>
+      </section>
+
       <section className="panel intel-command-strip">
         <div>
           <span>{isEditing ? "TACTICA EDIT ENVIRONMENT ACTIVE" : "ASTROPATHIC CARTOGRAPHY LINK ACTIVE"}</span>
-          <p>{display.astropathicDate}</p>
+          <p>{display.survey.transitRoute}</p>
         </div>
         {canEdit && (
           <div className="edit-actions">
@@ -960,20 +1025,23 @@ function SectorIntelSection({
         )}
       </section>
 
-      <section className="intel-overview-grid">
+      <section className="intel-console-grid">
         <div className="panel intel-map-panel">
           <header>
             <div>
-              <p className="section-kicker">{display.sectorName}</p>
+              <p className="section-kicker">Degraded local survey</p>
               {isEditing ? (
                 <input value={display.subsectorName} onChange={(event) => updateField("subsectorName", event.target.value)} aria-label="Subsector name" />
               ) : <h2>{display.subsectorName}</h2>}
             </div>
-            <span>LOCAL CARTOGRAPHY · NOT TO SCALE</span>
+            <div className="intel-layer-controls" aria-label="Cartographic layers">
+              <button className={showWarpLanes ? "active" : ""} onClick={() => setShowWarpLanes((current) => !current)} type="button">WARP ROUTES</button>
+              <button className={showEmpyricInterference ? "active" : ""} onClick={() => setShowEmpyricInterference((current) => !current)} type="button">EMPYRIC VEIL</button>
+            </div>
           </header>
-          <div className="sector-map" aria-label={`Localized map of ${display.subsectorName}`}>
+          <div className={`sector-map intel-survey-map${showEmpyricInterference ? " empyric-active" : ""}`} aria-label={`Localized map of ${display.subsectorName}`}>
             <div className="sector-map-grid" aria-hidden="true" />
-            <div className="sector-rift" aria-hidden="true"><i /><i /><i /></div>
+            {showEmpyricInterference && <div className="sector-rift" aria-hidden="true"><i /><i /><i /></div>}
             {plottedOrigin?.kind === "exact" && (
               <div className="sector-origin-fix" role="status">
                 <span>TRANSMISSION ORIGIN FIX</span>
@@ -985,7 +1053,7 @@ function SectorIntelSection({
                 </small>
               </div>
             )}
-            {display.warpLanes.map((lane, index) => {
+            {showWarpLanes && display.warpLanes.map((lane, index) => {
               const from = display.worlds[lane.from];
               const to = display.worlds[lane.to];
               if (!from || !to || lane.from === lane.to) return null;
@@ -1009,60 +1077,117 @@ function SectorIntelSection({
             })}
             {display.worlds.map((world, index) => {
               const isOriginFocus = plottedOrigin?.kind === "exact" && plottedOrigin.parentSystemIndex === index;
+              const isSelected = selectedWorldIndex === index;
               return (
-                <CartographyTransitionLink
+                <button
                   aria-current={isOriginFocus ? "location" : undefined}
-                  aria-label={isOriginFocus ? `Transmission origin focus: ${plottedOrigin.label}; open ${world.name} solar system` : `Open ${world.name} solar system`}
-                  className={`sector-world world-${index + 1} ${world.status.toLowerCase().replace(/[^a-z]+/g, "-")}${isOriginFocus ? " transmission-origin-focus" : ""}`}
+                  aria-label={isOriginFocus ? `Transmission origin focus: ${plottedOrigin.label}; inspect ${world.name}` : `Inspect ${world.name}`}
+                  aria-pressed={isSelected}
+                  className={`sector-world world-${index + 1} ${world.status.toLowerCase().replace(/[^a-z]+/g, "-")}${isOriginFocus ? " transmission-origin-focus" : ""}${isSelected ? " selected" : ""}`}
                   data-origin-focus={isOriginFocus ? plottedOrigin.canonicalId : undefined}
                   key={`${world.name}-${index}`}
-                  href={`/intel/system/${index + 1}`}
+                  onClick={() => setSelectedWorldIndex(index)}
                   style={{ left: `${world.x}%`, top: `${world.y}%` }}
                   title={`${world.name} · ${world.classification} · ${world.status}`}
+                  type="button"
                 >
                   <i />
                   <b>{world.name}</b>
                   <small>{world.status}</small>
-                </CartographyTransitionLink>
+                </button>
               );
             })}
+            <div className="lunaris-locus-marker" aria-label="Lunaris receiving locus; heavily damaged but capable of self-defence">
+              <i /><b>LUNARIS</b><small>BARELY OPERATIONAL · BATTERIES STANDING</small>
+            </div>
+            {!display.worlds.length && (
+              <div className="survey-void-state">
+                <span>NO RELIABLE CELESTIAL SOLUTION</span>
+                <b>{display.survey.systemDesignation}</b>
+                <p>Long-range augurs return empyric noise. No star, world, station, or translation route has yet been entered into the sanctioned local register.</p>
+              </div>
+            )}
             <span className="map-compass" aria-hidden="true">N<br />✦</span>
-            <span className="map-scale">12.4 LIGHT YEARS</span>
+            <span className="map-scale">LOCAL SCALE UNAVAILABLE</span>
           </div>
           <div className="intel-map-legend">
-            <span><i className="secure" /> Secure</span>
-            <span><i className="contested" /> Contested</span>
-            <span><i className="hostile" /> Hostile / unknown</span>
+            <span><i className="secure" /> Confirmed contact</span>
+            <span><i className="contested" /> Uncertain contact</span>
+            <span><i className="hostile" /> Hostile / unresolved</span>
             <span><i className="lane-stable" /> Stable lane</span>
             <span><i className="lane-unstable" /> Unstable / blockaded</span>
           </div>
         </div>
 
-        <aside className="panel deployment-brief">
-          <p className="section-kicker">Current deployment</p>
-          {isEditing ? (
-            <>
-              <label>THEATRE<input value={display.currentTheater} onChange={(event) => updateField("currentTheater", event.target.value)} /></label>
-              <label>STATUS<input value={display.deploymentStatus} onChange={(event) => updateField("deploymentStatus", event.target.value)} /></label>
-              <label>ASTROPATHIC DATE<input value={display.astropathicDate} onChange={(event) => updateField("astropathicDate", event.target.value)} /></label>
-              <label>STRATEGIC SUMMARY<textarea value={display.summary} onChange={(event) => updateField("summary", event.target.value)} /></label>
-            </>
+        <aside className="panel intel-target-dossier">
+          <div className="galactic-fix" aria-label="Approximate northeastern Nachmund location; exact coordinates unknown">
+            <div className="galactic-fix-disk"><i /><span /></div>
+            <p><span>PROBABLE GALACTIC FIX</span><b>{display.survey.probableRegion}</b><small>UNCERTAINTY ENVELOPE · NOT TO SCALE</small></p>
+          </div>
+          {selectedWorld ? (
+            <div className="intel-selected-record">
+              <p className="section-kicker">Selected cartographic object</p>
+              <h2>{selectedWorld.name}</h2>
+              <strong>{selectedWorld.classification} · {selectedWorld.status}</strong>
+              <dl>
+                <div><dt>CHARTED BODIES</dt><dd>{selectedWorld.bodies.length}</dd></div>
+                <div><dt>MAP POSITION</dt><dd>{selectedWorld.x.toFixed(1)} / {selectedWorld.y.toFixed(1)}</dd></div>
+                <div><dt>AUTHORITY</dt><dd>OPERATIONAL INTELLIGENCE</dd></div>
+              </dl>
+              <CartographyTransitionLink className="seal-button" href={`/intel/system/${selectedWorldIndex! + 1}`}>OPEN SYSTEM RECORD</CartographyTransitionLink>
+            </div>
           ) : (
-            <>
-              <h2>{display.currentTheater}</h2>
+            <div className="intel-selected-record unresolved">
+              <p className="section-kicker">Receiving vessel condition</p>
+              <h2>{display.survey.receivingLocus}</h2>
               <strong>{display.deploymentStatus}</strong>
               <p>{display.summary}</p>
-            </>
+              <dl>
+                <div><dt>SUPPORTING FORCE</dt><dd>{display.survey.supportForceStatus}</dd></div>
+                <div><dt>FLAGSHIP</dt><dd>{display.survey.vesselCondition}</dd></div>
+                <div><dt>LOCAL ISOLATION</dt><dd>{display.survey.isolationStatus}</dd></div>
+              </dl>
+            </div>
           )}
-          <div className="deployment-sigil" aria-hidden="true"><span /></div>
         </aside>
       </section>
 
       {isEditing && (
-        <section className="panel intel-world-editor">
+        <section className="panel intel-survey-editor">
           <div className="panel-heading">
-            <div><p className="section-kicker">Cartography controls</p><h2>World registry</h2></div>
-            <button
+            <div><p className="section-kicker">Operational premise controls</p><h2>Survey authority & condition</h2></div>
+          </div>
+          <div className="intel-survey-fields">
+            <label>AUTHORITY<select value={display.survey.authority} onChange={(event) => updateSurvey("authority", event.target.value)}><option value="draft">DRAFT</option><option value="review">REVIEW</option><option value="ratified">RATIFIED INTELLIGENCE</option></select></label>
+            <label>THEATRE<input value={display.currentTheater} onChange={(event) => updateField("currentTheater", event.target.value)} /></label>
+            <label>STATUS<input value={display.deploymentStatus} onChange={(event) => updateField("deploymentStatus", event.target.value)} /></label>
+            <label>ASTROPATHIC DATE<input value={display.astropathicDate} onChange={(event) => updateField("astropathicDate", event.target.value)} /></label>
+            <label>RECEIVING LOCUS<input value={display.survey.receivingLocus} onChange={(event) => updateSurvey("receivingLocus", event.target.value)} /></label>
+            <label>SYSTEM DESIGNATION<input value={display.survey.systemDesignation} onChange={(event) => updateSurvey("systemDesignation", event.target.value)} /></label>
+            <label>PROBABLE REGION<input value={display.survey.probableRegion} onChange={(event) => updateSurvey("probableRegion", event.target.value)} /></label>
+            <label>TRANSIT ROUTE<input value={display.survey.transitRoute} onChange={(event) => updateSurvey("transitRoute", event.target.value)} /></label>
+            <label>NAVIGATIONAL CONFIDENCE<input value={display.survey.cartographicConfidence} onChange={(event) => updateSurvey("cartographicConfidence", event.target.value)} /></label>
+            <label>COMMUNION STATUS<input value={display.survey.communications} onChange={(event) => updateSurvey("communications", event.target.value)} /></label>
+            <label>SUPPORTING FORCE<input value={display.survey.supportForceStatus} onChange={(event) => updateSurvey("supportForceStatus", event.target.value)} /></label>
+            <label>VESSEL CONDITION<input value={display.survey.vesselCondition} onChange={(event) => updateSurvey("vesselCondition", event.target.value)} /></label>
+            <label>ISOLATION STATUS<input value={display.survey.isolationStatus} onChange={(event) => updateSurvey("isolationStatus", event.target.value)} /></label>
+            <label className="wide">STRATEGIC SUMMARY<textarea value={display.summary} onChange={(event) => updateField("summary", event.target.value)} /></label>
+          </div>
+        </section>
+      )}
+
+      <nav className="intel-register-tabs" aria-label="Intelligence registers">
+        <button className={activeRegister === "systems" ? "active" : ""} onClick={() => setActiveRegister("systems")}><span>01</span>SYSTEM SURVEY <b>{display.worlds.length}</b></button>
+        <button className={activeRegister === "contacts" ? "active" : ""} onClick={() => setActiveRegister("contacts")}><span>02</span>CONTACTS <b>{display.factions.length}</b></button>
+        <button className={activeRegister === "mandate" ? "active" : ""} onClick={() => setActiveRegister("mandate")}><span>03</span>CRUSADE MANDATE <b>{display.directives.length}</b></button>
+        <button className={activeRegister === "taxonomy" ? "active" : ""} onClick={() => setActiveRegister("taxonomy")}><span>04</span>CLASSIFICATION INDEX <b>113</b></button>
+      </nav>
+
+      {activeRegister === "systems" && (
+        <section className="panel intel-world-editor intel-register-panel">
+          <div className="panel-heading">
+            <div><p className="section-kicker">Local survey register</p><h2>Confirmed system records</h2></div>
+            {isEditing && <button
               className="text-button"
               onClick={() => setDraft((current) => ({
                 ...current,
@@ -1070,21 +1195,33 @@ function SectorIntelSection({
               }))}
             >
               + ADD SYSTEM
-            </button>
+            </button>}
           </div>
-          <div className="intel-world-list">
-            {display.worlds.map((world, index) => (
-              <div key={index}>
-                <input value={world.name} onChange={(event) => updateWorld(index, "name", event.target.value)} aria-label={`System ${index + 1} name`} />
-                <input value={world.classification} onChange={(event) => updateWorld(index, "classification", event.target.value)} aria-label={`${world.name} classification`} />
-                <input value={world.status} onChange={(event) => updateWorld(index, "status", event.target.value)} aria-label={`${world.name} status`} />
-                <label>X<input type="number" min="6" max="94" value={world.x} onChange={(event) => updateWorld(index, "x", event.target.value)} /></label>
-                <label>Y<input type="number" min="8" max="92" value={world.y} onChange={(event) => updateWorld(index, "y", event.target.value)} /></label>
-                <button onClick={() => setDraft((current) => ({ ...current, worlds: current.worlds.filter((_, i) => i !== index) }))}>REMOVE</button>
-              </div>
-            ))}
-          </div>
-          <div className="warp-lane-editor">
+          {isEditing ? (
+            <div className="intel-world-list">
+              {display.worlds.map((world, index) => (
+                <div key={index}>
+                  <input value={world.name} onChange={(event) => updateWorld(index, "name", event.target.value)} aria-label={`System ${index + 1} name`} />
+                  <input value={world.classification} onChange={(event) => updateWorld(index, "classification", event.target.value)} aria-label={`${world.name} classification`} />
+                  <input value={world.status} onChange={(event) => updateWorld(index, "status", event.target.value)} aria-label={`${world.name} status`} />
+                  <label>X<input type="number" min="6" max="94" value={world.x} onChange={(event) => updateWorld(index, "x", event.target.value)} /></label>
+                  <label>Y<input type="number" min="8" max="92" value={world.y} onChange={(event) => updateWorld(index, "y", event.target.value)} /></label>
+                  <button onClick={() => removeWorld(index)}>REMOVE</button>
+                </div>
+              ))}
+              {!display.worlds.length && <p className="empty-record">No system has survived cartographic verification. Add the first record only when the local fix is supported.</p>}
+            </div>
+          ) : (
+            <div className="intel-system-register">
+              {display.worlds.map((world, index) => (
+                <button key={`${world.name}-${index}`} onClick={() => setSelectedWorldIndex(index)}>
+                  <span>{String(index + 1).padStart(2, "0")}</span><div><b>{world.name}</b><small>{world.classification}</small></div><em>{world.status}</em><i>›</i>
+                </button>
+              ))}
+              {!display.worlds.length && <div className="intel-empty-register"><b>NO VERIFIED SYSTEM RECORDS</b><p>The Lunaris has not yet produced a reliable celestial solution. New locations will enter this register only after cartographic verification.</p></div>}
+            </div>
+          )}
+          {isEditing && <div className="warp-lane-editor">
             <div className="panel-heading">
               <div><p className="section-kicker">Navigator routes</p><h2>Warp lane registry</h2></div>
               <button
@@ -1120,88 +1257,32 @@ function SectorIntelSection({
               ))}
               {!display.warpLanes.length && <p className="empty-record">No sanctioned warp lanes have been charted.</p>}
             </div>
-          </div>
+          </div>}
         </section>
       )}
 
-      <PlanetClassificationArchive />
-
-      <section className="intel-section-heading">
-        <div><p className="section-kicker">Contact registry</p><h2>Allies, enemies & unresolved actors</h2></div>
-        <span>{display.factions.length} FACTIONS UNDER OBSERVATION</span>
-      </section>
-      <div className="faction-intel-grid">
-        {display.factions.map((faction, index) => (
-          <article className={`panel faction-card ${faction.alignment}`} key={index}>
-            <header>
-              {isEditing ? (
-                <select value={faction.alignment} onChange={(event) => updateFaction(index, "alignment", event.target.value)}>
-                  <option value="ally">ALLY</option>
-                  <option value="enemy">ENEMY</option>
-                  <option value="uncertain">UNCERTAIN</option>
-                </select>
-              ) : <span>{faction.alignment === "ally" ? "SANCTIONED ALLY" : faction.alignment === "enemy" ? "HOSTILE CONTACT" : "UNRESOLVED CONTACT"}</span>}
-              <b>THREAT {faction.threat}/5</b>
-            </header>
-            {isEditing ? (
-              <>
-                <input value={faction.name} onChange={(event) => updateFaction(index, "name", event.target.value)} aria-label={`Faction ${index + 1} name`} />
-                <input value={faction.classification} onChange={(event) => updateFaction(index, "classification", event.target.value)} aria-label={`${faction.name} classification`} />
-                <label>THREAT LEVEL<input type="range" min="1" max="5" value={faction.threat} onChange={(event) => updateFaction(index, "threat", event.target.value)} /></label>
-                <textarea value={faction.disposition} onChange={(event) => updateFaction(index, "disposition", event.target.value)} aria-label={`${faction.name} disposition`} />
-                <button className="intel-remove" onClick={() => setDraft((current) => ({ ...current, factions: current.factions.filter((_, i) => i !== index) }))}>REMOVE DOSSIER</button>
-              </>
-            ) : (
-              <>
-                <h3>{faction.name}</h3>
-                <small>{faction.classification}</small>
-                <p>{faction.disposition}</p>
-              </>
-            )}
-            <div className="threat-runes" aria-label={`Threat level ${faction.threat} of 5`}>
-              {[1, 2, 3, 4, 5].map((level) => <i className={level <= faction.threat ? "active" : ""} key={level} />)}
-            </div>
-          </article>
-        ))}
-        {isEditing && (
-          <button
-            className="panel add-intel-card"
-            onClick={() => setDraft((current) => ({
-              ...current,
-              factions: [...current.factions, { name: "Unknown Contact", alignment: "uncertain", classification: "Unclassified", threat: 1, disposition: "Intelligence pending." }],
-            }))}
-          >
-            + CREATE FACTION DOSSIER
-          </button>
-        )}
-      </div>
-
-      <section className="panel operational-directives">
-        <div className="panel-heading">
-          <div><p className="section-kicker">Priority channel</p><h2>Operational directives</h2></div>
-          <span>COMMAND AUTHORITY · LUNAR DRAGONS</span>
-        </div>
-        <ol>
-          {display.directives.map((directive, index) => (
-            <li key={index}>
-              <b>{String(index + 1).padStart(2, "0")}</b>
-              {isEditing ? (
-                <>
-                  <input
-                    value={directive}
-                    onChange={(event) => setDraft((current) => ({
-                      ...current,
-                      directives: current.directives.map((item, i) => i === index ? event.target.value : item),
-                    }))}
-                  />
-                  <button onClick={() => setDraft((current) => ({ ...current, directives: current.directives.filter((_, i) => i !== index) }))}>×</button>
-                </>
-              ) : <span>{directive}</span>}
-            </li>
+      {activeRegister === "contacts" && <div className="faction-intel-grid intel-register-panel">
+          {display.factions.map((faction, index) => (
+            <article className={`panel faction-card ${faction.alignment}`} key={index}>
+              <header>
+                {isEditing ? <select value={faction.alignment} onChange={(event) => updateFaction(index, "alignment", event.target.value)}><option value="ally">ALLY</option><option value="enemy">ENEMY</option><option value="uncertain">UNCERTAIN</option></select> : <span>{faction.alignment === "ally" ? "SANCTIONED ALLY" : faction.alignment === "enemy" ? "HOSTILE CONTACT" : "UNRESOLVED CONTACT"}</span>}
+                <b>THREAT {faction.threat}/5</b>
+              </header>
+              {isEditing ? <><input value={faction.name} onChange={(event) => updateFaction(index, "name", event.target.value)} aria-label={`Faction ${index + 1} name`} /><input value={faction.classification} onChange={(event) => updateFaction(index, "classification", event.target.value)} aria-label={`${faction.name} classification`} /><label>THREAT LEVEL<input type="range" min="1" max="5" value={faction.threat} onChange={(event) => updateFaction(index, "threat", event.target.value)} /></label><textarea value={faction.disposition} onChange={(event) => updateFaction(index, "disposition", event.target.value)} aria-label={`${faction.name} disposition`} /><button className="intel-remove" onClick={() => setDraft((current) => ({ ...current, factions: current.factions.filter((_, i) => i !== index) }))}>REMOVE DOSSIER</button></> : <><h3>{faction.name}</h3><small>{faction.classification}</small><p>{faction.disposition}</p></>}
+              <div className="threat-runes" aria-label={`Threat level ${faction.threat} of 5`}>{[1, 2, 3, 4, 5].map((level) => <i className={level <= faction.threat ? "active" : ""} key={level} />)}</div>
+            </article>
           ))}
-        </ol>
-        {isEditing && <button className="text-button" onClick={() => setDraft((current) => ({ ...current, directives: [...current.directives, "New operational directive"] }))}>+ ADD DIRECTIVE</button>}
-      </section>
+          {!display.factions.length && <div className="panel intel-empty-register full"><b>NO IDENTIFIED LOCAL FACTIONS</b><p>No ally, enemy, or unresolved polity has survived verification within the unidentified system.</p></div>}
+          {isEditing && <button className="panel add-intel-card" onClick={() => setDraft((current) => ({ ...current, factions: [...current.factions, { name: "Unknown Contact", alignment: "uncertain", classification: "Unclassified", threat: 1, disposition: "Intelligence pending." }] }))}>+ CREATE FACTION DOSSIER</button>}
+        </div>}
+
+      {activeRegister === "mandate" && <section className="panel operational-directives intel-register-panel">
+          <div className="panel-heading"><div><p className="section-kicker">Decree authority</p><h2>Crusade mandate</h2></div><span>ADEPTUS TERRA · ARGENT VIGIL</span></div>
+          <ol>{display.directives.map((directive, index) => <li key={index}><b>{String(index + 1).padStart(2, "0")}</b>{isEditing ? <><input value={directive} onChange={(event) => setDraft((current) => ({ ...current, directives: current.directives.map((item, i) => i === index ? event.target.value : item) }))} /><button onClick={() => setDraft((current) => ({ ...current, directives: current.directives.filter((_, i) => i !== index) }))}>×</button></> : <span>{directive}</span>}</li>)}</ol>
+          {isEditing && <button className="text-button" onClick={() => setDraft((current) => ({ ...current, directives: [...current.directives, "New operational directive"] }))}>+ ADD DIRECTIVE</button>}
+        </section>}
+
+      {activeRegister === "taxonomy" && <div className="intel-register-panel"><PlanetClassificationArchive /></div>}
       {message && <p className="intel-save-status" role="status">{message}</p>}
     </div>
   );

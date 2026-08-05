@@ -13,14 +13,40 @@ export default function PlanetaryIntelPage() {
   const { isAdminMode } = useAdminMode();
   const { data, error, isLoading, isSaving, saveSection } = useChapterArchive();
   const { records: planetTypes } = usePlanetTypes();
-  const systemIndex = Math.max(0, Number.parseInt(params.system || "1", 10) - 1);
-  const planetIndex = Math.max(0, Number.parseInt(params.planet || "1", 10) - 1);
-  const system = data.sectorIntel.worlds[systemIndex] ?? data.sectorIntel.worlds[0];
-  const body = system.bodies[planetIndex] ?? system.bodies[0] ?? {
-    name: "Uncharted Body", type: "Unclassified Planet", classificationId: "", status: "Unsurveyed", orbit: 1,
-    population: "Unknown", climate: "Unknown", allegiance: "Unclaimed", resources: "Unsurveyed",
-    summary: "No planetary intelligence has yet been recorded.",
-  };
+  const parsedSystemNumber = Number.parseInt(params.system || "", 10);
+  const parsedPlanetNumber = Number.parseInt(params.planet || "", 10);
+  const systemIndex = Number.isInteger(parsedSystemNumber) && parsedSystemNumber > 0
+    ? parsedSystemNumber - 1
+    : -1;
+  const planetIndex = Number.isInteger(parsedPlanetNumber) && parsedPlanetNumber > 0
+    ? parsedPlanetNumber - 1
+    : -1;
+  const system = systemIndex >= 0 ? data.sectorIntel.worlds[systemIndex] : undefined;
+  const body = system && planetIndex >= 0 ? system.bodies[planetIndex] : undefined;
+
+  if (!isLoading && (!system || !body)) {
+    return (
+      <main className="app-shell">
+        <SidebarNavigation activeHref="/intel" />
+        <section className="workspace archive-boundary-workspace">
+          <header className="topbar">
+            <div><p className="eyebrow">The Lunar Dragons · PLANETARIA INTELLIGENCE</p><div className="chapter-name fixed-chapter-name">THE LUNAR DRAGONS</div></div>
+            <div className="top-actions"><Link className="seal-button" href="/intel">BACK TO INTELLIGENCE</Link></div>
+          </header>
+          <div className="subpage archive-boundary-subpage planetary-intel-page">
+            <section className="panel intel-record-unavailable" role="status">
+              <p className="section-kicker">Cartographic retrieval refused</p>
+              <h1>ORBITAL RECORD UNAVAILABLE</h1>
+              <p>The requested system and body indexes do not resolve to an existing charted record. No substitute body has been opened.</p>
+              <Link className="seal-button" href="/intel">RETURN TO SECTOR INTEL</Link>
+            </section>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!system || !body) return null;
   const classification = planetTypes.find((record) =>
     record.id === body.classificationId || record.name.toLowerCase() === body.type.toLowerCase(),
   );

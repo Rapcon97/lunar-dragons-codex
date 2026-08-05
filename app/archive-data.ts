@@ -205,6 +205,19 @@ export type WarpLane = {
   status: "stable" | "unstable" | "blockaded" | "unknown";
 };
 
+export type SectorSurveyState = {
+  authority: "draft" | "review" | "ratified";
+  receivingLocus: string;
+  systemDesignation: string;
+  probableRegion: string;
+  transitRoute: string;
+  cartographicConfidence: string;
+  communications: string;
+  supportForceStatus: string;
+  vesselCondition: string;
+  isolationStatus: string;
+};
+
 export type SectorIntel = {
   sectorName: string;
   subsectorName: string;
@@ -216,6 +229,7 @@ export type SectorIntel = {
   factions: SectorFaction[];
   directives: string[];
   warpLanes: WarpLane[];
+  survey: SectorSurveyState;
 };
 
 export type ChapterArchiveData = {
@@ -306,127 +320,35 @@ const defaultArchive: ChapterArchiveData = {
   relayMessages: [],
   relayLastGeneratedDate: "",
   sectorIntel: {
-    sectorName: "Nachmund Gauntlet · Contested Reaches",
-    subsectorName: "Nachmund Reclamation Commission",
-    currentTheater: "The Argent Vigil",
-    deploymentStatus: "CRUSADE ACTIVE · RECLAMATION & STRATEGIC VIGILANCE",
-    astropathicDate: "056.M42 · ADEPTUS TERRA WARRANT 008.M42/DR-017",
+    sectorName: "Northeastern Nachmund Approaches",
+    subsectorName: "Unresolved System Survey",
+    currentTheater: "The Argent Vigil · Stranding Phase",
+    deploymentStatus: "CRUSADE FORCE SCATTERED · LUNARIS BARELY OPERATIONAL",
+    astropathicDate: "056.M42 · CHRONOMETRIC FIX DEGRADED",
     summary:
-      "By decree of the Lord Commander, the Lunar Dragons prosecute the Argent Vigil across the contested reaches surrounding the Nachmund Gauntlet. Their charge is to find isolated systems, restore lawful Imperial authority where it may endure, destroy what lies beyond redemption, secure the roads between the stars, and prevent the passage between the divided Imperium from being closed.",
-    worlds: [
-      {
-        name: "Lunaris", classification: "Provisional Fleet Anchorage", status: "Secure · No sovereign claim", x: 48, y: 48,
-        bodies: [
-          { name: "Lunaris", type: "Provisional Anchorage Moon", status: "Chapter-protected", orbit: 2, population: "4.2 billion", climate: "Airless · Subsurface habitation", allegiance: "Imperium of Man", resources: "Gene-vaults · Moon-gates", summary: "The Chapter’s principal operational anchorage during the Argent Vigil. It is neither a sovereign Chapter world nor the permanent bastion authorised by the Decree of Reclamation and Vigilance." },
-          { name: "Draconis Gate", type: "Orbital Fortress", status: "Operational", orbit: 1, population: "83,000", climate: "Void installation", allegiance: "Lunar Dragons", resources: "Fleet docks · Astropathic choir", summary: "A ring-shaped void fortress controlling a stable translation corridor through the Argent Vigil operational reach." },
-          { name: "Umbra", type: "Dead Moon", status: "Restricted", orbit: 3, population: "None recorded", climate: "Cryogenic wastes", allegiance: "Sealed by chapter decree", resources: "Unknown", summary: "An unlit moon whose catacombs predate Imperial settlement. The 11th Company maintains the interdiction." },
-        ],
-      },
-      {
-        name: "Selene Prime", classification: "Hive-Moon", status: "Contested", x: 67, y: 31,
-        bodies: [
-          { name: "Selene Prime", type: "Hive World", status: "Contested", orbit: 2, population: "19.7 billion", climate: "Temperate hive belts", allegiance: "Imperium of Man", resources: "Munitions · Promethium", summary: "The industrial heart of the subsector. Genestealer spoor has been confirmed beneath Hive Enoch." },
-          { name: "Helicon", type: "Gas Giant", status: "Blockaded", orbit: 4, population: "1.1 million", climate: "Hydrogen storms", allegiance: "Imperium of Man", resources: "Fuel skimmers · Void gas", summary: "Its refinery platforms supply much of the Selene fleet and are now under intermittent xenos attack." },
-          { name: "Chapel’s Tear", type: "Pilgrim Moon", status: "Evacuating", orbit: 3, population: "640 million", climate: "Cold oceanic", allegiance: "Adeptus Ministorum", resources: "Shrines · Reliquaries", summary: "A tidal moon of floating basilicas, presently serving as a refugee staging point." },
-        ],
-      },
-      {
-        name: "Kharon", classification: "Dead System", status: "No Signal", x: 82, y: 67,
-        bodies: [
-          { name: "Kharon I", type: "Dead World", status: "Signal source", orbit: 1, population: "Unknown", climate: "Ash-choked", allegiance: "Unclaimed", resources: "Xeno ruins", summary: "Source of a repeating Lunar Dragons distress cipher transmitted centuries before the chapter’s recorded founding." },
-          { name: "The Pale Crown", type: "Shattered Moon", status: "Hostile", orbit: 2, population: "Warband presence", climate: "Debris field", allegiance: "The Pale Synod", resources: "Fortified wreckage", summary: "A broken moon converted into an ambush fortress by the Pale Synod." },
-        ],
-      },
-      {
-        name: "Vigil IX", classification: "Imperial Bastion", status: "Besieged", x: 28, y: 30,
-        bodies: [
-          { name: "Vigil IX", type: "Fortress World", status: "Besieged", orbit: 3, population: "2.8 billion", climate: "Arid highlands", allegiance: "Imperium of Man", resources: "Bastions · Macro-cannon foundries", summary: "The western shield of the subsector, enduring a prolonged void siege by the Pale Synod." },
-          { name: "Sentinel Secundus", type: "Defense Moon", status: "Damaged", orbit: 2, population: "12 million", climate: "Airless", allegiance: "Astra Militarum", resources: "Orbital batteries", summary: "One of three defense moons; the other two have fallen silent." },
-        ],
-      },
-      {
-        name: "Orison", classification: "Shrine World", status: "Secure", x: 19, y: 68,
-        bodies: [
-          { name: "Orison", type: "Shrine World", status: "Secure", orbit: 2, population: "7.4 billion", climate: "Mediterranean", allegiance: "Adeptus Ministorum", resources: "Pilgrim tithes · Scholastica", summary: "A world of moonlit cathedrals whose clergy regard the Lunar Dragons as protectors foretold in local scripture." },
-          { name: "The Penitent", type: "Monastery Moon", status: "Quarantined", orbit: 3, population: "91,000", climate: "Frozen", allegiance: "Ecclesiarchy", resources: "Restricted archives", summary: "Quarantined after its monks reported dreams of a black moon rising over Kharon." },
-        ],
-      },
-      {
-        name: "The Vesper Rift", classification: "Warp Anomaly", status: "Expanding", x: 56, y: 79,
-        bodies: [
-          { name: "Veil Anchor 7", type: "Mechanicus Station", status: "Failing", orbit: 1, population: "18,400", climate: "Void installation", allegiance: "Adeptus Mechanicus", resources: "Gellar pylons · Rift telemetry", summary: "The last functioning monitor station on the rift’s edge. Its machine spirit predicts accelerating expansion." },
-          { name: "Noctis", type: "Unclassified Object", status: "Approaching", orbit: 4, population: "Unknown", climate: "Sensor-occluded", allegiance: "Unknown", resources: "Unknown", summary: "A planet-mass shadow moving against local gravity. No reliable augur return has been obtained." },
-        ],
-      },
-    ],
-    factions: [
-      {
-        name: "Astra Militarum · Argent Vigil Commands",
-        alignment: "ally",
-        classification: "Imperial Cooperation Order",
-        threat: 1,
-        disposition: "Ordered to fight beside the Lunar Dragons while retaining their lawful chains of command; the Astartes break the foe and the armies of the Imperium hold what is won.",
-      },
-      {
-        name: "Navis Imperialis · Nachmund Detachments",
-        alignment: "ally",
-        classification: "Imperial Cooperation Order",
-        threat: 1,
-        disposition: "Charged to preserve the road between the stars and support the prosecution of the Argent Vigil.",
-      },
-      {
-        name: "Adeptus Mechanicus · Attached Cohorts",
-        alignment: "ally",
-        classification: "Imperial Cooperation Order",
-        threat: 1,
-        disposition: "Charged to restore, sustain and judge the works of Mankind committed to the crusade; they serve the Imperium beside the Chapter, not beneath it.",
-      },
-      {
-        name: "House Caelorn",
-        alignment: "ally",
-        classification: "Imperial Knight House",
-        threat: 1,
-        disposition: "Oath-bound to defend the Selene pilgrim lanes beside the Lunar Dragons.",
-      },
-      {
-        name: "Ordo Xenos · Selene Conclave",
-        alignment: "uncertain",
-        classification: "Inquisitorial Authority",
-        threat: 3,
-        disposition: "Shares intelligence selectively. Their sealed interest in Kharon remains unexplained.",
-      },
-      {
-        name: "The Pale Synod",
-        alignment: "enemy",
-        classification: "Heretic Astartes Warband",
-        threat: 5,
-        disposition: "Primary hostile force. Conducting raids around Vigil IX and harvesting astropathic choirs.",
-      },
-      {
-        name: "Splinter Fleet Nyx",
-        alignment: "enemy",
-        classification: "Tyranid Vanguard Organisms",
-        threat: 4,
-        disposition: "Genestealer spoor confirmed on Selene Prime. Fleet mass remains beyond augur range.",
-      },
-    ],
+      "At the opening of the Argent Vigil, a catastrophic empyric event scattered the crusade force during its passage from Imperium Sanctus through the Nachmund Gauntlet. Lunaris emerged within an unidentified system on the northeastern, Imperium Nihilus-facing approaches. Roughly seventy percent of the supporting vessels and forces are destroyed, scattered, or missing. The flagship is heavily damaged and barely operational, though its surviving batteries can still answer an attack.",
+    worlds: [],
+    factions: [],
     directives: [
       "Seek systems isolated by the Great Rift and determine the fate of worlds from which the Emperor’s light has been obscured.",
       "Relieve those who hold faith with Terra, restore lawful Imperial authority, and reclaim what may be reclaimed.",
       "Destroy what has fallen beyond redemption through corruption, treason, xenos dominion, or the touch of the Archenemy.",
       "Secure anchorages, supply routes, passages, and systems through the contested reaches.",
       "Stand vigil against every power that would close the Nachmund passage and deepen the sundering of the Imperium.",
-      "Reinforce Vigil IX before the next void-tide.",
-      "Recover the missing astropathic vessel Argent Psalm.",
-      "Determine why Kharon has begun transmitting a lunar distress cipher.",
     ],
-    warpLanes: [
-      { name: "The Moonward Passage", from: 0, to: 1, status: "stable" },
-      { name: "Vigil Run", from: 0, to: 3, status: "stable" },
-      { name: "Pilgrim’s Thread", from: 0, to: 4, status: "stable" },
-      { name: "Kharon Approach", from: 1, to: 2, status: "blockaded" },
-      { name: "Vesper Drift", from: 0, to: 5, status: "unstable" },
-    ],
+    warpLanes: [],
+    survey: {
+      authority: "draft",
+      receivingLocus: "LUNARIS",
+      systemDesignation: "UNIDENTIFIED SYSTEM",
+      probableRegion: "NORTHEASTERN NACHMUND APPROACHES · NIHILUS-FACING",
+      transitRoute: "IMPERIUM SANCTUS → NACHMUND GAUNTLET → IMPERIUM NIHILUS",
+      cartographicConfidence: "EXTREMELY LOW · EMPYRIC INTERFERENCE",
+      communications: "NO RELIABLE EXTERNAL CONTACT",
+      supportForceStatus: "APPROX. 70% DESTROYED · SCATTERED · MISSING",
+      vesselCondition: "HEAVILY DAMAGED · BARELY OPERATIONAL · DEFENSIVE CAPABILITY PRESENT",
+      isolationStatus: "LOCAL ISOLATION PREDATES THE GREAT RIFT · DURATION UNVERIFIED",
+    },
   },
 };
 
@@ -1397,6 +1319,39 @@ const legacyCompanyNames = new Set([
   "The Kindling",
 ]);
 
+const legacySectorSystemNames = new Set([
+  "Lunaris",
+  "Selene Prime",
+  "Kharon",
+  "Vigil IX",
+  "Orison",
+  "The Vesper Rift",
+]);
+
+const legacySectorFactionNames = new Set([
+  "Astra Militarum · Argent Vigil Commands",
+  "Navis Imperialis · Nachmund Detachments",
+  "Adeptus Mechanicus · Attached Cohorts",
+  "House Caelorn",
+  "Ordo Xenos · Selene Conclave",
+  "The Pale Synod",
+  "Splinter Fleet Nyx",
+]);
+
+const legacySectorWarpLaneNames = new Set([
+  "The Moonward Passage",
+  "Vigil Run",
+  "Pilgrim’s Thread",
+  "Kharon Approach",
+  "Vesper Drift",
+]);
+
+const legacySectorDirectiveText = new Set([
+  "Reinforce Vigil IX before the next void-tide.",
+  "Recover the missing astropathic vessel Argent Psalm.",
+  "Determine why Kharon has begun transmitting a lunar distress cipher.",
+]);
+
 const decreeChronicleEntries = [
   "008.M42 — In the eighth year of the Indomitus Crusade, Roboute Guilliman seals the Decree of Reclamation and Vigilance, recognising the Lunar Dragons’ sacrifice and distinguished service.",
   "008.M42 — The Chapter is commissioned to prosecute the Nachmund Reclamation, operationally designated the Argent Vigil.",
@@ -1464,7 +1419,8 @@ export function applyAuthoritativeLore(value: ChapterArchiveData): ChapterArchiv
     summary: defaults.sectorIntel.summary,
     factions: [...defaults.sectorIntel.factions.slice(0, 3), ...existingFactions],
     directives: [...officialDirectives, ...existingDirectives],
-    worlds: archive.sectorIntel.worlds.map((world) => world.name === "Lunaris" ? defaults.sectorIntel.worlds[0] : world),
+    worlds: archive.sectorIntel.worlds,
+    survey: defaults.sectorIntel.survey,
   };
   return archive;
 }
@@ -1848,7 +1804,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
 
   const sectorSource = record(source.sectorIntel);
   const worldSource = Array.isArray(sectorSource.worlds) ? sectorSource.worlds : defaults.sectorIntel.worlds;
-  const worlds = worldSource.slice(0, 24).map((item, index) => {
+  const normalizedWorlds = worldSource.slice(0, 24).map((item, index) => {
     const candidate = record(item);
     const fallback = defaults.sectorIntel.worlds[index] ?? {
       name: `Uncharted System ${index + 1}`,
@@ -1886,6 +1842,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
       };
     });
     return {
+      sourceIndex: index,
       name: text(candidate.name, fallback.name, 120),
       classification: text(candidate.classification, fallback.classification, 120),
       status: text(candidate.status, fallback.status, 120),
@@ -1894,6 +1851,9 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
       bodies,
     };
   });
+  const retainedWorlds = normalizedWorlds.filter((world) => !legacySectorSystemNames.has(world.name));
+  const worldIndexMap = new Map(retainedWorlds.map((world, index) => [world.sourceIndex, index]));
+  const worlds: SectorWorld[] = retainedWorlds.map(({ sourceIndex: _sourceIndex, ...world }) => world);
 
   const factionSource = Array.isArray(sectorSource.factions) ? sectorSource.factions : defaults.sectorIntel.factions;
   const factions: SectorFaction[] = factionSource.map((item, index) => {
@@ -1916,7 +1876,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
       threat: Math.max(1, Math.min(5, Math.round(Number(candidate.threat ?? fallback.threat) || 1))),
       disposition: text(candidate.disposition, fallback.disposition, 1200),
     };
-  });
+  }).filter((faction) => !legacySectorFactionNames.has(faction.name));
 
   const directiveSource = Array.isArray(sectorSource.directives)
     ? sectorSource.directives
@@ -1924,7 +1884,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
   const directives = directiveSource
     .filter((directive): directive is string => typeof directive === "string")
     .map((directive) => directive.trim().slice(0, 500))
-    .filter(Boolean)
+    .filter((directive) => Boolean(directive) && !legacySectorDirectiveText.has(directive))
     .slice(0, 50);
 
   const laneSource = Array.isArray(sectorSource.warpLanes)
@@ -1932,7 +1892,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
     : defaults.sectorIntel.warpLanes;
   const warpLanes: WarpLane[] = laneSource
   .slice(0, 80)
-  .map((item, index): WarpLane => {
+  .map((item, index): WarpLane | null => {
       const candidate = record(item);
       const fallback = defaults.sectorIntel.warpLanes[index] ?? {
         name: `Warp Lane ${index + 1}`,
@@ -1940,15 +1900,25 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
         to: Math.min(1, Math.max(0, worlds.length - 1)),
         status: "unknown" as const,
       };
-      const from = Math.max(0, Math.min(worlds.length - 1, Math.round(Number(candidate.from ?? fallback.from) || 0)));
-      const to = Math.max(0, Math.min(worlds.length - 1, Math.round(Number(candidate.to ?? fallback.to) || 0)));
+      const name = text(candidate.name, fallback.name, 140);
+      if (legacySectorWarpLaneNames.has(name)) return null;
+      const sourceFrom = Math.round(Number(candidate.from ?? fallback.from) || 0);
+      const sourceTo = Math.round(Number(candidate.to ?? fallback.to) || 0);
+      const from = worldIndexMap.get(sourceFrom);
+      const to = worldIndexMap.get(sourceTo);
+      if (from === undefined || to === undefined || from === to) return null;
       const status: WarpLane["status"] =
         candidate.status === "stable" || candidate.status === "unstable" || candidate.status === "blockaded"
           ? candidate.status
           : "unknown";
-      return { name: text(candidate.name, fallback.name, 140), from, to, status };
+      return { name, from, to, status };
     })
-    .filter((lane) => worlds.length > 1 && lane.from !== lane.to);
+    .filter((lane): lane is WarpLane => lane !== null);
+
+  const surveySource = record(sectorSource.survey);
+  const surveyAuthority = surveySource.authority === "review" || surveySource.authority === "ratified"
+    ? surveySource.authority
+    : "draft";
 
   return {
     identity: {
@@ -1980,6 +1950,18 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
       factions: factions.length ? factions : defaults.sectorIntel.factions,
       directives: directives.length ? directives : defaults.sectorIntel.directives,
       warpLanes,
+      survey: {
+        authority: surveyAuthority,
+        receivingLocus: text(surveySource.receivingLocus, defaults.sectorIntel.survey.receivingLocus, 160),
+        systemDesignation: text(surveySource.systemDesignation, defaults.sectorIntel.survey.systemDesignation, 160),
+        probableRegion: text(surveySource.probableRegion, defaults.sectorIntel.survey.probableRegion, 240),
+        transitRoute: text(surveySource.transitRoute, defaults.sectorIntel.survey.transitRoute, 300),
+        cartographicConfidence: text(surveySource.cartographicConfidence, defaults.sectorIntel.survey.cartographicConfidence, 200),
+        communications: text(surveySource.communications, defaults.sectorIntel.survey.communications, 200),
+        supportForceStatus: text(surveySource.supportForceStatus, defaults.sectorIntel.survey.supportForceStatus, 300),
+        vesselCondition: text(surveySource.vesselCondition, defaults.sectorIntel.survey.vesselCondition, 300),
+        isolationStatus: text(surveySource.isolationStatus, defaults.sectorIntel.survey.isolationStatus, 300),
+      },
     },
   };
 }

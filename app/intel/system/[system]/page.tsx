@@ -11,8 +11,35 @@ import { useChapterArchive } from "../../../_hooks/useChapterArchive";
 export default function SolarSystemIntelPage() {
   const params = useParams<{ system: string }>();
   const { data, error, isLoading } = useChapterArchive();
-  const systemIndex = Math.max(0, Number.parseInt(params.system || "1", 10) - 1);
-  const system = data.sectorIntel.worlds[systemIndex] ?? data.sectorIntel.worlds[0];
+  const parsedSystemNumber = Number.parseInt(params.system || "", 10);
+  const systemIndex = Number.isInteger(parsedSystemNumber) && parsedSystemNumber > 0
+    ? parsedSystemNumber - 1
+    : -1;
+  const system = systemIndex >= 0 ? data.sectorIntel.worlds[systemIndex] : undefined;
+
+  if (!isLoading && !system) {
+    return (
+      <main className="app-shell">
+        <SidebarNavigation activeHref="/intel" />
+        <section className="workspace archive-boundary-workspace">
+          <header className="topbar">
+            <div><p className="eyebrow">The Lunar Dragons · SYSTEMA CARTOGRAPHICA</p><div className="chapter-name fixed-chapter-name">THE LUNAR DRAGONS</div></div>
+            <div className="top-actions"><Link className="seal-button" href="/intel">BACK TO INTELLIGENCE</Link></div>
+          </header>
+          <div className="subpage archive-boundary-subpage system-intel-page">
+            <section className="panel intel-record-unavailable" role="status">
+              <p className="section-kicker">Cartographic retrieval refused</p>
+              <h1>SYSTEM RECORD UNAVAILABLE</h1>
+              <p>The requested index does not resolve to a uniquely charted system. No substitute location has been selected.</p>
+              <Link className="seal-button" href="/intel">RETURN TO SECTOR INTEL</Link>
+            </section>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!system) return null;
 
   return (
     <main className="app-shell">

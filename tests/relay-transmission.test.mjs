@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createDefaultArchiveData } from "../app/archive-data.ts";
+import { createDefaultArchiveData, normalizeArchiveData } from "../app/archive-data.ts";
 import {
   normalizeTransmissionOriginId,
   resolveTransmissionOrigin,
@@ -41,6 +41,81 @@ const source = (overrides = {}) => ({
   received: "0.588.056.M42",
   receivedAt: "2026-08-03T14:25:00.000Z",
   ...overrides,
+});
+
+function originIntelFixture() {
+  const intel = createDefaultArchiveData().sectorIntel;
+  const world = (name, bodies = []) => ({
+    name,
+    classification: "Controlled origin fixture",
+    status: "Charted",
+    x: 50,
+    y: 50,
+    bodies,
+  });
+  return {
+    ...intel,
+    worlds: [
+      world("Vigil IX"),
+      world("Orison"),
+      world("The Vesper Rift", [{
+        name: "Veil Anchor 7",
+        type: "Mechanicus Station",
+        status: "Failing",
+        orbit: 1,
+        population: "Unknown",
+        climate: "Void",
+        allegiance: "Adeptus Mechanicus",
+        resources: "Unverified",
+        summary: "Controlled fixture for origin-resolution tests.",
+      }]),
+    ],
+  };
+}
+
+test("the default Sector Intel archive starts as an unresolved draft survey", () => {
+  const intel = createDefaultArchiveData().sectorIntel;
+  assert.equal(intel.survey.authority, "draft");
+  assert.equal(intel.survey.receivingLocus, "LUNARIS");
+  assert.equal(intel.survey.systemDesignation, "UNIDENTIFIED SYSTEM");
+  assert.equal(intel.worlds.length, 0);
+  assert.equal(intel.warpLanes.length, 0);
+  assert.equal(intel.factions.length, 0);
+  assert.match(intel.survey.supportForceStatus, /70%/);
+  assert.match(intel.survey.vesselCondition, /BARELY OPERATIONAL/);
+});
+
+test("legacy placeholder cartography is hidden while later custom survey records survive", () => {
+  const world = (name, x) => ({
+    name,
+    classification: "Test record",
+    status: "Unverified",
+    x,
+    y: 50,
+    bodies: [],
+  });
+  const normalized = normalizeArchiveData({
+    sectorIntel: {
+      worlds: [world("Lunaris", 20), world("Unknown Reach Alpha", 50), world("Unknown Reach Beta", 80)],
+      factions: [
+        { name: "House Caelorn", alignment: "ally", classification: "Legacy placeholder", threat: 1, disposition: "Legacy" },
+        { name: "Unidentified Contact", alignment: "uncertain", classification: "Unresolved", threat: 2, disposition: "Observed once" },
+      ],
+      directives: [
+        "Reinforce Vigil IX before the next void-tide.",
+        "Maintain defensive readiness while the nav-fix remains unresolved.",
+      ],
+      warpLanes: [
+        { name: "The Moonward Passage", from: 0, to: 1, status: "stable" },
+        { name: "Unverified Translation Trace", from: 1, to: 2, status: "unknown" },
+      ],
+    },
+  }).sectorIntel;
+
+  assert.deepEqual(normalized.worlds.map((entry) => entry.name), ["Unknown Reach Alpha", "Unknown Reach Beta"]);
+  assert.deepEqual(normalized.factions.map((entry) => entry.name), ["Unidentified Contact"]);
+  assert.deepEqual(normalized.directives, ["Maintain defensive readiness while the nav-fix remains unresolved."]);
+  assert.deepEqual(normalized.warpLanes, [{ name: "Unverified Translation Trace", from: 0, to: 1, status: "unknown" }]);
 });
 
 test("shared event presentation protects failed-node and delayed analysis fields", () => {
@@ -492,7 +567,7 @@ test("sender closings and the final machine blessing remain unchanged", () => {
 });
 
 test("the controlled origin aliases resolve all three supported records", () => {
-  const intel = createDefaultArchiveData().sectorIntel;
+  const intel = originIntelFixture();
   const vigil = resolveTransmissionOrigin(intel, { originLocationId: "vigil-ix", originState: "CONFIRMED" });
   const orison = resolveTransmissionOrigin(intel, { originLocationId: "orison", originState: "VERIFIED" });
   const anchor = resolveTransmissionOrigin(intel, { originLocationId: "veil-anchor-7", originState: "CONFIRMED" });
@@ -502,33 +577,33 @@ test("the controlled origin aliases resolve all three supported records", () => 
     canonicalId: "vigil-ix",
     label: "Vigil IX",
     parentSystemLabel: "Vigil IX",
-    parentSystemIndex: 3,
+    parentSystemIndex: 0,
     mapHref: "/intel?origin=vigil-ix",
-    recordHref: "/intel/system/4",
+    recordHref: "/intel/system/1",
   });
   assert.deepEqual(orison, {
     kind: "exact",
     canonicalId: "orison",
     label: "Orison",
     parentSystemLabel: "Orison",
-    parentSystemIndex: 4,
+    parentSystemIndex: 1,
     mapHref: "/intel?origin=orison",
-    recordHref: "/intel/system/5",
+    recordHref: "/intel/system/2",
   });
   assert.deepEqual(anchor, {
     kind: "exact",
     canonicalId: "veil-anchor-7",
     label: "Veil Anchor 7",
     parentSystemLabel: "The Vesper Rift",
-    parentSystemIndex: 5,
+    parentSystemIndex: 2,
     bodyIndex: 0,
     mapHref: "/intel?origin=veil-anchor-7",
-    recordHref: "/intel/system/6/planet/1",
+    recordHref: "/intel/system/3/planet/1",
   });
 });
 
 test("explicit origin IDs normalize case, whitespace, underscores, and Imperial dash forms", () => {
-  const intel = createDefaultArchiveData().sectorIntel;
+  const intel = originIntelFixture();
   const variants = ["  VIGIL IX  ", "vigil_ix", "Vigil‑IX", "vigil---ix"];
   for (const value of variants) {
     assert.equal(normalizeTransmissionOriginId(value), "vigil-ix");
@@ -540,7 +615,7 @@ test("explicit origin IDs normalize case, whitespace, underscores, and Imperial 
 });
 
 test("origin routes are calculated from the current runtime array order", () => {
-  const intel = createDefaultArchiveData().sectorIntel;
+  const intel = originIntelFixture();
   const reordered = { ...intel, worlds: [...intel.worlds].reverse() };
   const vigil = resolveTransmissionOrigin(reordered, { originLocationId: "vigil-ix", originState: "CONFIRMED" });
   const anchor = resolveTransmissionOrigin(reordered, { originLocationId: "veil-anchor-7", originState: "CONFIRMED" });
@@ -554,7 +629,7 @@ test("origin routes are calculated from the current runtime array order", () => 
 });
 
 test("missing, renamed, duplicated, and ambiguous archive records never resolve", () => {
-  const intel = createDefaultArchiveData().sectorIntel;
+  const intel = originIntelFixture();
   const withoutVigil = { ...intel, worlds: intel.worlds.filter((world) => world.name !== "Vigil IX") };
   const renamedVigil = {
     ...intel,
@@ -581,7 +656,7 @@ test("missing, renamed, duplicated, and ambiguous archive records never resolve"
 });
 
 test("low-confidence, legacy, inferred, and prose-only origins receive no active links", () => {
-  const intel = createDefaultArchiveData().sectorIntel;
+  const intel = originIntelFixture();
   const partial = resolveTransmissionOrigin(intel, { originLocationId: "orison", originState: "PARTIAL" });
   const legacy = resolveTransmissionOrigin(intel);
   const proseOnly = resolveTransmissionOrigin(intel, {
@@ -606,7 +681,7 @@ test("low-confidence, legacy, inferred, and prose-only origins receive no active
 });
 
 test("the shared resolver gives Command and Relay identical origin destinations", () => {
-  const intel = createDefaultArchiveData().sectorIntel;
+  const intel = originIntelFixture();
   const metadata = { originLocationId: "veil-anchor-7", originState: "VERIFIED" };
   const command = resolveTransmissionOrigin(intel, metadata);
   const relay = resolveTransmissionOrigin(intel, { ...metadata });
