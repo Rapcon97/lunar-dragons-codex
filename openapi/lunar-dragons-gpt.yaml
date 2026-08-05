@@ -88,12 +88,14 @@ paths:
 
     post:
       operationId: createLoreEntry
+      x-openai-isConsequential: false
       summary: Create a structured lore entry
       description: >
         Creates a lore entry. Search existing lore first when practical.
-        Omitted status defaults to draft. Use review for material awaiting
-        approval and canon only for explicitly established lore. An unknown
-        status is rejected rather than normalized.
+        Omitted status defaults to draft. Choose status explicitly when known;
+        use draft or review for unfinished material and canon only for
+        explicitly established lore. An unknown status is rejected rather
+        than normalized.
       requestBody:
         required: true
         content:
@@ -150,6 +152,7 @@ paths:
 
     patch:
       operationId: updateLoreEntryById
+      x-openai-isConsequential: false
       summary: Update an existing structured lore entry
       description: >
         Partially updates a lore entry by ID. Only supplied fields change.
@@ -183,7 +186,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
-          description: The update would duplicate another entry or its optimistic write conflicted.
+          description: A matching entry exists or the bounded optimistic write conflicted.
           content:
             application/json:
               schema:

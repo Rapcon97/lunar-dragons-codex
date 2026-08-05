@@ -20,6 +20,7 @@ const paths = {
   optimisticWrite: "storage/optimistic-write.ts",
   migration: "drizzle/0005_structured_lore.sql",
   vite: "vite.config.ts",
+  openapi: "openapi/lunar-dragons-gpt.yaml",
 };
 
 async function read(path) {
@@ -448,6 +449,21 @@ test("GPT adapter preserves structured lore identity during updates", async () =
     /loreEntryToTimeline\(updated\)/,
     "Structured updates must regenerate the legacy timeline representation",
   );
+});
+
+test("GPT Actions schema marks writes non-consequential without weakening runtime limits", async () => {
+  const source = await read(paths.openapi);
+
+  assert.equal(
+    source.match(/x-openai-isConsequential:\s*false/g)?.length,
+    2,
+    "Create and update Actions must use the reviewed GPT confirmation metadata",
+  );
+  assert.match(source, /Omitted status defaults to draft/);
+  assert.match(source, /default:\s*draft/);
+  assert.match(source, /date:[\s\S]*?maxLength:\s*80/);
+  assert.match(source, /title:[\s\S]*?maxLength:\s*240/);
+  assert.match(source, /content:[\s\S]*?maxLength:\s*12000/);
 });
 
 test("GPT-created lore has a draft safety default", async () => {
