@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAdminMode } from "../_components/AdminMode";
 import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
@@ -308,7 +309,7 @@ function LunarisSection() {
       </section>
     </div>
 
-    {visualPreview && (
+    {visualPreview && createPortal(
       <div
         className="archive-previewer-backdrop"
         role="presentation"
@@ -332,7 +333,8 @@ function LunarisSection() {
           </div>
           <footer><span>ESC TO CLOSE</span><span>ARCHIVAL IMAGE · UNALTERED SOURCE PLATE</span></footer>
         </section>
-      </div>
+      </div>,
+      document.body,
     )}
     </>
   );

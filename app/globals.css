@@ -1789,7 +1789,7 @@ a { color: inherit; text-decoration: none; }
 }
 .lunaris-command-plate::before {
   content: ""; position: absolute; z-index: 1; inset: 0; pointer-events: none;
-  background: linear-gradient(90deg, rgba(2, 5, 3, .97) 0%, rgba(3, 7, 4, .82) 35%, rgba(3, 7, 4, .18) 70%), linear-gradient(0deg, rgba(2, 5, 3, .98), transparent 52%, rgba(2, 5, 3, .28));
+  background: linear-gradient(90deg, rgba(2, 5, 3, .73) 0%, rgba(3, 7, 4, .48) 36%, rgba(3, 7, 4, .1) 72%), linear-gradient(0deg, rgba(2, 5, 3, .92), transparent 50%, rgba(2, 5, 3, .15));
 }
 .lunaris-command-plate::after { content: "NAVIS PRAETORIA · ARGENT VIGIL"; position: absolute; z-index: 4; right: 14px; bottom: 9px; color: #51634c; font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .18em; }
 .lunaris-vessel-mark { position: relative; height: 118px; filter: drop-shadow(0 9px 13px rgba(0, 0, 0, .75)); }
@@ -1804,52 +1804,52 @@ a { color: inherit; text-decoration: none; }
 .lunaris-vessel-mark > span { position: absolute; z-index: 0; left: 0; right: 0; top: 61px; height: 1px; background: linear-gradient(90deg, transparent, #75916b, transparent); }
 .lunaris-vessel-art { position: absolute; z-index: 0; inset: 0; height: auto; margin: 0; }
 .lunaris-vessel-art::before { content: ""; position: absolute; z-index: 2; inset: 13px; border: 1px solid rgba(105, 132, 96, .2); pointer-events: none; }
-.lunaris-vessel-art::after { content: ""; position: absolute; z-index: 1; inset: 0; background: radial-gradient(ellipse at 67% 49%, transparent 20%, rgba(1, 3, 2, .2) 58%, rgba(1, 3, 2, .78)); pointer-events: none; }
-.lunaris-vessel-art img { width: 100%; height: 100%; object-fit: cover; object-position: 55% 50%; filter: saturate(.72) contrast(1.08) brightness(.68); }
+.lunaris-vessel-art::after { content: ""; position: absolute; z-index: 1; inset: 0; background: radial-gradient(ellipse at 62% 49%, transparent 23%, rgba(1, 3, 2, .12) 62%, rgba(1, 3, 2, .5)); pointer-events: none; }
+.lunaris-vessel-art img { width: 100%; height: 100%; object-fit: cover; object-position: 55% 50%; filter: saturate(.78) contrast(1.06) brightness(.86); }
 .lunaris-vessel-art span { position: absolute; z-index: 3; left: clamp(24px, 4vw, 58px); top: clamp(22px, 3vw, 42px); border-left: 2px solid #718569; padding: 5px 9px; color: #82947a; background: rgba(3, 8, 4, .68); font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .13em; }
 .lunaris-title-block { position: relative; z-index: 3; align-self: end; text-shadow: 0 3px 18px #000; }
 .lunaris-title-block h2 { margin: 2px 0 0; color: #a8b79e; font: 400 clamp(48px, 7vw, 84px)/.88 Georgia, serif; letter-spacing: .03em; text-transform: uppercase; }
-.lunaris-title-block > strong { display: flex; align-items: center; gap: 11px; margin-top: 14px; color: #8da083; font: 400 clamp(var(--ui-text-12), 1.35vw, var(--ui-text-17)) Georgia, serif; letter-spacing: .08em; text-transform: uppercase; }
+.lunaris-title-block > strong { display: flex; align-items: center; gap: 11px; margin-top: 14px; color: #9caf92; font: 400 clamp(var(--type-body-small), 1.25vw, var(--type-body)) Georgia, serif; letter-spacing: .06em; text-transform: uppercase; }
 .lunaris-title-block > strong i { width: 5px; height: 5px; transform: rotate(45deg); background: #66795f; }
-.lunaris-title-block > p:last-child { max-width: 720px; margin: 20px 0 0; color: #788672; font: var(--ui-text-15)/1.6 Georgia, serif; }
+.lunaris-title-block > p:last-child { max-width: 720px; margin: 20px 0 0; color: #a0ae98; font: var(--type-body)/1.62 Georgia, serif; }
 .lunaris-command-plate > aside { position: absolute; z-index: 3; top: clamp(24px, 3vw, 44px); right: clamp(24px, 3vw, 44px); display: grid; gap: 8px; border: 1px solid rgba(94, 116, 87, .65); padding: 16px 18px; background: rgba(3, 8, 4, .78); backdrop-filter: blur(5px); text-align: center; }
-.lunaris-command-plate > aside span, .lunaris-command-plate > aside b, .lunaris-command-plate > aside small { font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .14em; }
+.lunaris-command-plate > aside span, .lunaris-command-plate > aside b, .lunaris-command-plate > aside small { font: var(--type-control) "Courier New", monospace; letter-spacing: .12em; }
 .lunaris-command-plate > aside span { color: #748a6d; }
 .lunaris-command-plate > aside b { color: #a0b296; font-weight: 400; }
 .lunaris-command-plate > aside small { color: #5b6856; line-height: 1.5; }
 .lunaris-hero-metrics { position: relative; z-index: 3; align-self: end; display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid rgba(75, 94, 69, .7); background: rgba(3, 8, 4, .82); backdrop-filter: blur(6px); }
 .lunaris-hero-metrics span { min-width: 0; display: grid; gap: 7px; padding: 14px 15px; border-right: 1px solid rgba(75, 94, 69, .55); }
 .lunaris-hero-metrics span:last-child { border-right: 0; }
-.lunaris-hero-metrics small { color: #60715a; font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .13em; }
-.lunaris-hero-metrics b { color: #9caf92; font: 400 var(--ui-text-13) "Courier New", monospace; letter-spacing: .06em; white-space: nowrap; }
+.lunaris-hero-metrics small { color: #71836a; font: var(--type-control) "Courier New", monospace; letter-spacing: .11em; }
+.lunaris-hero-metrics b { color: #a8b9a0; font: 400 var(--type-body) "Courier New", monospace; letter-spacing: .05em; white-space: nowrap; }
 .lunaris-recognition-plate { padding: clamp(20px, 3vw, 34px); overflow: hidden; }
 .lunaris-recognition-plate > header { display: flex; align-items: end; justify-content: space-between; gap: 22px; padding-bottom: 16px; border-bottom: 1px solid #303c2d; }
 .lunaris-recognition-plate > header p { margin: 0 0 6px; }
 .lunaris-recognition-plate > header h3 { margin: 0; color: #9dad94; font: 400 clamp(var(--ui-text-16), 2.2vw, 2rem) Georgia, serif; }
-.lunaris-recognition-plate > header > span { color: #65775f; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .12em; text-align: right; }
+.lunaris-recognition-plate > header > span { color: #758970; font: var(--type-control) "Courier New", monospace; letter-spacing: .11em; text-align: right; }
 .lunaris-recognition-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr); gap: clamp(22px, 3vw, 42px); align-items: stretch; margin-top: 24px; }
 .lunaris-recognition-viewport { position: relative; min-height: 340px; padding: 0; overflow: hidden; border: 1px solid #41503d; background: #050805; cursor: pointer; }
 .lunaris-recognition-viewport::before { content: ""; position: absolute; z-index: 2; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(2, 5, 3, .18), transparent 55%), repeating-linear-gradient(0deg, transparent 0 3px, rgba(107, 137, 97, .035) 3px 4px); }
 .lunaris-recognition-viewport::after { content: ""; position: absolute; z-index: 3; inset: 12px; border: 1px solid rgba(116, 145, 105, .23); pointer-events: none; }
 .lunaris-recognition-viewport img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 27%; filter: saturate(.62) contrast(1.08) brightness(.72); transition: filter .2s, transform .3s; }
-.lunaris-recognition-viewport > span { position: absolute; z-index: 4; right: 13px; bottom: 13px; border: 1px solid #53644d; padding: 9px 11px; color: #93a58a; background: rgba(3, 8, 4, .9); font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .13em; }
+.lunaris-recognition-viewport > span { position: absolute; z-index: 4; right: 13px; bottom: 13px; border: 1px solid #53644d; padding: 9px 11px; color: #a5b79b; background: rgba(3, 8, 4, .9); font: var(--type-control) "Courier New", monospace; letter-spacing: .11em; }
 .lunaris-recognition-viewport:hover img, .lunaris-recognition-viewport:focus-visible img { filter: saturate(.76) contrast(1.08) brightness(.86); transform: scale(1.018); }
 .lunaris-recognition-viewport:focus-visible { outline: 1px solid #91a887; outline-offset: 3px; }
 .lunaris-recognition-extract { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-.lunaris-recognition-extract > p:nth-child(2) { margin: 8px 0 20px; color: #83907c; font: var(--ui-text-14)/1.65 Georgia, serif; }
+.lunaris-recognition-extract > p:nth-child(2) { margin: 8px 0 20px; color: #93a08c; font: var(--type-body)/1.65 Georgia, serif; }
 .lunaris-recognition-extract dl { margin: 0; }
 .lunaris-recognition-extract dl > div { display: grid; gap: 5px; border-top: 1px solid #263123; padding: 11px 0; }
-.lunaris-recognition-extract dt { color: #596a54; font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .12em; }
-.lunaris-recognition-extract dd { margin: 0; color: #97a58f; font: var(--ui-text-12)/1.45 Georgia, serif; }
+.lunaris-recognition-extract dt { color: #6e8068; font: var(--type-control) "Courier New", monospace; letter-spacing: .1em; }
+.lunaris-recognition-extract dd { margin: 0; color: #a4b09d; font: var(--type-body-small)/1.5 Georgia, serif; }
 .lunaris-profile-grid { display: grid; grid-template-columns: minmax(360px, .72fr) minmax(0, 1.28fr); gap: 14px; }
 .lunaris-profile, .lunaris-scale, .lunaris-armament, .lunaris-capacity, .lunaris-facilities, .lunaris-reliquary, .lunaris-honours { padding: 25px; }
 .lunaris-profile > header, .lunaris-armament > header { display: flex; justify-content: space-between; gap: 18px; padding-bottom: 15px; border-bottom: 1px solid #303c2d; }
 .lunaris-profile > header p, .lunaris-armament > header p { margin: 0; }
-.lunaris-profile > header span, .lunaris-armament > header span { color: #5c6a57; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .13em; }
+.lunaris-profile > header span, .lunaris-armament > header span { color: #71816c; font: var(--type-control) "Courier New", monospace; letter-spacing: .11em; }
 .lunaris-profile dl, .lunaris-scale dl, .lunaris-capacity dl { margin: 0; }
 .lunaris-profile dl > div, .lunaris-scale dl > div, .lunaris-capacity dl > div { display: grid; grid-template-columns: minmax(120px, .55fr) 1fr; gap: 14px; border-bottom: 1px solid #202a1f; padding: 11px 2px; }
-.lunaris-profile dt, .lunaris-scale dt, .lunaris-capacity dt { color: #65775f; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .12em; }
-.lunaris-profile dd, .lunaris-scale dd, .lunaris-capacity dd { margin: 0; color: #98a68f; font: var(--ui-text-13)/1.4 Georgia, serif; }
+.lunaris-profile dt, .lunaris-scale dt, .lunaris-capacity dt { color: #71836a; font: var(--type-control) "Courier New", monospace; letter-spacing: .1em; }
+.lunaris-profile dd, .lunaris-scale dd, .lunaris-capacity dd { margin: 0; color: #a4b19c; font: var(--type-body-small)/1.5 Georgia, serif; }
 .lunaris-scale { display: flex; flex-direction: column; }
 .lunaris-dimensions-plate { position: relative; margin: 10px 0 18px; }
 .lunaris-dimensions-plate > button { position: relative; width: 100%; height: clamp(300px, 30vw, 430px); padding: 0; overflow: hidden; border: 1px solid #3c4938; background: #030604; cursor: pointer; }
@@ -1858,11 +1858,11 @@ a { color: inherit; text-decoration: none; }
 .lunaris-dimensions-plate img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; filter: sepia(1) saturate(.78) hue-rotate(58deg) brightness(.66) contrast(1.25); transition: filter .2s, transform .3s; }
 .lunaris-dimensions-plate > button:hover img, .lunaris-dimensions-plate > button:focus-visible img { filter: sepia(1) saturate(.9) hue-rotate(58deg) brightness(.78) contrast(1.25); transform: scale(1.015); }
 .lunaris-dimensions-plate > button:focus-visible { outline: 1px solid #91a887; outline-offset: 3px; }
-.lunaris-blueprint-axis { position: absolute; z-index: 4; right: 5%; bottom: 18%; left: 5%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; color: #93a78a; font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .11em; }
+.lunaris-blueprint-axis { position: absolute; z-index: 4; right: 5%; bottom: 18%; left: 5%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; color: #a1b398; font: var(--type-control) "Courier New", monospace; letter-spacing: .1em; }
 .lunaris-blueprint-axis i { height: 1px; background: rgba(121, 153, 111, .68); }
-.lunaris-blueprint-open { position: absolute; z-index: 4; right: 13px; bottom: 13px; border: 1px solid #53644d; padding: 8px 10px; color: #93a58a; background: rgba(3, 8, 4, .9); font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .13em; }
-.lunaris-dimensions-plate figcaption { margin-top: 9px; color: #52634e; font: var(--ui-text-7) "Courier New", monospace; letter-spacing: .14em; text-align: right; }
-.lunaris-media-previewer { border-color: #56684f; }
+.lunaris-blueprint-open { position: absolute; z-index: 4; right: 13px; bottom: 13px; border: 1px solid #53644d; padding: 8px 10px; color: #a5b79b; background: rgba(3, 8, 4, .9); font: var(--type-control) "Courier New", monospace; letter-spacing: .11em; }
+.lunaris-dimensions-plate figcaption { margin-top: 9px; color: #65775f; font: var(--type-meta) "Courier New", monospace; letter-spacing: .12em; text-align: right; }
+.lunaris-media-previewer { position: relative; width: min(1320px, calc(100vw - 24px)); height: min(920px, calc(100dvh - 24px)); border-color: #56684f; }
 .lunaris-media-previewer > header { border-bottom-color: #40503b; background: linear-gradient(90deg, rgba(19, 34, 19, .72), rgba(4, 8, 5, .98)); }
 .lunaris-media-previewer h2 { color: #a6b69c; }
 .lunaris-media-previewer .archive-previewer-body { background: radial-gradient(circle, rgba(45, 67, 41, .12), transparent 62%), #020402; }
@@ -1874,7 +1874,7 @@ a { color: inherit; text-decoration: none; }
 .lunaris-armament article:last-child { border-right: 0; }
 .lunaris-armament h3 { margin: 0 0 15px; color: #91a388; font: 400 var(--ui-text-18) Georgia, serif; text-transform: uppercase; }
 .lunaris-armament ul, .lunaris-facilities ul, .lunaris-honours ul { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
-.lunaris-armament li, .lunaris-facilities li, .lunaris-honours li { color: #7a8973; font: var(--ui-text-12)/1.45 Georgia, serif; }
+.lunaris-armament li, .lunaris-facilities li, .lunaris-honours li { color: #94a18d; font: var(--type-body-small)/1.55 Georgia, serif; }
 .lunaris-armament li::before, .lunaris-facilities li::before, .lunaris-honours li::before { content: "◆"; margin-right: 9px; color: #53664e; font-size: 7px; }
 .lunaris-logistics-grid { display: grid; grid-template-columns: .82fr .82fr 1.2fr; gap: 14px; }
 .lunaris-capacity .section-kicker, .lunaris-facilities .section-kicker, .lunaris-reliquary .section-kicker, .lunaris-honours .section-kicker { padding-bottom: 14px; border-bottom: 1px solid #303c2d; }
@@ -1884,10 +1884,10 @@ a { color: inherit; text-decoration: none; }
 .lunaris-legacy-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 14px; }
 .lunaris-reliquary > div { width: 78px; height: 78px; display: grid; place-items: center; margin: 25px auto; border: 1px solid #596b53; transform: rotate(45deg); background: radial-gradient(circle, rgba(153, 183, 137, .25), rgba(18, 29, 18, .9) 62%); box-shadow: 0 0 25px rgba(118, 161, 103, .14), inset 0 0 14px #050805; }
 .lunaris-reliquary > div i { color: #b2c4a7; font-size: 24px; font-style: normal; transform: rotate(-45deg); text-shadow: 0 0 16px rgba(154, 195, 137, .72); }
-.lunaris-reliquary > p:last-child { color: #8d9b85; font: var(--ui-text-15)/1.65 Georgia, serif; }
+.lunaris-reliquary > p:last-child { color: #98a691; font: var(--type-body)/1.68 Georgia, serif; }
 .lunaris-honours blockquote { margin: 27px 0 0; border-top: 1px solid #303c2d; padding: 22px 2px 0; color: #98a88f; font: italic var(--ui-text-15)/1.6 Georgia, serif; }
 .lunaris-honours cite { display: block; margin-top: 13px; color: #687961; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .1em; text-transform: uppercase; }
-.lunaris-symbolism { margin: 24px 0 0; border-top: 1px solid #303c2d; padding-top: 20px; color: #98a88f; font: var(--ui-text-14)/1.65 Georgia, serif; letter-spacing: .035em; }
+.lunaris-symbolism { margin: 24px 0 0; border-top: 1px solid #303c2d; padding-top: 20px; color: #a2b099; font: var(--type-body)/1.65 Georgia, serif; letter-spacing: .025em; }
 
 .relay-inbox { display: grid; gap: 18px; }
 .relay-inbox-command {

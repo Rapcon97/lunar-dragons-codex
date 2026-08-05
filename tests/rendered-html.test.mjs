@@ -536,10 +536,14 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
   assert.match(sectionPage, /setVisualPreview\("blueprint"\)/);
   assert.match(sectionPage, /OPEN COMPLETE RECOGNITION PLATE/);
   assert.match(sectionPage, /OPEN COMPLETE SCHEMA/);
+  assert.match(sectionPage, /import \{ createPortal \} from "react-dom"/);
+  assert.match(sectionPage, /visualPreview && createPortal\(/);
   assert.match(styles, /\.lunaris-vessel-art img\s*\{[^}]*object-fit:\s*cover/s);
+  assert.match(styles, /\.lunaris-vessel-art img\s*\{[^}]*brightness\(\.86\)/s);
   assert.match(styles, /\.lunaris-recognition-layout\s*\{[^}]*grid-template-columns:/s);
   assert.match(styles, /\.lunaris-recognition-viewport img\s*\{[^}]*object-fit:\s*cover/s);
   assert.match(styles, /\.lunaris-dimensions-plate img\s*\{[^}]*object-fit:\s*cover/s);
-  assert.match(styles, /\.lunaris-media-previewer\s*\{/);
+  assert.match(styles, /\.lunaris-media-previewer\s*\{[^}]*100dvh/s);
+  assert.match(styles, /\.lunaris-recognition-extract dt\s*\{[^}]*--type-control/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lunaris-recognition-plate > header\s*\{[^}]*flex-direction:\s*column/s);
 });
