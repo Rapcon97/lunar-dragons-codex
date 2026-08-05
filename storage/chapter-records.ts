@@ -15,6 +15,10 @@ import {
   type OptimisticProposal,
   type OptimisticResult,
 } from "./optimistic-write";
+import {
+  proposeLorePublication,
+  type LorePublicationReason,
+} from "../app/lore-publication";
 
 const ARCHIVE_ID = "lunar-dragons";
 const MAX_LORE_WRITE_ATTEMPTS = 3;
@@ -265,6 +269,15 @@ export function mutateChapterLore<Value, Reason extends string>(
     commit: commitChapterLoreState,
     maxAttempts: MAX_LORE_WRITE_ATTEMPTS,
   });
+}
+
+export function publishReviewLoreEntry(
+  id: string,
+  expectedUpdatedAt: number,
+): Promise<OptimisticResult<{ entry: LoreEntry }, LorePublicationReason>> {
+  return mutateChapterLore((current) =>
+    proposeLorePublication(current, id, expectedUpdatedAt, Date.now()),
+  );
 }
 
 async function readChapterArchiveAttempt(relayWriteAttempt: number): Promise<ChapterArchiveData | null> {

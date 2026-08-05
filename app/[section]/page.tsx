@@ -77,7 +77,7 @@ type Section = keyof typeof sectionInfo;
 
 export default function SectionPage() {
   const { canAdmin, isAdminMode } = useAdminMode();
-  const { data, error, isLoading, isSaving, saveSection, updateSection } = useChapterArchive();
+  const { data, error, isLoading, isSaving, load, saveSection, updateSection } = useChapterArchive();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const section = (pathname.split("/")[1] || "chapter") as Section;
@@ -136,6 +136,7 @@ export default function SectionPage() {
               canAdmin={canAdmin}
               isAdminMode={isAdminMode}
               loreEntries={data.loreEntries}
+              onArchiveRefresh={load}
             />
           )}
         </div>
@@ -1415,10 +1416,12 @@ function SettingsSection({
   canAdmin,
   isAdminMode,
   loreEntries,
+  onArchiveRefresh,
 }: {
   canAdmin: boolean;
   isAdminMode: boolean;
   loreEntries: LoreEntry[];
+  onArchiveRefresh: () => Promise<void>;
 }) {
   const canEdit = isAdminMode;
   return (
@@ -1430,6 +1433,7 @@ function SettingsSection({
         canAdmin={canAdmin}
         entries={loreEntries}
         isAdminMode={isAdminMode}
+        onPublished={onArchiveRefresh}
       />
       <GuestAccountManager canEdit={canEdit} />
     </div>

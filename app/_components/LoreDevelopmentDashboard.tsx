@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { LoreEntry, LoreStatus } from "../archive-data";
 
 const loreStatusGroups: Array<{
@@ -65,12 +68,56 @@ export function LoreDevelopmentDashboard({
   canAdmin,
   entries,
   isAdminMode,
+  onPublished,
 }: {
   canAdmin: boolean;
   entries: LoreEntry[];
   isAdminMode: boolean;
+  onPublished: () => Promise<void>;
 }) {
+  const [publishingId, setPublishingId] = useState("");
+  const [publicationStatus, setPublicationStatus] = useState("");
+
   if (!canAdmin || !isAdminMode) return null;
+
+  async function publishEntry(entry: LoreEntry) {
+    const confirmed = window.confirm(
+      `Publish "${entry.title || "Untitled archival record"}" as established canon?\n\nThis record will become visible in the public Chronicles.`,
+    );
+    if (!confirmed) return;
+
+    setPublishingId(entry.id);
+    setPublicationStatus("");
+    try {
+      const response = await fetch(
+        `/api/admin/lore/${encodeURIComponent(entry.id)}/publish`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-lunar-admin-mode": "active",
+          },
+          body: JSON.stringify({ expectedUpdatedAt: entry.updatedAt }),
+        },
+      );
+      const result = (await response.json()) as {
+        entry?: LoreEntry;
+        error?: string;
+      };
+      if (!response.ok || !result.entry) {
+        throw new Error(result.error || "Publication failed.");
+      }
+
+      await onPublished();
+      setPublicationStatus(`CANON SEALED // ${result.entry.title}`);
+    } catch (error) {
+      setPublicationStatus(
+        error instanceof Error ? error.message : "The lore record could not be published.",
+      );
+    } finally {
+      setPublishingId("");
+    }
+  }
 
   return (
     <section
@@ -82,8 +129,8 @@ export function LoreDevelopmentDashboard({
           <p className="section-kicker">Administratum annalis</p>
           <h2 id="lore-development-title">Lore Development</h2>
           <p>
-            A sealed view of every structured lore record. Statuses are shown
-            exactly as stored and are never changed from this dashboard.
+            A sealed view of every structured lore record. Review records may
+            be explicitly judged as canon by the Chapter Administrator.
           </p>
         </div>
         <div className="lore-development-total" aria-label={`${entries.length} total lore records`}>
@@ -92,6 +139,12 @@ export function LoreDevelopmentDashboard({
           <small>ADMINISTRATOR CLEARANCE</small>
         </div>
       </div>
+
+      {publicationStatus && (
+        <p className="lore-publication-status" role="status">
+          {publicationStatus}
+        </p>
+      )}
 
       <div className="lore-development-groups">
         {loreStatusGroups.map((group) => {
@@ -171,6 +224,22 @@ export function LoreDevelopmentDashboard({
                       <div className="lore-record-complete">
                         <span>COMPLETE ARCHIVAL CONTENT</span>
                         <p>{entry.content}</p>
+                        {entry.status === "review" && (
+                          <div className="lore-record-publication">
+                            <span>
+                              CANON PROMOTION REQUIRES EXPLICIT ADMINISTRATOR JUDGEMENT
+                            </span>
+                            <button
+                              type="button"
+                              disabled={Boolean(publishingId)}
+                              onClick={() => void publishEntry(entry)}
+                            >
+                              {publishingId === entry.id
+                                ? "SEALING RECORD..."
+                                : "PUBLISH TO CANON"}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </details>
                   ))}

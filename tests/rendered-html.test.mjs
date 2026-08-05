@@ -62,9 +62,11 @@ test("Phase 4 event presentation is shared and relay persistence rejects stale w
 });
 
 test("the lore development dashboard requires admin capability and active Admin Mode", async () => {
-  const [dashboard, sectionPage] = await Promise.all([
+  const [dashboard, sectionPage, publicationRoute, publicationDomain] = await Promise.all([
     readFile("app/_components/LoreDevelopmentDashboard.tsx", "utf8"),
     readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/api/admin/lore/[id]/publish/route.ts", "utf8"),
+    readFile("app/lore-publication.ts", "utf8"),
   ]);
 
   assert.match(dashboard, /if \(!canAdmin \|\| !isAdminMode\) return null/);
@@ -87,6 +89,19 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.match(dashboard, /entry\.updatedAt/);
   assert.doesNotMatch(dashboard, /method:\s*["']DELETE|resetChapterArchive/);
   assert.doesNotMatch(sectionPage, /RESET SHARED RECORDS|Reset shared archive|onReset=/);
+  assert.match(dashboard, /entry\.status === "review"/);
+  assert.match(dashboard, /PUBLISH TO CANON/);
+  assert.match(dashboard, /window\.confirm/);
+  assert.match(dashboard, /"x-lunar-admin-mode": "active"/);
+  assert.match(publicationRoute, /getArchiveAdmin\(\)/);
+  assert.match(publicationRoute, /isSameOriginRequest\(request\)/);
+  assert.match(publicationRoute, /x-lunar-admin-mode/);
+  assert.match(publicationRoute, /publishReviewLoreEntry/);
+  assert.doesNotMatch(publicationRoute, /DELETE|resetChapterArchive|GPT_API_KEY/);
+  assert.match(publicationDomain, /existing\.status !== "review"/);
+  assert.match(publicationDomain, /existing\.updatedAt !== expectedUpdatedAt/);
+  assert.match(publicationDomain, /status: "canon"/);
+  assert.match(publicationDomain, /\.\.\.existing/);
 });
 
 test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () => {
