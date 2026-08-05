@@ -86,6 +86,25 @@ test("archive normalization preserves lore content beyond the former limit", () 
   assert.equal(normalized.loreEntries[0]?.content, content);
 });
 
+test("archive normalization removes the placeholder relic and seals the Gift's physical form", () => {
+  const normalized = normalizeArchiveData({
+    relics: [
+      { name: "The Gift of Luna", type: "Fragment of Luna · Founding stone", status: "Awaiting record" },
+      { name: "Lunaris", type: "Chapter Flagship · Battle Barge", status: "Bearer of the First Stone · The Argent Spear" },
+      { name: "Ancient chassis unrecorded", type: "Dreadnought", status: "Awaiting record" },
+      { name: "The Argent Key", type: "Chapter relic", status: "Sealed" },
+    ],
+  });
+
+  assert.deepEqual(normalized.relics.map((relic) => relic.name), [
+    "The Gift of Luna",
+    "Lunaris",
+    "The Argent Key",
+  ]);
+  assert.equal(normalized.relics[0]?.type, "Founding trust · physical form sealed");
+  assert.equal(normalized.relics[0]?.status, "In Chapter keeping · future foundation unfulfilled");
+});
+
 test("structured lore collection uses a 512 KB UTF-8 capacity budget", () => {
   const exact = ["x".repeat(MAX_LORE_COLLECTION_BYTES - 4)];
   assert.equal(loreCollectionSizeBytes(exact), MAX_LORE_COLLECTION_BYTES);

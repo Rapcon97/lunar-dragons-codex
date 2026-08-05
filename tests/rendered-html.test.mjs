@@ -500,3 +500,36 @@ test("Phase 3 origin actions share one controlled resolver and safe Intel focus"
   assert.match(styles, /\.sector-world\.transmission-origin-focus/);
   assert.match(styles, /\.sector-origin-fix/);
 });
+
+test("the Lunaris dossier uses the sealed canon profile and current visual archive", async () => {
+  const [sectionPage, archiveData, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/archive-data.ts", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  for (const asset of [
+    "/lunaris-flagship.png",
+    "/lunaris-recognition-plate.png",
+    "/lunaris-dimensions.png",
+  ]) {
+    assert.match(sectionPage, new RegExp(asset.replaceAll("/", "\\/")));
+  }
+
+  assert.match(sectionPage, /Eight torpedo tubes/);
+  assert.match(sectionPage, /Thunderhawk gunships", "24–36"/);
+  assert.match(sectionPage, /Standard Drop Pods", "~100–120"/);
+  assert.match(sectionPage, /Armoured transports", "60–80"/);
+  assert.match(sectionPage, /PERMANENT CADRE<\/dt><dd>~120–180 Astartes/);
+  assert.match(sectionPage, /CURRENT ROLL<\/dt><dd>056\.M42/);
+  assert.match(sectionPage, /Its physical form remains absent from the accessible canon/);
+  assert.match(sectionPage, /Authenticated service record/);
+  assert.doesNotMatch(sectionPage, /LAUNCHED<\/dt><dd>008\.M42/);
+  assert.doesNotMatch(sectionPage, /Countless Worlds Saved|Enemies of Mankind Destroyed|Imperium Preserved/);
+  assert.doesNotMatch(sectionPage, /fragment of Luna gifted by Roboute Guilliman|stone is encased in a sacred adamantine reliquary/);
+
+  assert.match(archiveData, /Founding trust · physical form sealed/);
+  assert.match(archiveData, /relic\.name !== "Ancient chassis unrecorded"/);
+  assert.match(styles, /\.lunaris-recognition-plate\s*\{/);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lunaris-recognition-plate > header\s*\{[^}]*flex-direction:\s*column/s);
+});

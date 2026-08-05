@@ -275,8 +275,7 @@ const defaultArchive: ChapterArchiveData = {
     { label: "Name the Chapter Master", done: false },
   ],
   relics: [
-    { name: "The Gift of Luna", type: "Fragment of Luna · Founding stone", status: "In Chapter keeping · awaiting a permanent bastion" },
-    { name: "Ancient chassis unrecorded", type: "Dreadnought", status: "Awaiting record" },
+    { name: "The Gift of Luna", type: "Founding trust · physical form sealed", status: "In Chapter keeping · future foundation unfulfilled" },
     { name: "Lunaris", type: "Chapter Flagship · Battle Barge", status: "Bearer of the First Stone · The Argent Spear" },
   ],
   companies: [
@@ -1426,7 +1425,7 @@ export function applyAuthoritativeLore(value: ChapterArchiveData): ChapterArchiv
   const archive = JSON.parse(JSON.stringify(value)) as ChapterArchiveData;
   const defaults = createDefaultArchiveData();
   const existingRelics = archive.relics.filter(
-    (relic) => relic.name !== "Relic name unrecorded" && relic.name !== "The Gift of Luna" && relic.name !== "Flagship name unrecorded" && relic.name !== "Lunaris",
+    (relic) => relic.name !== "Relic name unrecorded" && relic.name !== "Ancient chassis unrecorded" && relic.name !== "The Gift of Luna" && relic.name !== "Flagship name unrecorded" && relic.name !== "Lunaris",
   );
   const existingEntries = archive.entries.filter(
     (entry) => !decreeChronicleMarkers.some((marker) => entry.includes(marker)),
@@ -1448,7 +1447,7 @@ export function applyAuthoritativeLore(value: ChapterArchiveData): ChapterArchiv
   archive.milestones = archive.milestones.map((milestone) =>
     milestone.label === "Write a defining campaign" ? { ...milestone, done: true } : milestone,
   );
-  archive.relics = [defaults.relics[0], defaults.relics[2], ...existingRelics];
+  archive.relics = [defaults.relics[0], defaults.relics[1], ...existingRelics];
   archive.entries = [...decreeChronicleEntries, ...existingEntries];
   archive.loreEntries = reconcileChronicleEntries(
     archive.entries,
@@ -1715,6 +1714,9 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
         };
       })
     : defaults.relics;
+  const normalizedRelics = relics
+    .filter((relic) => relic.name !== "Ancient chassis unrecorded")
+    .map((relic) => relic.name === "The Gift of Luna" ? { ...defaults.relics[0] } : relic);
 
   const companies = defaults.companies.map((fallback, index) => {
     const candidate = record(Array.isArray(source.companies) ? source.companies[index] : undefined);
@@ -1959,7 +1961,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
       foundingPrompt: text(identity.foundingPrompt, defaults.identity.foundingPrompt, 12000),
     },
     milestones: milestones.length ? milestones : defaults.milestones,
-    relics: relics.length ? relics : defaults.relics,
+    relics: normalizedRelics.length ? normalizedRelics : defaults.relics,
     companies,
     entries,
     loreEntries,

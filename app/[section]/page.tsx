@@ -152,24 +152,30 @@ export default function SectionPage() {
 
 function LunarisSection() {
   const armament = [
-    ["Prow weapons", "2× heavy bombardment cannon batteries (fixed)", "6–8× macro torpedo tubes", "Boarding torpedo launchers", "Void mine launchers"],
-    ["Broadsides", "Multiple heavy macro-cannon batteries · port & starboard", "Lance battery emplacements", "Auxiliary macro batteries"],
-    ["Dorsal armament", "2× twin heavy lance turrets", "Multiple bombardment cannon emplacements", "Missile launch bays"],
-    ["Defence systems", "Extensive point-defence turrets", "Flak batteries", "Defence laser arrays", "Close-range macro batteries", "Multi-layered void shield projectors"],
+    ["Prow weapons", "Two heavy bombardment cannon batteries", "Eight torpedo tubes", "Conventional torpedoes", "Specialist torpedoes", "Astartes boarding torpedoes"],
+    ["Broadsides", "Heavy macro-cannon decks", "Auxiliary macro batteries", "Limited lance emplacements"],
+    ["Dorsal systems", "Heavy dorsal lances", "Secondary bombardment systems", "Command and augur arrays"],
+    ["Defence systems", "Extensive point defence", "Close-range cannon", "Layered void shields"],
   ];
   const launchCapacity = [
-    ["Thunderhawk gunships", "20–40"], ["Thunderhawk transports", "10–20"], ["Stormbirds", "4–6"],
-    ["Stormtalons / Stormhawks", "12–20"], ["Drop pods", "200+"], ["Boarding torpedoes", "50+"], ["Shuttles & landers", "Numerous"],
+    ["Thunderhawk gunships", "24–36"], ["Thunderhawk transporters", "8–16"], ["Heavy landing craft", "4–8"],
+    ["Interceptors & support craft", "12–24"], ["Standard Drop Pods", "~100–120"], ["Specialist & Dreadnought pods", "20–30"],
+    ["Boarding torpedoes", "40–60"], ["Assault rams", "12–20"], ["Shuttles, cutters & utility craft", "Numerous"],
   ];
   const vehicleCapacity = [
-    ["Main battle tanks", "40–60"], ["Armoured transports", "40–60"], ["Support tanks", "20–30"],
-    ["Dreadnoughts · deployed", "10–20"], ["Dreadnought vaults", "~20 stations"], ["Auxiliary vehicles", "Numerous"],
+    ["Heavy armour vehicles", "40–60"], ["Armoured transports", "60–80"], ["Artillery & support vehicles", "20–30"],
+    ["Dreadnought cradles", "~20"], ["Super-heavy stations", "Limited"],
   ];
   const facilities = [
-    "Strategium · Crusade Command", "Vox-command spires", "Astartes armouries", "Apothecarion", "Librarius", "Reclusiam",
-    "Forge & Mechanicus enclaves", "Vehicle decks", "Dreadnought vaults", "Gene-halls & training areas", "Medicae bays", "Sanctorums & chapels", "Vast cargo holds",
+    "Primary strategium", "Command spires", "Chapter sanctums & chapels", "Reliquary of the First Stone", "Apothecarion", "Librarius", "Reclusiam",
+    "Forge & Mechanicus enclaves", "Vehicle decks", "Dreadnought vaults", "Gene-vaults", "Training spaces", "Medical bays", "Cargo holds", "Astropathic chambers", "Navigator sanctums",
   ];
-  const honours = ["Indomitus Crusade Campaigns", "Nachmund Reclamation", "Argent Vigil Operations", "Countless Worlds Saved", "Enemies of Mankind Destroyed", "Imperium Preserved"];
+  const serviceRecord = [
+    "Late M30–early M31 · authenticated ancient structure enters expeditionary service",
+    "Ultima Founding · allocated, renamed Lunaris and consecrated to the Lunar Dragons",
+    "008.M42 · command vessel of the Nachmund Reclamation and the Argent Vigil",
+    "056.M42 · current Chapter roll verified: Bearer of the First Stone · The Argent Spear",
+  ];
 
   return (
     <div className="lunaris-dossier">
@@ -187,33 +193,46 @@ function LunarisSection() {
         <aside><span>AUTHENTICATED</span><b>VERIFIED</b><small>LORD COMMANDER EYES ONLY</small></aside>
       </section>
 
+      <section className="panel lunaris-recognition-plate">
+        <header>
+          <div><p className="section-kicker">Imperial Navy recognition datasheet</p><h3>Authenticated exterior and strategic profile</h3></div>
+          <span>056.M42 · CURRENT CHAPTER ROLL</span>
+        </header>
+        <figure>
+          <img src="/lunaris-recognition-plate.png" alt="Imperial recognition datasheet for the Lunaris showing its exterior, dimensions, armament and embarked strength" />
+          <figcaption>ARCHIVAL PLATE · OFFICIAL RECOGNITION REFERENCE</figcaption>
+        </figure>
+      </section>
+
       <section className="lunaris-profile-grid">
         <article className="panel lunaris-profile">
           <header><p className="section-kicker">Vessel profile</p><span>ASTARTES WARSHIP</span></header>
           <dl>
             <div><dt>VESSEL TYPE</dt><dd>Heavy Command Battle Barge</dd></div>
-            <div><dt>ROLE</dt><dd>Fleet Command · Planetary Assault · Strategic Headquarters</dd></div>
+            <div><dt>ORIGINAL HULL</dt><dd>Unknown · expeditionary heavy assault carrier family considered probable</dd></div>
+            <div><dt>ROLE</dt><dd>Planetary assault · orbital bombardment · mass Astartes deployment · boarding · fleet command</dd></div>
             <div><dt>LENGTH</dt><dd>~12.3 kilometres</dd></div>
             <div><dt>BEAM · MAX</dt><dd>~3.8 kilometres</dd></div>
             <div><dt>DRAFT</dt><dd>~1.6 kilometres</dd></div>
-            <div><dt>LAUNCHED</dt><dd>008.M42 · Indomitus Crusade</dd></div>
-            <div><dt>CONSTRUCTION</dt><dd>Adamantine hull · Astartes modification grade</dd></div>
-            <div><dt>CREW</dt><dd>Tens of thousands · serfs, voidsmen, servitors, Adeptus Mechanicus</dd></div>
-            <div><dt>VOID SHIELDS</dt><dd>Multiple overlapped generators · pattern classified</dd></div>
-            <div><dt>ARMOUR</dt><dd>Ceramite, plasteel and adamantine · reinforced prow and vital decks</dd></div>
+            <div><dt>ANCIENT CORE</dt><dd>Late Great Crusade or early Horus Heresy</dd></div>
+            <div><dt>CHAPTER CUSTODY</dt><dd>Since the Ultima Founding</dd></div>
+            <div><dt>CURRENT ROLL</dt><dd>056.M42</dd></div>
+            <div><dt>CONSTRUCTION</dt><dd>Layered Mechanicus reconstruction around an authenticated ancient keel, spine, command sanctum and root machine-spirit architecture</dd></div>
+            <div><dt>VOID SHIELDS</dt><dd>Layered generators · precise pattern sealed</dd></div>
           </dl>
         </article>
         <article className="panel lunaris-scale">
-          <p className="section-kicker">Dimensions & deployment</p>
+          <p className="section-kicker">Mechanicus structural blueprint</p>
           <figure className="lunaris-dimensions-plate">
-            <img src="/lunaris-dimensions.png" alt="Cleaned orthographic top and side schematics of the Lunaris" />
-            <figcaption>ORTHOGRAPHIC IDENTIFICATION · TOP / SIDE</figcaption>
+            <img src="/lunaris-dimensions.png" alt="Mechanicus technical blueprint of the Lunaris with broadside, dorsal, ventral and sectional views" />
+            <figcaption>PAL-17/Θ · PROVISIONAL STRUCTURAL SCHEMA</figcaption>
           </figure>
           <div className="lunaris-measure"><span>PROW</span><i /><strong>12.3 KM</strong><i /><span>STERN</span></div>
           <dl>
-            <div><dt>COMFORTABLE CAPACITY</dt><dd>~500–600 Astartes</dd></div>
-            <div><dt>EMERGENCY CAPACITY</dt><dd>~800+ Astartes</dd></div>
+            <div><dt>PERMANENT CADRE</dt><dd>~120–180 Astartes</dd></div>
+            <div><dt>SUSTAINED CAMPAIGN</dt><dd>~500–600 Astartes</dd></div>
             <div><dt>STANDARD DEPLOYMENT</dt><dd>Chapter Command plus up to four Companies, support elements, Dreadnoughts, vehicles and ancillaries</dd></div>
+            <div><dt>MAXIMUM EMBARKATION</dt><dd>Most or all of the Chapter under austere, short-duration conditions</dd></div>
           </dl>
         </article>
       </section>
@@ -230,8 +249,8 @@ function LunarisSection() {
       </section>
 
       <section className="lunaris-legacy-grid">
-        <article className="panel lunaris-reliquary"><p className="section-kicker">The Reliquary of the First Shore</p><div aria-hidden="true"><i>◆</i></div><p>Within the heart of <i>Lunaris</i> is kept the fragment of Luna gifted by Roboute Guilliman—a reminder of Mankind’s first shore and the duty of the Lunar Dragons. The stone is encased in a sacred adamantine reliquary under eternal guard.</p></article>
-        <article className="panel lunaris-honours"><p className="section-kicker">Roll of honour</p><ul>{honours.map((honour) => <li key={honour}>{honour}</li>)}</ul><blockquote>“Let the stone remind you that no fortress is eternal, and that even the greatest works of Mankind were raised by mortal hands.”<cite>— Roboute Guilliman, Lord Commander of the Imperium</cite></blockquote></article>
+        <article className="panel lunaris-reliquary"><p className="section-kicker">The Reliquary of the First Stone</p><div aria-hidden="true"><i>◆</i></div><p>The Gift of Luna entered Chapter keeping during the Ultima Founding and was installed aboard <i>Lunaris</i> at the vessel’s consecration. Guilliman’s decree of 008.M42 reaffirmed that trust. Its physical form remains absent from the accessible canon and is not represented here.</p></article>
+        <article className="panel lunaris-honours"><p className="section-kicker">Authenticated service record</p><ul>{serviceRecord.map((record) => <li key={record}>{record}</li>)}</ul><p className="lunaris-symbolism">The Argent Spear · The First Home · Bearer of the First Stone · The Unfinished Foundation</p></article>
       </section>
     </div>
   );
