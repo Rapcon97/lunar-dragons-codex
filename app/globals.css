@@ -2115,12 +2115,9 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .vox-quote-meta button:disabled { opacity: .3; cursor: default; }
 .vox-manager-status { margin: 0; color: #74866c; font-size: var(--ui-text-9); letter-spacing: .11em; text-transform: uppercase; }
 .settings-page { display: grid; gap: 42px; }
-.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.settings-card { padding: 30px; min-height: 220px; }
+.settings-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.settings-card { padding: 30px; min-height: 0; }
 .settings-card > p:not(.section-kicker) { color: #5c6a57; line-height: 1.6; font-family: Georgia, serif; }
-.danger-card { border-color: rgba(111,36,31,.34); }
-.danger-card button { margin-top: 14px; color: #a3655e; border-color: #633a35; }
-.danger-card > span { display: block; margin-top: 14px; color: #74856c; font-size: var(--ui-text-9); }
 .settings-vox-section { display: grid; gap: 22px; padding-top: 34px; border-top: 1px solid var(--line); }
 .settings-section-heading { display: grid; grid-template-columns: 1fr .7fr; align-items: end; gap: 40px; }
 .settings-section-heading h2 { margin: 7px 0 0; color: #879a7c; font-family: Georgia, serif; font-size: clamp(28px, 4vw, 44px); font-weight: 400; }

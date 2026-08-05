@@ -86,6 +86,7 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.match(dashboard, /entry\.createdAt/);
   assert.match(dashboard, /entry\.updatedAt/);
   assert.doesNotMatch(dashboard, /method:\s*["']DELETE|resetChapterArchive/);
+  assert.doesNotMatch(sectionPage, /RESET SHARED RECORDS|Reset shared archive|onReset=/);
 });
 
 test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () => {

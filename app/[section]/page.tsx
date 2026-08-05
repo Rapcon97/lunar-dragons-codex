@@ -69,7 +69,7 @@ const sectionInfo = {
     code: "ARCHIVUM",
     kicker: "Archive controls",
     title: "Archive Settings",
-    description: "Manage shared chapter records, archive controls, and guest access to the Lunar Dragons archive.",
+    description: "Manage shared chapter records and guest access to the Lunar Dragons archive.",
   },
 } as const;
 
@@ -77,7 +77,7 @@ type Section = keyof typeof sectionInfo;
 
 export default function SectionPage() {
   const { canAdmin, isAdminMode } = useAdminMode();
-  const { data, error, isLoading, isSaving, resetArchive, saveSection, updateSection } = useChapterArchive();
+  const { data, error, isLoading, isSaving, saveSection, updateSection } = useChapterArchive();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const section = (pathname.split("/")[1] || "chapter") as Section;
@@ -136,7 +136,6 @@ export default function SectionPage() {
               canAdmin={canAdmin}
               isAdminMode={isAdminMode}
               loreEntries={data.loreEntries}
-              onReset={resetArchive}
             />
           )}
         </div>
@@ -1416,23 +1415,16 @@ function SettingsSection({
   canAdmin,
   isAdminMode,
   loreEntries,
-  onReset,
 }: {
   canAdmin: boolean;
   isAdminMode: boolean;
   loreEntries: LoreEntry[];
-  onReset: () => Promise<boolean>;
 }) {
   const canEdit = isAdminMode;
-  const [message, setMessage] = useState("");
-  async function resetSharedArchive() {
-    if (await onReset()) setMessage("Shared chapter records reset. Uploaded heraldry was left intact.");
-  }
   return (
     <div className="settings-page">
       <div className="settings-grid">
         <section className="panel settings-card"><p className="section-kicker">Storage</p><h2>Shared chapter records</h2><p>Names, lore, milestones, companies, relics, chronicles, and sector intelligence are stored with the hosted archive and remain consistent across signed-in devices.</p></section>
-        <section className="panel settings-card danger-card"><p className="section-kicker">Reset</p><h2>Reset shared archive</h2><p>This resets the chapter’s structured records for every viewer. It does not remove your uploaded badge or banner.</p>{canEdit ? <button onClick={resetSharedArchive}>RESET SHARED RECORDS</button> : <span>Enter Admin Mode to access archive controls.</span>}{message && <span role="status">{message}</span>}</section>
       </div>
       <LoreDevelopmentDashboard
         canAdmin={canAdmin}
