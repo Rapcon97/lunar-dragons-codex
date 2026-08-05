@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   description: "The command archive of the Lunar Dragons, an Ultima Founding Chapter prosecuting the Argent Vigil around the Nachmund Gauntlet.",
   metadataBase: new URL("https://chapter-archive.rapcon.chatgpt.site"),
   icons: {
-    icon: [{ url: "/lunar-dragons-favicon.png", type: "image/png" }],
-    shortcut: "/lunar-dragons-favicon.png",
-    apple: "/lunar-dragons-favicon.png",
+    icon: [{ url: "/lunar-dragons-sigil-depth.png", type: "image/png" }],
+    shortcut: "/lunar-dragons-sigil-depth.png",
+    apple: "/lunar-dragons-sigil-depth.png",
   },
   openGraph: {
     title: "The Lunar Dragons — Chapter Archive",
