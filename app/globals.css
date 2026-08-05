@@ -3806,10 +3806,15 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .chronicle-exload-status {
     grid-column: 1 / -1;
     width: 100%;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
     justify-items: start;
+    gap: 6px;
   }
-  .chronicle-exload-status strong { justify-self: end; }
+  .chronicle-exload-status span,
+  .chronicle-exload-status strong {
+    justify-self: start;
+    white-space: normal;
+  }
   .chronicle-exload-status button { justify-self: stretch; width: 100%; }
   .chronicle-exload-compose { grid-template-columns: 1fr; padding: 12px; }
   .chronicle-exload-compose label { grid-column: 1; }

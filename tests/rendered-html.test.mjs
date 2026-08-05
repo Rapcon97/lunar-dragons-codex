@@ -111,6 +111,8 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () 
   assert.match(styles, /\.chronicle-record-content\s*\{[^}]*max-width:\s*86ch;[^}]*font:[^;]*\/1\.85/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-grid\s*\{\s*display:\s*block;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-scroll\s*\{\s*overflow:\s*visible;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-status\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-status span,[\s\S]*\.chronicle-exload-status strong\s*\{[^}]*white-space:\s*normal;/s);
 });
 
 test("the terminal footer unifies viewer controls and the live chronometer", async () => {
