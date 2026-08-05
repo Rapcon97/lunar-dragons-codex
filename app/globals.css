@@ -2411,6 +2411,14 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .intel-selected-record dt { color: #546251; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .12em; }
 .intel-selected-record dd { margin: 0; color: #829279; font: var(--ui-text-8)/1.45 "Courier New",monospace; overflow-wrap: anywhere; }
 .intel-selected-record .seal-button { margin-top: auto; }
+.intel-simulacrum-bodies { width: 100%; display: grid; gap: 0; margin-top: auto; border: 1px solid #3a4b36; background: #040704; }
+.intel-simulacrum-bodies > span,.intel-simulacrum-bodies > em { color: #8c785b; padding: 10px 12px; font: var(--ui-text-6) "Courier New",monospace; font-style: normal; letter-spacing: .12em; }
+.intel-simulacrum-bodies > span { border-bottom: 1px solid #303d2d; }
+.intel-simulacrum-bodies > em { border-top: 1px solid #4a3828; color: #8f684c; }
+.intel-simulacrum-bodies p { display: grid; grid-template-columns: minmax(72px,.38fr) minmax(0,1fr); gap: 10px; margin: 0; border-top: 1px solid #253023; padding: 9px 12px; }
+.intel-simulacrum-bodies p:first-of-type { border-top: 0; }
+.intel-simulacrum-bodies b { color: #91a687; font: 400 var(--ui-text-8) "Courier New",monospace; }
+.intel-simulacrum-bodies small { color: #5d6d58; font: var(--ui-text-6)/1.4 "Courier New",monospace; letter-spacing: .06em; text-transform: uppercase; }
 .intel-survey-editor { padding: 24px; }
 .intel-survey-fields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 18px; }
 .intel-survey-fields label { display: grid; gap: 6px; color: #596855; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .12em; }
@@ -2465,6 +2473,16 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 }
 .intel-command-strip > div:first-child span { color: #8aa47f; font: 700 var(--ui-text-8) "Courier New", monospace; letter-spacing: .2em; }
 .intel-command-strip > div:first-child p { margin: 5px 0 0; color: #53664f; font: var(--ui-text-8) "Courier New", monospace; letter-spacing: .14em; }
+.intel-command-strip .edit-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.intel-simulacrum-toggle { color: #9eb794; background: #071007; border: 1px solid #5d7856; padding: 11px 14px; cursor: pointer; font: var(--ui-text-7) "Courier New",monospace; letter-spacing: .11em; }
+.intel-simulacrum-toggle:hover,.intel-simulacrum-toggle:focus-visible { color: #c3d7b9; border-color: #8aa180; box-shadow: 0 0 18px rgba(100,145,89,.18); }
+.intel-simulacrum-toggle.active { color: #d4b28a; border-color: #8b6948; background: #120c06; }
+.intel-simulacrum-warning { display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid #715437; padding: 13px 17px; background: repeating-linear-gradient(135deg,rgba(128,87,45,.09) 0 8px,transparent 8px 16px),#0d0905; box-shadow: inset 3px 0 #a47a4e; }
+.intel-simulacrum-warning strong,.intel-simulacrum-warning span { font: var(--ui-text-7)/1.5 "Courier New",monospace; letter-spacing: .11em; }
+.intel-simulacrum-warning strong { flex: 0 0 auto; color: #c19a6d; }
+.intel-simulacrum-warning span { color: #7f745f; text-align: right; }
+.sector-intel.simulacrum-active .intel-theatre-header { box-shadow: inset 0 3px #8f6b45; }
+.sector-intel.simulacrum-active .intel-authority-badge b { color: #c09968; }
 .intel-overview-grid { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(280px,.65fr); gap: 14px; }
 .intel-map-panel { min-width: 0; padding: 22px; }
 .intel-map-panel > header { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
@@ -3009,6 +3027,11 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .intel-status-matrix article,.intel-status-matrix article:nth-child(2) { min-height: 86px; border-right: 0; border-bottom: 1px solid #283625; }
   .intel-status-matrix article:last-child { border-bottom: 0; }
   .intel-command-strip { align-items: flex-start; flex-direction: column; }
+  .intel-command-strip .edit-actions { width: 100%; justify-content: stretch; }
+  .intel-command-strip .edit-actions button { flex: 1 1 100%; }
+  .intel-simulacrum-warning { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .intel-simulacrum-warning span { text-align: left; }
+  .intel-simulacrum-bodies p { grid-template-columns: 1fr; gap: 3px; }
   .intel-layer-controls { width: 100%; justify-content: start; }
   .intel-layer-controls button { flex: 1; }
   .intel-survey-map { min-height: 510px; }

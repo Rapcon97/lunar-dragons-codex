@@ -936,6 +936,75 @@ const initialSurveyPriorities = [
   "Locate fuel, repair material, concealment, and defensible anchorage.",
 ] as const;
 
+const completedSectorSimulacrum: SectorIntel = {
+  sectorName: "NOOSPHERIC SANDBOX",
+  subsectorName: "COMPLETED SECTOR CHART SIMULACRUM",
+  currentTheater: "ADMINISTRATOR PRESENTATION TEST",
+  deploymentStatus: "NON-CANON CARTOGRAPHIC SIMULATION",
+  astropathicDate: "SIMULATION CLOCK // NO ARCHIVE STAMP",
+  summary: "A presentation-only model of a finished Sector Intel chart. Every system, body, faction, and route in this view is temporary test data and is never written to the chapter archive.",
+  survey: {
+    authority: "draft",
+    receivingLocus: "SIMULATED OBSERVATION NODE",
+    systemDesignation: "TEST DATASET",
+    probableRegion: "CARTOGRAPHIC SANDBOX // NO GALACTIC FIX",
+    transitRoute: "NOOSPHERIC SIMULACRUM ACTIVE // LIVE INTELLIGENCE ISOLATED",
+    cartographicConfidence: "MODEL COMPLETE",
+    communications: "TEST CHANNELS RESPONSIVE",
+    supportForceStatus: "SIMULATED FORMATION",
+    vesselCondition: "NOT APPLICABLE",
+    isolationStatus: "ARCHIVE WRITE PATH DISABLED",
+  },
+  worlds: [
+    {
+      name: "SIMULACRUM ALPHA", classification: "BINARY ANCHOR SYSTEM", status: "Secure", x: 24, y: 30,
+      bodies: [
+        { name: "ALPHA-I", type: "Barren World", status: "Surveyed", orbit: 1, population: "None", climate: "Irradiated", allegiance: "Unclaimed", resources: "Trace metals", summary: "Inner-system cartographic test body." },
+        { name: "ALPHA-II", type: "Hive World", status: "Compliant", orbit: 2, population: "TEST VALUE", climate: "Industrial", allegiance: "Simulated Imperial", resources: "Manufactoria", summary: "Populated-world dossier presentation sample." },
+        { name: "ALPHA-III", type: "Gas Giant", status: "Surveyed", orbit: 3, population: "None", climate: "Storm bands", allegiance: "Unclaimed", resources: "Volatiles", summary: "Outer giant and orbital-scale marker sample." },
+      ],
+    },
+    {
+      name: "SIMULACRUM BETA", classification: "FORTIFIED SINGLE-STAR SYSTEM", status: "Contested", x: 47, y: 22,
+      bodies: [
+        { name: "BETA-I", type: "Forge World", status: "Operational", orbit: 1, population: "TEST VALUE", climate: "Mechanised", allegiance: "Simulated Mechanicus", resources: "Adamantine analogue", summary: "Industrial dossier layout sample." },
+        { name: "BETA-II", type: "Dead World", status: "Quarantined", orbit: 2, population: "None", climate: "Ash waste", allegiance: "Unresolved", resources: "Sealed", summary: "Restricted-world dossier layout sample." },
+      ],
+    },
+    {
+      name: "SIMULACRUM GAMMA", classification: "OUTER REACH SYSTEM", status: "No Signal", x: 73, y: 42,
+      bodies: [
+        { name: "GAMMA-I", type: "Ocean World", status: "Unverified", orbit: 1, population: "Unknown", climate: "Pelagic", allegiance: "Unknown", resources: "Biological", summary: "Unresolved planetary record sample." },
+        { name: "GAMMA-II", type: "Ice World", status: "Unverified", orbit: 2, population: "Unknown", climate: "Cryogenic", allegiance: "Unknown", resources: "Promethium analogue", summary: "Outer-orbit dossier sample." },
+        { name: "GAMMA-II-A", type: "Moon", status: "Signal Detected", orbit: 3, population: "Unknown", climate: "Airless", allegiance: "Unknown", resources: "Unresolved", summary: "Planetary satellite dossier sample." },
+      ],
+    },
+    {
+      name: "SIMULACRUM DELTA", classification: "WARP-SHADOWED SYSTEM", status: "Unknown", x: 60, y: 72,
+      bodies: [
+        { name: "DELTA-I", type: "Agri World", status: "Degraded Contact", orbit: 1, population: "TEST VALUE", climate: "Temperate", allegiance: "Unresolved", resources: "Agricultural", summary: "Civilian-world dossier presentation sample." },
+        { name: "DELTA-II", type: "Death World", status: "Hostile Biosphere", orbit: 2, population: "Sparse", climate: "Toxic", allegiance: "Unclaimed", resources: "Biological", summary: "Hazard-world dossier presentation sample." },
+      ],
+    },
+  ],
+  warpLanes: [
+    { name: "TEST ROUTE A-1", from: 0, to: 1, status: "stable" },
+    { name: "TEST ROUTE B-2", from: 1, to: 2, status: "unstable" },
+    { name: "TEST ROUTE C-3", from: 2, to: 3, status: "blockaded" },
+    { name: "TEST ROUTE D-4", from: 3, to: 0, status: "unknown" },
+  ],
+  factions: [
+    { name: "SIMULATED IMPERIAL HOLDING", alignment: "ally", classification: "PRESENTATION CONTACT", threat: 1, disposition: "Example ally dossier. This polity does not exist in the authoritative archive." },
+    { name: "SIMULATED HOSTILE CONTACT", alignment: "enemy", classification: "PRESENTATION CONTACT", threat: 4, disposition: "Example hostile dossier. This threat does not exist in the authoritative archive." },
+    { name: "SIMULATED UNKNOWN POLITY", alignment: "uncertain", classification: "PRESENTATION CONTACT", threat: 2, disposition: "Example unresolved dossier. This polity does not exist in the authoritative archive." },
+  ],
+  directives: [
+    "Demonstrate a populated sector chart without altering the live survey.",
+    "Exercise system selection, route rendering, body summaries, and contact dossiers.",
+    "Return to live intelligence before entering or sealing operational data.",
+  ],
+};
+
 function SectorIntelSection({
   canEdit,
   intel,
@@ -954,10 +1023,15 @@ function SectorIntelSection({
   const [activeRegister, setActiveRegister] = useState<"systems" | "contacts" | "mandate" | "taxonomy">("systems");
   const [showWarpLanes, setShowWarpLanes] = useState(true);
   const [showEmpyricInterference, setShowEmpyricInterference] = useState(true);
+  const [showTestChart, setShowTestChart] = useState(false);
 
   useEffect(() => {
     if (!isEditing) setDraft(intel);
   }, [intel, isEditing]);
+
+  useEffect(() => {
+    if (!canEdit) setShowTestChart(false);
+  }, [canEdit]);
 
   function updateField(field: keyof Omit<SectorIntel, "worlds" | "factions" | "directives" | "warpLanes" | "survey">, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -1036,8 +1110,9 @@ function SectorIntelSection({
     }
   }
 
-  const display = isEditing ? draft : intel;
-  const plottedOrigin = originLocationId
+  const isTestChartActive = canEdit && showTestChart;
+  const display = isTestChartActive ? completedSectorSimulacrum : isEditing ? draft : intel;
+  const plottedOrigin = !isTestChartActive && originLocationId
     ? resolveTransmissionOrigin(display, { originLocationId, originState: "CONFIRMED" })
     : null;
   const selectedWorld = selectedWorldIndex === null ? null : display.worlds[selectedWorldIndex] ?? null;
@@ -1056,8 +1131,17 @@ function SectorIntelSection({
     if (selectedWorldIndex !== null && selectedWorldIndex >= display.worlds.length) setSelectedWorldIndex(null);
   }, [display.worlds.length, selectedWorldIndex]);
 
+  function toggleTestChart() {
+    setShowTestChart((current) => !current);
+    setIsEditing(false);
+    setDraft(intel);
+    setSelectedWorldIndex(null);
+    setActiveRegister("systems");
+    setMessage("");
+  }
+
   return (
-    <div className={isEditing ? "sector-intel editing" : "sector-intel"}>
+    <div className={`${isEditing ? "sector-intel editing" : "sector-intel"}${isTestChartActive ? " simulacrum-active" : ""}`}>
       <section className="panel intel-theatre-header">
         <div className="intel-theatre-seal" aria-hidden="true"><span>III</span></div>
         <div className="intel-theatre-title">
@@ -1081,22 +1165,32 @@ function SectorIntelSection({
 
       <section className="panel intel-command-strip">
         <div>
-          <span>{isEditing ? "TACTICA EDIT ENVIRONMENT ACTIVE" : "ASTROPATHIC CARTOGRAPHY LINK ACTIVE"}</span>
+          <span>{isTestChartActive ? "ADMINISTRATOR CARTOGRAPHIC SIMULACRUM" : isEditing ? "TACTICA EDIT ENVIRONMENT ACTIVE" : "ASTROPATHIC CARTOGRAPHY LINK ACTIVE"}</span>
           <p>{display.survey.transitRoute}</p>
         </div>
         {canEdit && (
           <div className="edit-actions">
-            {isEditing ? (
+            <button className={`intel-simulacrum-toggle${isTestChartActive ? " active" : ""}`} onClick={toggleTestChart} type="button">
+              {isTestChartActive ? "RETURN TO LIVE INTEL" : "VIEW COMPLETED CHART TEST"}
+            </button>
+            {!isTestChartActive && (isEditing ? (
               <>
                 <button className="cancel-edit" onClick={() => { setDraft(intel); setIsEditing(false); }}>CANCEL</button>
                 <button className="save-edit" onClick={() => void saveIntel()}>SEAL INTELLIGENCE</button>
               </>
             ) : (
               <button className="enter-edit" onClick={() => setIsEditing(true)}>✎ EDIT SECTOR INTEL</button>
-            )}
+            ))}
           </div>
         )}
       </section>
+
+      {isTestChartActive && (
+        <aside className="intel-simulacrum-warning" role="status">
+          <strong>NOOSPHERIC SANDBOX // NON-CANON // NOT STORED</strong>
+          <span>This completed chart is an administrator-only presentation model. It cannot be edited, saved, or opened as a live Sector Intel record.</span>
+        </aside>
+      )}
 
       <section className="intel-console-grid">
         <div className="panel intel-map-panel">
@@ -1193,8 +1287,8 @@ function SectorIntelSection({
                 </button>
               );
             })}
-            <div className="lunaris-locus-marker" aria-label="Lunaris receiving locus; heavily damaged but capable of self-defence">
-              <i /><b>LUNARIS</b><small>BARELY OPERATIONAL · BATTERIES STANDING</small>
+            <div className="lunaris-locus-marker" aria-label={isTestChartActive ? "Simulated observation node; presentation only" : "Lunaris receiving locus; heavily damaged but capable of self-defence"}>
+              <i /><b>{isTestChartActive ? "OBSERVATION NODE" : "LUNARIS"}</b><small>{isTestChartActive ? "SIMULATION LOCUS · NOT STORED" : "BARELY OPERATIONAL · BATTERIES STANDING"}</small>
             </div>
             {!display.worlds.length && (
               <div className="survey-void-state">
@@ -1228,9 +1322,19 @@ function SectorIntelSection({
               <dl>
                 <div><dt>CHARTED BODIES</dt><dd>{selectedWorld.bodies.length}</dd></div>
                 <div><dt>MAP POSITION</dt><dd>{selectedWorld.x.toFixed(1)} / {selectedWorld.y.toFixed(1)}</dd></div>
-                <div><dt>AUTHORITY</dt><dd>OPERATIONAL INTELLIGENCE</dd></div>
+                <div><dt>AUTHORITY</dt><dd>{isTestChartActive ? "NON-CANON SIMULATION" : "OPERATIONAL INTELLIGENCE"}</dd></div>
               </dl>
-              <CartographyTransitionLink className="seal-button" href={`/intel/system/${selectedWorldIndex! + 1}`}>OPEN SYSTEM RECORD</CartographyTransitionLink>
+              {isTestChartActive ? (
+                <div className="intel-simulacrum-bodies" aria-label={`Simulated bodies in ${selectedWorld.name}`}>
+                  <span>SIMULATED ORBITAL REGISTER</span>
+                  {selectedWorld.bodies.map((body) => (
+                    <p key={body.name}><b>{body.name}</b><small>{body.type} // {body.status}</small></p>
+                  ))}
+                  <em>NO LIVE ARCHIVE ROUTE</em>
+                </div>
+              ) : (
+                <CartographyTransitionLink className="seal-button" href={`/intel/system/${selectedWorldIndex! + 1}`}>OPEN SYSTEM RECORD</CartographyTransitionLink>
+              )}
             </div>
           ) : (
             <div className="intel-selected-record unresolved">

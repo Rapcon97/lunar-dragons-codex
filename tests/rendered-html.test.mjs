@@ -544,6 +544,28 @@ test("the unidentified-system draft renders only provisional non-navigable auspe
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.preliminary-contact-grid,\.preliminary-survey-briefs\s*\{\s*grid-template-columns:\s*1fr;/s);
 });
 
+test("Admin Mode exposes an isolated completed-sector simulacrum without a persistence path", async () => {
+  const [sectionPage, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(sectionPage, /const completedSectorSimulacrum: SectorIntel/);
+  for (const system of ["SIMULACRUM ALPHA", "SIMULACRUM BETA", "SIMULACRUM GAMMA", "SIMULACRUM DELTA"]) {
+    assert.match(sectionPage, new RegExp(system));
+  }
+  assert.match(sectionPage, /const isTestChartActive = canEdit && showTestChart/);
+  assert.match(sectionPage, /const display = isTestChartActive \? completedSectorSimulacrum : isEditing \? draft : intel/);
+  assert.match(sectionPage, /\{canEdit && \([\s\S]*RETURN TO LIVE INTEL[\s\S]*VIEW COMPLETED CHART TEST/);
+  assert.match(sectionPage, /NOOSPHERIC SANDBOX \/\/ NON-CANON \/\/ NOT STORED/);
+  assert.match(sectionPage, /!isTestChartActive && originLocationId/);
+  assert.match(sectionPage, /NO LIVE ARCHIVE ROUTE/);
+  assert.doesNotMatch(sectionPage, /onSave\(completedSectorSimulacrum\)|setDraft\(completedSectorSimulacrum\)/);
+  assert.match(styles, /\.intel-simulacrum-warning\s*\{/);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.intel-simulacrum-warning\s*\{[^}]*flex-direction:\s*column;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.intel-simulacrum-bodies p\s*\{[^}]*grid-template-columns:\s*1fr;/s);
+});
+
 test("the Lunaris dossier uses the sealed canon profile and current visual archive", async () => {
   const [sectionPage, archiveData, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
