@@ -119,6 +119,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "413":
+          description: The structured lore collection would exceed its safe archive capacity.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -191,6 +197,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "413":
+          description: The structured lore collection would exceed its safe archive capacity.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/ServerError"
 
@@ -254,7 +266,7 @@ components:
           $ref: "#/components/schemas/LoreStatus"
         content:
           type: string
-          maxLength: 12000
+          maxLength: 64000
           description: Full lore text.
         createdAt:
           type: integer
@@ -290,7 +302,7 @@ components:
         content:
           type: string
           minLength: 1
-          maxLength: 12000
+          maxLength: 64000
           description: Complete lore text.
 
     UpdateLoreEntryRequest:
@@ -314,7 +326,7 @@ components:
         content:
           type: string
           minLength: 1
-          maxLength: 12000
+          maxLength: 64000
           description: Replacement lore content.
 
     LoreEntryListResponse:

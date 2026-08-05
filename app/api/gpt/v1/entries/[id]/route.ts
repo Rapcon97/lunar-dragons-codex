@@ -7,6 +7,7 @@ import {
   parseLoreUpdateBody,
   validateLoreEntryId,
 } from "../validation";
+import { LORE_COLLECTION_CAPACITY_ERROR } from "../../../../../lore-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,12 @@ export async function PATCH(
     }
 
     const result = await updateGPTLoreEntry(id.trim(), parsed.value);
+    if (!result.success && result.reason === "capacity") {
+      return Response.json(
+        { error: LORE_COLLECTION_CAPACITY_ERROR },
+        { status: 413 },
+      );
+    }
     if (!result.success && result.reason === "not-found") {
       return Response.json(
         { error: "Lore entry not found." },

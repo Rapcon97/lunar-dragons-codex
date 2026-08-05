@@ -1,3 +1,4 @@
+import { MAX_LORE_CONTENT_LENGTH } from "./lore-limits.ts";
 import { transmissionBodyFragments } from "./transmission-fragments.ts";
 
 export type ChapterIdentity = {
@@ -1760,7 +1761,11 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
             ? candidate.status
             : "draft";
 
-        const content = text(candidate.content, "", 12000).trim();
+        const content = text(
+          candidate.content,
+          "",
+          MAX_LORE_CONTENT_LENGTH,
+        ).trim();
 
         const createdAt = Math.max(
           0,

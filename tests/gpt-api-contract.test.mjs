@@ -17,6 +17,7 @@ const paths = {
   entries: "app/api/gpt/v1/entries/route.ts",
   entryUpdate: "app/api/gpt/v1/entries/[id]/route.ts",
   validation: "app/api/gpt/v1/entries/validation.ts",
+  loreLimits: "app/lore-limits.ts",
   optimisticWrite: "storage/optimistic-write.ts",
   migration: "drizzle/0005_structured_lore.sql",
   vite: "vite.config.ts",
@@ -451,6 +452,16 @@ test("GPT adapter preserves structured lore identity during updates", async () =
   );
 });
 
+test("structured lore writes reject aggregate archive overflow clearly", async () => {
+  const source = `${await read(paths.entries)}\n${await read(paths.entryUpdate)}\n${await read(paths.adapter)}\n${await read(paths.loreLimits)}`;
+
+  assert.match(source, /MAX_LORE_COLLECTION_BYTES\s*=\s*512\s*\*\s*1024/);
+  assert.match(source, /loreCollectionFitsCapacity/);
+  assert.match(source, /reason:\s*"capacity"/);
+  assert.match(source, /status:\s*413/);
+  assert.match(source, /512 KB archive capacity/);
+});
+
 test("GPT Actions schema marks writes non-consequential without weakening runtime limits", async () => {
   const source = await read(paths.openapi);
 
@@ -463,7 +474,12 @@ test("GPT Actions schema marks writes non-consequential without weakening runtim
   assert.match(source, /default:\s*draft/);
   assert.match(source, /date:[\s\S]*?maxLength:\s*80/);
   assert.match(source, /title:[\s\S]*?maxLength:\s*240/);
-  assert.match(source, /content:[\s\S]*?maxLength:\s*12000/);
+  assert.equal(
+    source.match(/maxLength:\s*64000/g)?.length,
+    3,
+    "Response, create, and update schemas must share the 64,000-character limit",
+  );
+  assert.match(source, /"413":[\s\S]*?safe archive capacity/);
 });
 
 test("GPT-created lore has a draft safety default", async () => {

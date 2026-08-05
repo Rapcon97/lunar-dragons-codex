@@ -2,6 +2,7 @@ import {
   createDefaultArchiveData,
   type LoreEntry,
 } from "./archive-data";
+import { loreCollectionFitsCapacity } from "./lore-limits";
 import {
   mutateChapterLore,
   readChapterArchive,
@@ -239,12 +240,17 @@ export async function appendGPTChronicleEntry(entry: string) {
       return { ok: false as const, reason: "duplicate" as const };
     }
 
+    const loreEntries = [...archive.loreEntries, loreEntry];
+    if (!loreCollectionFitsCapacity(loreEntries)) {
+      return { ok: false as const, reason: "capacity" as const };
+    }
+
     const entries = [...archive.entries, normalizedEntry];
     return {
       ok: true as const,
       state: {
         ...archive,
-        loreEntries: [...archive.loreEntries, loreEntry],
+        loreEntries,
         entries,
       },
       value: { timelineCount: entries.length },
@@ -291,6 +297,10 @@ export async function appendGPTLoreEntry(input: GPTLoreEntryInput) {
     }
 
     const loreEntries = [...archive.loreEntries, loreEntry];
+    if (!loreCollectionFitsCapacity(loreEntries)) {
+      return { ok: false as const, reason: "capacity" as const };
+    }
+
     const entries = [...archive.entries, loreEntryToTimeline(loreEntry)];
     return {
       ok: true as const,
@@ -350,6 +360,9 @@ export async function updateGPTLoreEntry(
 
     const loreEntries = [...archive.loreEntries];
     loreEntries[index] = updated;
+    if (!loreCollectionFitsCapacity(loreEntries)) {
+      return { ok: false as const, reason: "capacity" as const };
+    }
 
     const previousLegacyEntry = loreEntryToTimeline(existing);
     const updatedLegacyEntry = loreEntryToTimeline(updated);

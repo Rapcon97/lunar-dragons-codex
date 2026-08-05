@@ -1,5 +1,6 @@
 import { appendGPTChronicleEntry } from "../../../../gpt-api-adapter";
 import { requireGPTApiKey } from "../../../../gpt-api-auth";
+import { LORE_COLLECTION_CAPACITY_ERROR } from "../../../../lore-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,13 @@ export async function POST(request: Request) {
     }
 
     const result = await appendGPTChronicleEntry(entry);
+
+    if (!result.success && result.reason === "capacity") {
+      return Response.json(
+        { error: LORE_COLLECTION_CAPACITY_ERROR },
+        { status: 413 },
+      );
+    }
 
     if (!result.success) {
       return Response.json(

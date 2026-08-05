@@ -1,7 +1,9 @@
+import { MAX_LORE_CONTENT_LENGTH } from "../../../../lore-limits.ts";
+
 export const MAX_LORE_DATE_LENGTH = 80;
 export const MAX_LORE_TITLE_LENGTH = 240;
-export const MAX_LORE_CONTENT_LENGTH = 12_000;
 export const MAX_LORE_ENTRY_ID_LENGTH = 160;
+export { MAX_LORE_CONTENT_LENGTH };
 
 export const allowedLoreCategories = [
   "campaign",

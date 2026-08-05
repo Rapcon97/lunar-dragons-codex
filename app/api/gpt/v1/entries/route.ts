@@ -4,6 +4,7 @@ import {
 } from "../../../../gpt-api-adapter";
 import { requireGPTApiKey } from "../../../../gpt-api-auth";
 import { parseLoreCreateBody } from "./validation";
+import { LORE_COLLECTION_CAPACITY_ERROR } from "../../../../lore-limits";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,12 @@ export async function POST(request: Request) {
     }
 
     const result = await appendGPTLoreEntry(parsed.value);
+    if (!result.success && result.reason === "capacity") {
+      return Response.json(
+        { error: LORE_COLLECTION_CAPACITY_ERROR },
+        { status: 413 },
+      );
+    }
     if (!result.success) {
       const error =
         result.reason === "duplicate"

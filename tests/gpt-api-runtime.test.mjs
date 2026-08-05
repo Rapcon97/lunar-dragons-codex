@@ -7,6 +7,12 @@ import {
   parseLoreCreateBody,
   parseLoreUpdateBody,
 } from "../app/api/gpt/v1/entries/validation.ts";
+import { normalizeArchiveData } from "../app/archive-data.ts";
+import {
+  MAX_LORE_COLLECTION_BYTES,
+  loreCollectionFitsCapacity,
+  loreCollectionSizeBytes,
+} from "../app/lore-limits.ts";
 
 test("omitted structured lore status defaults to draft", () => {
   const result = parseLoreCreateBody({ content: "A newly recovered account." });
@@ -35,6 +41,20 @@ test("explicit unknown structured lore status is rejected", () => {
 });
 
 test("structured lore validation enforces content bounds", () => {
+  assert.equal(MAX_LORE_CONTENT_LENGTH, 64_000);
+  assert.equal(
+    parseLoreCreateBody({
+      content: "x".repeat(MAX_LORE_CONTENT_LENGTH),
+    }).ok,
+    true,
+  );
+  assert.equal(
+    parseLoreUpdateBody({
+      content: "x".repeat(MAX_LORE_CONTENT_LENGTH),
+    }).ok,
+    true,
+  );
+
   const result = parseLoreCreateBody({
     content: "x".repeat(MAX_LORE_CONTENT_LENGTH + 1),
   });
@@ -42,6 +62,42 @@ test("structured lore validation enforces content bounds", () => {
     ok: false,
     error: "Lore entry content is too long.",
   });
+});
+
+test("archive normalization preserves lore content beyond the former limit", () => {
+  const content = "x".repeat(12_001);
+  const normalized = normalizeArchiveData({
+    entries: [],
+    loreEntries: [
+      {
+        id: "long-lore-record",
+        date: "008.M42",
+        title: "Long-form record",
+        category: "relic",
+        status: "review",
+        content,
+        createdAt: 10,
+        updatedAt: 20,
+      },
+    ],
+  });
+
+  assert.equal(normalized.loreEntries[0]?.id, "long-lore-record");
+  assert.equal(normalized.loreEntries[0]?.content, content);
+});
+
+test("structured lore collection uses a 512 KB UTF-8 capacity budget", () => {
+  const exact = ["x".repeat(MAX_LORE_COLLECTION_BYTES - 4)];
+  assert.equal(loreCollectionSizeBytes(exact), MAX_LORE_COLLECTION_BYTES);
+  assert.equal(loreCollectionFitsCapacity(exact), true);
+  assert.equal(
+    loreCollectionFitsCapacity(["x".repeat(MAX_LORE_COLLECTION_BYTES - 3)]),
+    false,
+  );
+  assert.equal(
+    loreCollectionSizeBytes(["é"]),
+    new TextEncoder().encode('["é"]').byteLength,
+  );
 });
 
 test("partial updates reject an explicit unknown status", () => {
