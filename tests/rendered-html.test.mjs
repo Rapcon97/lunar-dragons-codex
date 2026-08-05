@@ -88,6 +88,31 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.doesNotMatch(dashboard, /method:\s*["']DELETE|resetChapterArchive/);
 });
 
+test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () => {
+  const [sectionPage, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(sectionPage, /section === "chronicles" \? "chronicles-workspace"/);
+  assert.match(sectionPage, /section === "chronicles" \? "chronicles-subpage"/);
+  assert.match(sectionPage, /entries=\{data\.loreEntries\.filter\(\(entry\) => entry\.status === "canon"\)\}/);
+  assert.doesNotMatch(sectionPage, /isAdminMode \? data\.entries : canonChronicleEntries/);
+  assert.match(sectionPage, /CHRONICLE EXLOAD TERMINAL/);
+  assert.match(sectionPage, /SEALED RECORD INDEX/);
+  assert.match(sectionPage, /<DecreeRecord \/>/);
+  assert.match(sectionPage, /selectedEntry\.content/);
+  assert.match(sectionPage, /entry\.id\.startsWith\("legacy-"\)/);
+  assert.match(sectionPage, /STATUS <strong>CANON · SEALED<\/strong>/);
+
+  assert.match(styles, /\.archive-mode:has\(\.chronicles-workspace\)\s*\{[^}]*height:\s*100dvh;[^}]*overflow:\s*hidden;/s);
+  assert.match(styles, /\.workspace\.chronicles-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)/s);
+  assert.match(styles, /\.chronicle-exload-grid\s*\{[^}]*grid-template-columns:\s*minmax\(290px, 29%\) minmax\(0, 1fr\)/s);
+  assert.match(styles, /\.chronicle-record-content\s*\{[^}]*max-width:\s*86ch;[^}]*font:[^;]*\/1\.85/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-grid\s*\{\s*display:\s*block;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-scroll\s*\{\s*overflow:\s*visible;/s);
+});
+
 test("the terminal footer unifies viewer controls and the live chronometer", async () => {
   const [footer, adminMode, chronometer, layout, styles] = await Promise.all([
     readFile("app/_components/ArchiveTerminalFooter.tsx", "utf8"),
@@ -311,9 +336,9 @@ test("homepage and Relay share the deterministic accessible transmission rendere
     sectionPage.indexOf("const identityFields"),
   );
   assert.match(sectionPage, /section === "relay" \? "relay-subpage"/);
-  assert.match(sectionPage, /workspace \$\{section === "relay" \? "relay-workspace" : ""\}/);
+  assert.match(sectionPage, /workspace \$\{section === "relay" \? "relay-workspace" : section === "chronicles" \? "chronicles-workspace" : ""\}/);
   assert.match(sectionPage, /section !== "relay"/);
-  assert.match(sectionPage, /section !== "relay" && \([\s\S]*?<footer><span>THE LUNAR DRAGONS/s);
+  assert.match(sectionPage, /section !== "relay" && section !== "chronicles" && \([\s\S]*?<footer><span>THE LUNAR DRAGONS/s);
   assert.match(relaySection, /ASTROPATHIC EXLOAD TERMINAL/);
   assert.doesNotMatch(relaySection, /VOX-MISSIVE RECOVERY/);
   assert.match(relaySection, /className="relay-inbox-grid panel"/);

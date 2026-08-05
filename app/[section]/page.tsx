@@ -14,7 +14,6 @@ import { TransmissionOriginActions } from "../_components/TransmissionOriginActi
 import { resolveTransmissionOrigin } from "../_components/transmission-origin";
 import { useChapterArchive } from "../_hooks/useChapterArchive";
 import {
-  canonChronicleEntries,
   type AstropathicMessage,
   type ChapterCompany,
   type ChapterIdentity,
@@ -89,7 +88,7 @@ export default function SectionPage() {
     <main className="app-shell">
       <SidebarNavigation activeHref={`/${section}`} />
 
-      <section className={`workspace ${section === "relay" ? "relay-workspace" : ""}`.trim()}>
+      <section className={`workspace ${section === "relay" ? "relay-workspace" : section === "chronicles" ? "chronicles-workspace" : ""}`.trim()}>
         <header className="topbar">
           <div>
             <p className="eyebrow">The Lunar Dragons · {info.code}</p>
@@ -101,8 +100,8 @@ export default function SectionPage() {
           </div>
         </header>
 
-        <div className={`subpage ${section === "relay" ? "relay-subpage" : ""}`}>
-          {section !== "relay" && (
+        <div className={`subpage ${section === "relay" ? "relay-subpage" : section === "chronicles" ? "chronicles-subpage" : ""}`}>
+          {section !== "relay" && section !== "chronicles" && (
             <section className="section-hero">
               <div>
                 <p className="section-kicker">{info.kicker}</p>
@@ -125,7 +124,8 @@ export default function SectionPage() {
           {section === "chronicles" && (
             <ChroniclesSection
               canEdit={isAdminMode}
-              entries={isAdminMode ? data.entries : canonChronicleEntries(data)}
+              entries={data.loreEntries.filter((entry) => entry.status === "canon")}
+              legacyEntries={data.entries}
               onSave={(value) => saveSection("entries", value)}
             />
           )}
@@ -140,7 +140,7 @@ export default function SectionPage() {
             />
           )}
         </div>
-        {section !== "relay" && (
+        {section !== "relay" && section !== "chronicles" && (
           <footer><span>THE LUNAR DRAGONS · THE ARGENT VIGIL</span><span>Reclaim what has been lost. Guard the passage.</span></footer>
         )}
       </section>
@@ -1109,33 +1109,153 @@ function SectorIntelSection({
 function ChroniclesSection({
   canEdit,
   entries,
+  legacyEntries,
   onSave,
 }: {
   canEdit: boolean;
-  entries: string[];
+  entries: LoreEntry[];
+  legacyEntries: string[];
   onSave: (value: string[]) => Promise<boolean>;
 }) {
   const [note, setNote] = useState("");
+  const [selectedId, setSelectedId] = useState("decree");
+  const [isComposing, setIsComposing] = useState(false);
+  const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (selectedId !== "decree" && !entries.some((entry) => entry.id === selectedId)) {
+      setSelectedId("decree");
+    }
+  }, [entries, selectedId]);
+
   async function addEntry() {
     if (!note.trim()) return;
-    const next = [`M42.??? — ${note.trim()}`, ...entries];
-    if (await onSave(next)) setNote("");
+    const next = [`M42.??? — ${note.trim()}`, ...legacyEntries];
+    if (await onSave(next)) {
+      setNote("");
+      setIsComposing(false);
+    }
   }
+
+  function archiveTimestamp(value: number) {
+    if (!Number.isFinite(value) || value <= 0) return "ARCHIVE STAMP UNRECORDED";
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "UTC",
+    }).format(new Date(value)).toUpperCase();
+  }
+
   return (
-    <>
-      <DecreeRecord />
-      <div className="chronicle-ledger panel">
-      {canEdit && (
-        <div className="quick-entry">
-          <input value={note} onChange={(event) => setNote(event.target.value)} onKeyDown={(event) => event.key === "Enter" && addEntry()} placeholder="Record a battle, oath, loss, or discovery…" />
-          <button onClick={addEntry}>SEAL ENTRY</button>
+    <section className="chronicle-exload-terminal" aria-labelledby="chronicle-exload-title">
+      <header className="chronicle-exload-header">
+        <div className="chronicle-exload-mark" aria-hidden="true"><i /><b>III</b></div>
+        <div className="chronicle-exload-heading">
+          <span>ADEPTUS ASTARTES · ANNALIS SANCTUM</span>
+          <h1 id="chronicle-exload-title">CHRONICLE EXLOAD TERMINAL</h1>
+        </div>
+        <div className="chronicle-exload-status" aria-label={`${entries.length} canon records, archive link active`}>
+          <span><i /> ARCHIVE LINK ACTIVE</span>
+          <strong>{String(entries.length).padStart(2, "0")} CANON RECORDS</strong>
+          {canEdit && <button type="button" onClick={() => setIsComposing((current) => !current)}>{isComposing ? "CLOSE SEALING RITE" : "SEAL NEW RECORD"}</button>}
+        </div>
+      </header>
+
+      {canEdit && isComposing && (
+        <div className="chronicle-exload-compose">
+          <label htmlFor="chronicle-new-record">NEW CANONICAL ENTRY · ADMIN AUTHORITY</label>
+          <input
+            id="chronicle-new-record"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && addEntry()}
+            placeholder="Record a battle, oath, loss, or discovery…"
+          />
+          <button type="button" onClick={addEntry}>SEAL ENTRY</button>
         </div>
       )}
-      <div className="ledger-list">
-        {entries.length ? entries.map((entry, index) => <article key={`${entry}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><p>{entry}</p></article>) : <p className="empty-record">No deeds have yet been entered into the sealed record.</p>}
+
+      <div className="chronicle-exload-grid">
+        <aside className="chronicle-exload-index" aria-label="Canonical Chronicle record index">
+          <header>
+            <span>SEALED RECORD INDEX</span>
+            <small>{entries.length + 1} RETRIEVABLE OBJECTS</small>
+          </header>
+          <div className="chronicle-index-scroll">
+            <button
+              type="button"
+              className={`chronicle-index-entry decree ${selectedId === "decree" ? "selected" : ""}`}
+              aria-pressed={selectedId === "decree"}
+              onClick={() => setSelectedId("decree")}
+            >
+              <span className="chronicle-index-number">I</span>
+              <span className="chronicle-index-copy">
+                <small>008.M42 · IMPERIAL DECREE</small>
+                <strong>Decree of Reclamation and Vigilance</strong>
+                <em>SEALED INSTRUMENT · AUTH: REGENTIS</em>
+              </span>
+            </button>
+
+            {entries.length ? entries.map((entry, index) => (
+              <button
+                type="button"
+                className={`chronicle-index-entry ${selectedId === entry.id ? "selected" : ""}`}
+                aria-pressed={selectedId === entry.id}
+                key={entry.id}
+                onClick={() => setSelectedId(entry.id)}
+              >
+                <span className="chronicle-index-number">{String(index + 1).padStart(2, "0")}</span>
+                <span className="chronicle-index-copy">
+                  <small>{entry.date || "DATE UNRECORDED"} · {entry.category}</small>
+                  <strong>{entry.title || "Untitled canonical record"}</strong>
+                  <em>{entry.id.startsWith("legacy-") ? "LEGACY ARCHIVE INDEX" : "STRUCTURED ARCHIVE RECORD"}</em>
+                </span>
+              </button>
+            )) : (
+              <p className="chronicle-index-empty">NO CANONICAL DEEDS HAVE YET BEEN ENTERED UNDER SEAL.</p>
+            )}
+          </div>
+        </aside>
+
+        <article className="chronicle-exload-reader" aria-live="polite">
+          <header>
+            <div>
+              <span>ACTIVE EXLOAD</span>
+              <strong>{selectedId === "decree" ? "INSTRUMENTUM IMPERIALIS" : "CANONICAL CHRONICLE RECORD"}</strong>
+            </div>
+            <small>READ AUTHORITY · ARCHIVE VIEW</small>
+          </header>
+          <div className="chronicle-reader-scroll" tabIndex={0}>
+            {selectedId === "decree" ? (
+              <DecreeRecord />
+            ) : selectedEntry ? (
+              <section className="chronicle-record-sheet" aria-labelledby={`chronicle-record-${selectedEntry.id}`}>
+                <p className="chronicle-record-path">ANNALIS / {selectedEntry.category.toUpperCase()} / {selectedEntry.date || "DATE-NULL"}</p>
+                <h2 id={`chronicle-record-${selectedEntry.id}`}>{selectedEntry.title || "Untitled canonical record"}</h2>
+                <div className="chronicle-record-signifiers">
+                  <span>DATE <strong>{selectedEntry.date || "UNRECORDED"}</strong></span>
+                  <span>CLASS <strong>{selectedEntry.category.toUpperCase()}</strong></span>
+                  <span>STATUS <strong>CANON · SEALED</strong></span>
+                </div>
+                <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
+                <p className="chronicle-record-content">{selectedEntry.content}</p>
+                <footer className="chronicle-record-footer">
+                  <div><span>RECORD IDENT</span><strong>{selectedEntry.id}</strong></div>
+                  <div><span>ENTERED</span><strong>{archiveTimestamp(selectedEntry.createdAt)}</strong></div>
+                  <div><span>LAST VERIFIED</span><strong>{archiveTimestamp(selectedEntry.updatedAt)}</strong></div>
+                </footer>
+              </section>
+            ) : (
+              <p className="chronicle-reader-empty">SELECT A SEALED RECORD FOR EXLOAD.</p>
+            )}
+          </div>
+        </article>
       </div>
-      </div>
-    </>
+    </section>
   );
 }
 
