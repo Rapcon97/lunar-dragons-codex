@@ -104,6 +104,8 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () 
   assert.match(sectionPage, /selectedEntry\.content/);
   assert.match(sectionPage, /entry\.id\.startsWith\("legacy-"\)/);
   assert.match(sectionPage, /STATUS <strong>CANON · SEALED<\/strong>/);
+  assert.match(sectionPage, /<header className=\{selectedEntry \? "record-active" : undefined\}>[\s\S]*className="chronicle-reader-record-meta"[\s\S]*READ AUTHORITY · ARCHIVE VIEW[\s\S]*<\/header>/);
+  assert.match(sectionPage, /chronicle-reader-record-meta[\s\S]*chronicle-record-path[\s\S]*chronicle-record-signifiers/);
 
   assert.match(styles, /\.archive-mode:has\(\.chronicles-workspace\)\s*\{[^}]*height:\s*100dvh;[^}]*overflow:\s*hidden;/s);
   assert.match(styles, /\.workspace\.chronicles-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)/s);
@@ -113,6 +115,8 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () 
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-scroll\s*\{\s*overflow:\s*visible;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-status\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-status span,[\s\S]*\.chronicle-exload-status strong\s*\{[^}]*white-space:\s*normal;/s);
+  assert.match(styles, /\.chronicle-exload-reader > header\.record-active\s*\{[^}]*grid-template-columns:\s*minmax\(175px, \.65fr\) minmax\(0, 1\.35fr\) auto;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-record-meta \.chronicle-record-signifiers\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s);
 });
 
 test("the terminal footer unifies viewer controls and the live chronometer", async () => {

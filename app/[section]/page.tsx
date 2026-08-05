@@ -1222,11 +1222,21 @@ function ChroniclesSection({
         </aside>
 
         <article className="chronicle-exload-reader" aria-live="polite">
-          <header>
-            <div>
+          <header className={selectedEntry ? "record-active" : undefined}>
+            <div className="chronicle-reader-heading">
               <span>ACTIVE EXLOAD</span>
               <strong>{selectedId === "decree" ? "INSTRUMENTUM IMPERIALIS" : "CANONICAL CHRONICLE RECORD"}</strong>
             </div>
+            {selectedEntry && (
+              <div className="chronicle-reader-record-meta">
+                <p className="chronicle-record-path">ANNALIS / {selectedEntry.category.toUpperCase()} / {selectedEntry.date || "DATE-NULL"}</p>
+                <div className="chronicle-record-signifiers">
+                  <span>DATE <strong>{selectedEntry.date || "UNRECORDED"}</strong></span>
+                  <span>CLASS <strong>{selectedEntry.category.toUpperCase()}</strong></span>
+                  <span>STATUS <strong>CANON · SEALED</strong></span>
+                </div>
+              </div>
+            )}
             <small>READ AUTHORITY · ARCHIVE VIEW</small>
           </header>
           <div className="chronicle-reader-scroll" tabIndex={0}>
@@ -1234,13 +1244,7 @@ function ChroniclesSection({
               <DecreeRecord />
             ) : selectedEntry ? (
               <section className="chronicle-record-sheet" aria-labelledby={`chronicle-record-${selectedEntry.id}`}>
-                <p className="chronicle-record-path">ANNALIS / {selectedEntry.category.toUpperCase()} / {selectedEntry.date || "DATE-NULL"}</p>
                 <h2 id={`chronicle-record-${selectedEntry.id}`}>{selectedEntry.title || "Untitled canonical record"}</h2>
-                <div className="chronicle-record-signifiers">
-                  <span>DATE <strong>{selectedEntry.date || "UNRECORDED"}</strong></span>
-                  <span>CLASS <strong>{selectedEntry.category.toUpperCase()}</strong></span>
-                  <span>STATUS <strong>CANON · SEALED</strong></span>
-                </div>
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
                 <p className="chronicle-record-content">{selectedEntry.content}</p>
                 <footer className="chronicle-record-footer">
