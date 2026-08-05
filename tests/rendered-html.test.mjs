@@ -146,6 +146,34 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal", async () 
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-record-meta \.chronicle-record-signifiers\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s);
 });
 
+test("principal archive sections share the Relay and Chronicle frame boundaries", async () => {
+  const [home, sectionPage, companyPage, systemPage, planetPage, styles] = await Promise.all([
+    readFile("app/page.tsx", "utf8"),
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/companies/[company]/page.tsx", "utf8"),
+    readFile("app/intel/system/[system]/page.tsx", "utf8"),
+    readFile("app/intel/system/[system]/planet/[planet]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(home, /workspace archive-boundary-workspace command-boundary-workspace/);
+  assert.match(home, /content-grid command-grid-redesign archive-boundary-content/);
+  assert.match(sectionPage, /\["chapter", "flagship", "armoury", "companies", "intel"\]\.includes\(section\)/);
+  assert.match(sectionPage, /usesArchiveBoundary \? "archive-boundary-workspace"/);
+  assert.match(sectionPage, /usesArchiveBoundary \? "archive-boundary-subpage"/);
+  assert.match(companyPage, /workspace archive-boundary-workspace/);
+  assert.match(companyPage, /subpage archive-boundary-subpage company-detail-page/);
+  assert.match(systemPage, /subpage archive-boundary-subpage system-intel-page/);
+  assert.match(planetPage, /subpage archive-boundary-subpage planetary-intel-page/);
+
+  assert.match(styles, /--archive-frame-gutter-inline:\s*clamp\(16px, 1\.4vw, 28px\)/);
+  assert.match(styles, /--archive-frame-gutter-block:\s*clamp\(14px, 1\.25vw, 24px\)/);
+  assert.match(styles, /\.archive-boundary-subpage,[\s\S]*\.content-grid\.archive-boundary-content\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin:\s*0;/s);
+  assert.match(styles, /\.relay-workspace \.relay-subpage\s*\{[^}]*padding:\s*var\(--archive-frame-gutter-block\) var\(--archive-frame-gutter-inline\) 0;/s);
+  assert.match(styles, /\.chronicles-workspace \.chronicles-subpage\s*\{[^}]*padding:\s*var\(--archive-frame-gutter-block\) var\(--archive-frame-gutter-inline\) 0;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.content-grid\.archive-boundary-content\s*\{\s*padding:\s*12px 10px 24px;/s);
+});
+
 test("the terminal footer unifies viewer controls and the live chronometer", async () => {
   const [footer, adminMode, chronometer, layout, styles] = await Promise.all([
     readFile("app/_components/ArchiveTerminalFooter.tsx", "utf8"),
@@ -373,9 +401,10 @@ test("homepage and Relay share the deterministic accessible transmission rendere
     sectionPage.indexOf("const identityFields"),
   );
   assert.match(sectionPage, /section === "relay" \? "relay-subpage"/);
-  assert.match(sectionPage, /workspace \$\{section === "relay" \? "relay-workspace" : section === "chronicles" \? "chronicles-workspace" : ""\}/);
+  assert.match(sectionPage, /section === "relay" \? "relay-workspace"/);
+  assert.match(sectionPage, /section === "chronicles" \? "chronicles-workspace"/);
   assert.match(sectionPage, /section !== "relay"/);
-  assert.match(sectionPage, /section !== "relay" && section !== "chronicles" && \([\s\S]*?<footer><span>THE LUNAR DRAGONS/s);
+  assert.match(sectionPage, /section !== "relay" && section !== "chronicles" && !usesArchiveBoundary && \([\s\S]*?<footer><span>THE LUNAR DRAGONS/s);
   assert.match(relaySection, /ASTROPATHIC EXLOAD TERMINAL/);
   assert.doesNotMatch(relaySection, /VOX-MISSIVE RECOVERY/);
   assert.match(relaySection, /className="relay-inbox-grid panel"/);
@@ -386,7 +415,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(styles, /\.relay-subpage\s*\{[^}]*padding:\s*clamp\([^}]*\) clamp\([^}]*\) 0/s);
   assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.archive-mode:has\(\.relay-workspace\)\s*\{[^}]*height:\s*100dvh[^}]*overflow:\s*hidden[^}]*padding-bottom:\s*0/s);
   assert.match(styles, /\.workspace\.relay-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\)[^}]*overflow:\s*hidden/s);
-  assert.match(styles, /\.relay-workspace \.relay-subpage\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none[^}]*height:\s*100%[^}]*min-height:\s*0[^}]*display:\s*flex[^}]*margin:\s*0[^}]*padding:\s*clamp\(14px, 1\.25vw, 24px\) clamp\(16px, 1\.4vw, 28px\) 0/s);
+  assert.match(styles, /\.relay-workspace \.relay-subpage\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none[^}]*height:\s*100%[^}]*min-height:\s*0[^}]*display:\s*flex[^}]*margin:\s*0[^}]*padding:\s*var\(--archive-frame-gutter-block\) var\(--archive-frame-gutter-inline\) 0/s);
   assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.relay-inbox-grid\s*\{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*min-height:\s*0/s);
   assert.match(styles, /\.relay-inbox-grid\s*\{[^}]*border-bottom-color:\s*#42563e[^}]*box-shadow:\s*inset 0 -3px/s);
   assert.match(styles, /\.relay-terminal-rack-title strong\s*\{[^}]*font:\s*400 clamp\(1\.75rem,[^}]*white-space:\s*nowrap/s);

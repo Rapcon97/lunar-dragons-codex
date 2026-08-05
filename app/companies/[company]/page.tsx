@@ -252,12 +252,12 @@ export default function CompanyOverview() {
       <main className="app-shell">
         <SidebarNavigation activeHref="/companies" />
 
-        <section className="workspace">
+        <section className="workspace archive-boundary-workspace">
           <header className="topbar">
             <div><p className="eyebrow">The Lunar Dragons · COMPANY/██</p><div className="chapter-name detail-chapter-name">{chapterName}</div></div>
             <div className="top-actions"><span className="save-state"><i /> RECORD SEALED</span><Link href="/companies" className="seal-button">BACK TO COMPANIES</Link></div>
           </header>
-          <div className="subpage secret-company-detail-page">
+          <div className="subpage archive-boundary-subpage secret-company-detail-page">
             <section className="eleventh-detail-gate panel">
               <span className="eleventh-detail-sigil" aria-hidden="true">XI</span>
               <p className="section-kicker">ORDO OBSCURUS · EYES ONLY</p>
@@ -296,13 +296,13 @@ export default function CompanyOverview() {
     <main className="app-shell">
       <SidebarNavigation activeHref="/companies" />
 
-      <section className="workspace">
+      <section className="workspace archive-boundary-workspace">
         <header className="topbar">
           <div><p className="eyebrow">The Lunar Dragons · COMPANY/{String(companyIndex + 1).padStart(2, "0")}</p><div className="chapter-name detail-chapter-name">{chapterName}</div></div>
           <div className="top-actions"><span className="save-state"><i /> {error ? "Archive unavailable" : isLoading ? "Loading shared roster" : "Shared roster synced"}</span><Link href="/companies" className="seal-button">BACK TO COMPANIES</Link></div>
         </header>
 
-        <div className="subpage company-detail-page">
+        <div className="subpage archive-boundary-subpage company-detail-page">
           <section className="company-detail-hero panel">
             <div className="company-sigil-control">
               <div

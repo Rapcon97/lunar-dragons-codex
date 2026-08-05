@@ -11,6 +11,8 @@
   --line: rgba(107, 130, 91, .18);
   --actual-sidebar-width: 82px;
   --archive-terminal-height: 62px;
+  --archive-frame-gutter-inline: clamp(16px, 1.4vw, 28px);
+  --archive-frame-gutter-block: clamp(14px, 1.25vw, 24px);
   /* Semantic archive typography. Numeric aliases remain for compatibility
      with the established component styling while collapsing it onto a
      readable, predictable set of roles. */
@@ -3174,7 +3176,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     min-height: 0;
     display: flex;
     margin: 0;
-    padding: clamp(14px, 1.25vw, 24px) clamp(16px, 1.4vw, 28px) 0;
+    padding: var(--archive-frame-gutter-block) var(--archive-frame-gutter-inline) 0;
   }
   .relay-workspace .relay-inbox {
     min-height: 0;
@@ -3801,7 +3803,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     min-height: 0;
     display: flex;
     margin: 0;
-    padding: clamp(14px, 1.25vw, 24px) clamp(16px, 1.4vw, 28px) 0;
+    padding: var(--archive-frame-gutter-block) var(--archive-frame-gutter-inline) 0;
   }
   .chronicles-workspace .chronicle-exload-terminal { flex: 1 1 auto; }
 }
@@ -4061,4 +4063,28 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .archive-terminal-prompt strong { font-size: var(--type-micro); }
   .chronicle-index-copy small,
   .chronicle-index-copy em { white-space: normal; }
+}
+
+/* Shared archive-frame boundaries -------------------------------------------
+   Command and the principal archive sections use the same viewport edges as
+   the Relay and Chronicle terminals while retaining natural document scroll. */
+.archive-boundary-workspace {
+  width: auto;
+  min-height: calc(100dvh - var(--archive-terminal-height));
+}
+
+.archive-boundary-subpage,
+.content-grid.archive-boundary-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: var(--archive-frame-gutter-block) var(--archive-frame-gutter-inline) clamp(28px, 3vw, 48px);
+}
+
+.archive-boundary-workspace > footer { display: none; }
+
+@media (max-width: 700px) {
+  .archive-boundary-workspace { min-height: 0; }
+  .archive-boundary-subpage,
+  .content-grid.archive-boundary-content { padding: 12px 10px 24px; }
 }

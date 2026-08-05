@@ -49,12 +49,12 @@ export default function PlanetaryIntelPage() {
   return (
     <main className="app-shell">
       <SidebarNavigation activeHref="/intel" />
-      <section className="workspace">
+      <section className="workspace archive-boundary-workspace">
         <header className="topbar">
           <div><p className="eyebrow">The Lunar Dragons · PLANETARIA INTELLIGENCE</p><div className="chapter-name fixed-chapter-name">THE LUNAR DRAGONS</div></div>
           <div className="top-actions"><span className="save-state"><i /> {error ? "Archive unavailable" : isLoading ? "Loading planetary record" : "Planetary record synced"}</span><Link className="seal-button" href={`/intel/system/${systemIndex + 1}`}>BACK TO SYSTEM</Link></div>
         </header>
-        <div className="subpage planetary-intel-page">
+        <div className="subpage archive-boundary-subpage planetary-intel-page">
           <nav className="intel-breadcrumbs" aria-label="Cartography hierarchy"><Link href="/intel">{data.sectorIntel.subsectorName}</Link><span>›</span><Link href={`/intel/system/${systemIndex + 1}`}>{system.name}</Link><span>›</span><strong>{body.name}</strong></nav>
           <section className="planetary-hero panel">
             <PlanetThumbnail planetType={classification ?? body.type} className={`planetary-globe-archive ${bodyTone}`} alt={`${body.name}, ${body.type}`} eager />

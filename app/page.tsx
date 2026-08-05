@@ -168,7 +168,7 @@ export default function Home() {
     <main className="app-shell" data-command-theme="lunar-dragons">
       <SidebarNavigation activeHref="/" />
 
-      <section className="workspace">
+      <section className="workspace archive-boundary-workspace command-boundary-workspace">
         <header className="topbar command-topbar">
           <div>
             <p className="eyebrow">Chapter LXRD · Argent Vigil · Command Nexus</p>
@@ -180,7 +180,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="content-grid command-grid-redesign">
+        <div className="content-grid command-grid-redesign archive-boundary-content">
           <section className="command-hero panel" aria-label="Lunar Dragons command identity">
             <div className={`command-sigil-vault ${badgeUrl ? `has-upload ${badgeMode}-mode` : ""}`}>
               {badgeUrl ? (
@@ -341,10 +341,6 @@ export default function Home() {
             )}
           </section>
         </div>
-        <footer>
-          <span>THE LUNAR DRAGONS · THE ARGENT VIGIL · CHAPTER ARCHIVE</span>
-          <span>Reclaim what has been lost. Guard the passage.</span>
-        </footer>
       </section>
     </main>
   );

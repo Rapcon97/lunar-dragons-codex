@@ -83,12 +83,13 @@ export default function SectionPage() {
   const section = (pathname.split("/")[1] || "chapter") as Section;
   const info = sectionInfo[section] || sectionInfo.chapter;
   const chapterName = "THE LUNAR DRAGONS";
+  const usesArchiveBoundary = ["chapter", "flagship", "armoury", "companies", "intel"].includes(section);
 
   return (
     <main className="app-shell">
       <SidebarNavigation activeHref={`/${section}`} />
 
-      <section className={`workspace ${section === "relay" ? "relay-workspace" : section === "chronicles" ? "chronicles-workspace" : ""}`.trim()}>
+      <section className={`workspace ${section === "relay" ? "relay-workspace" : section === "chronicles" ? "chronicles-workspace" : usesArchiveBoundary ? "archive-boundary-workspace" : ""}`.trim()}>
         <header className="topbar">
           <div>
             <p className="eyebrow">The Lunar Dragons · {info.code}</p>
@@ -100,7 +101,7 @@ export default function SectionPage() {
           </div>
         </header>
 
-        <div className={`subpage ${section === "relay" ? "relay-subpage" : section === "chronicles" ? "chronicles-subpage" : ""}`}>
+        <div className={`subpage ${section === "relay" ? "relay-subpage" : section === "chronicles" ? "chronicles-subpage" : usesArchiveBoundary ? "archive-boundary-subpage" : ""}`}>
           {section !== "relay" && section !== "chronicles" && (
             <section className="section-hero">
               <div>
@@ -140,7 +141,7 @@ export default function SectionPage() {
             />
           )}
         </div>
-        {section !== "relay" && section !== "chronicles" && (
+        {section !== "relay" && section !== "chronicles" && !usesArchiveBoundary && (
           <footer><span>THE LUNAR DRAGONS · THE ARGENT VIGIL</span><span>Reclaim what has been lost. Guard the passage.</span></footer>
         )}
       </section>

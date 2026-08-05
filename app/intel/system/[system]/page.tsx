@@ -17,7 +17,7 @@ export default function SolarSystemIntelPage() {
   return (
     <main className="app-shell">
       <SidebarNavigation activeHref="/intel" />
-      <section className="workspace">
+      <section className="workspace archive-boundary-workspace">
         <header className="topbar">
           <div><p className="eyebrow">The Lunar Dragons · SYSTEMA CARTOGRAPHICA</p><div className="chapter-name fixed-chapter-name">THE LUNAR DRAGONS</div></div>
           <div className="top-actions">
@@ -25,7 +25,7 @@ export default function SolarSystemIntelPage() {
             <Link className="seal-button" href="/intel">BACK TO SUBSECTOR</Link>
           </div>
         </header>
-        <div className="subpage system-intel-page">
+        <div className="subpage archive-boundary-subpage system-intel-page">
           <nav className="intel-breadcrumbs" aria-label="Cartography hierarchy">
             <Link href="/intel">{data.sectorIntel.subsectorName}</Link><span>›</span><strong>{system.name}</strong>
           </nav>
