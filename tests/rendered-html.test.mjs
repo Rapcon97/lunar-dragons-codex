@@ -178,6 +178,15 @@ test("principal archive sections share the Relay and Chronicle frame boundaries"
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.content-grid\.archive-boundary-content\s*\{\s*padding:\s*12px 10px 24px;/s);
 });
 
+test("the Command nexus always renders the authenticated Lunar Dragons sigil", async () => {
+  const home = await readFile("app/page.tsx", "utf8");
+
+  assert.match(home, /src="\/lunar-dragons-sigil-depth\.png" alt="The Lunar Dragons chapter sigil"/);
+  assert.doesNotMatch(home, /\/api\/chapter-badge/);
+  assert.doesNotMatch(home, /UPLOAD SIGIL|REPLACE SIGIL/);
+  assert.doesNotMatch(home, /type="file"/);
+});
+
 test("the terminal footer unifies viewer controls and the live chronometer", async () => {
   const [footer, adminMode, chronometer, layout, styles] = await Promise.all([
     readFile("app/_components/ArchiveTerminalFooter.tsx", "utf8"),

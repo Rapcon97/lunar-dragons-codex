@@ -19,22 +19,13 @@ export default function Home() {
   const chapterName = "THE LUNAR DRAGONS";
   const [note, setNote] = useState("");
   const [selectedRelayMessage, setSelectedRelayMessage] = useState<AstropathicMessage | null>(null);
-  const [badgeUrl, setBadgeUrl] = useState<string | null>(null);
-  const [badgeStatus, setBadgeStatus] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const { badgeMode, companies, entries, relayMessages } = data;
+  const { companies, entries, relayMessages } = data;
   const visibleChronicleEntries = useMemo(
     () => isAdminMode ? entries : canonChronicleEntries(data),
     [data, entries, isAdminMode],
   );
   const archiveReady = !isLoading && !error;
   const archivePendingText = error ? "ARCHIVE LINK UNAVAILABLE" : "ACCESSING SHARED ARCHIVE…";
-
-  useEffect(() => {
-    fetch("/api/chapter-badge", { cache: "no-store" }).then((response) => {
-      if (response.ok) setBadgeUrl(`/api/chapter-badge?v=${Date.now()}`);
-    });
-  }, []);
 
   useEffect(() => {
     if (!selectedRelayMessage) return;
@@ -60,110 +51,6 @@ export default function Home() {
     if (await saveSection("entries", next)) setNote("");
   }
 
-  function readImageShape(file: File) {
-    return new Promise<"badge" | "banner">((resolve) => {
-      const image = new Image();
-      const url = URL.createObjectURL(file);
-      image.onload = () => {
-        resolve(image.width / image.height > 1.45 ? "banner" : "badge");
-        URL.revokeObjectURL(url);
-      };
-      image.onerror = () => {
-        resolve("badge");
-        URL.revokeObjectURL(url);
-      };
-      image.src = url;
-    });
-  }
-
-  function canvasBlob(
-    canvas: HTMLCanvasElement,
-    type: string,
-    quality: number,
-  ) {
-    return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
-  }
-
-  async function prepareBadgeUpload(file: File) {
-    const maxSelectedBytes = 50 * 1024 * 1024;
-    const transferTargetBytes = 750 * 1024;
-
-    if (file.size > maxSelectedBytes) {
-      throw new Error("Choose an image smaller than 50 MB.");
-    }
-    if (file.size <= transferTargetBytes) return file;
-    if (file.type === "image/gif") {
-      throw new Error("Large animated GIFs cannot be optimized. Use PNG, JPG, or WEBP.");
-    }
-
-    setBadgeStatus("Optimizing large heraldry…");
-    const bitmap = await createImageBitmap(file);
-    const maxEdge = 2560;
-    let scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("This browser cannot prepare the image.");
-
-    let output: Blob | null = null;
-    const outputType = file.type === "image/png" ? "image/webp" : "image/jpeg";
-
-    for (let attempt = 0; attempt < 7; attempt += 1) {
-      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      output = await canvasBlob(canvas, outputType, Math.max(.44, .88 - attempt * .07));
-      if (output && output.size <= transferTargetBytes) break;
-      scale *= .76;
-    }
-    bitmap.close();
-
-    if (!output || output.size > transferTargetBytes) {
-      throw new Error("The image could not be optimized enough for upload.");
-    }
-
-    const extension = outputType === "image/webp" ? "webp" : "jpg";
-    return new File([output], `chapter-heraldry.${extension}`, { type: outputType });
-  }
-
-  async function uploadBadge(file?: File) {
-    if (!file) return;
-    setIsUploading(true);
-    setBadgeStatus("");
-
-    try {
-      const mode = await readImageShape(file);
-      const preparedFile = await prepareBadgeUpload(file);
-      const form = new FormData();
-      form.append("badge", preparedFile);
-      const response = await fetch("/api/chapter-badge", { method: "POST", body: form });
-      const contentType = response.headers.get("content-type") || "";
-      const result = contentType.includes("application/json")
-        ? ((await response.json()) as { error?: string })
-        : { error: response.ok ? undefined : `The upload service rejected the image (${response.status}).` };
-      if (!response.ok) throw new Error(result.error || "Upload failed.");
-      await saveSection("badgeMode", mode);
-      setBadgeUrl(`/api/chapter-badge?v=${Date.now()}`);
-      setBadgeStatus(mode === "banner" ? "Chapter banner secured." : "Chapter badge secured.");
-    } catch (error) {
-      setBadgeStatus(error instanceof Error ? error.message : "Upload failed.");
-    } finally {
-      setIsUploading(false);
-    }
-  }
-
-  async function removeBadge() {
-    setIsUploading(true);
-    const response = await fetch("/api/chapter-badge", { method: "DELETE" });
-    if (response.ok) {
-      setBadgeUrl(null);
-      setBadgeStatus("Heraldry removed.");
-    } else {
-      setBadgeStatus("The heraldry could not be removed.");
-    }
-    setIsUploading(false);
-  }
-
   return (
     <main className="app-shell" data-command-theme="lunar-dragons">
       <SidebarNavigation activeHref="/" />
@@ -182,28 +69,9 @@ export default function Home() {
 
         <div className="content-grid command-grid-redesign archive-boundary-content">
           <section className="command-hero panel" aria-label="Lunar Dragons command identity">
-            <div className={`command-sigil-vault ${badgeUrl ? `has-upload ${badgeMode}-mode` : ""}`}>
-              {badgeUrl ? (
-                <img src={badgeUrl} alt={`${chapterName} heraldry`} />
-              ) : (
-                <img src="/lunar-dragons-sigil-depth.png" alt="Lunar Dragons chapter sigil" />
-              )}
+            <div className="command-sigil-vault">
+              <img src="/lunar-dragons-sigil-depth.png" alt="The Lunar Dragons chapter sigil" />
               <span>CHAPTER SIGIL · VERIFIED</span>
-              {isAdminMode && (
-                <div className="command-sigil-controls">
-                  <label className="upload-button">
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      onChange={(event) => uploadBadge(event.target.files?.[0])}
-                      disabled={isUploading}
-                    />
-                    {isUploading ? "SECURING…" : badgeUrl ? "REPLACE SIGIL" : "UPLOAD SIGIL"}
-                  </label>
-                  {badgeUrl && <button className="remove-badge" onClick={removeBadge} disabled={isUploading}>REMOVE</button>}
-                </div>
-              )}
-              {badgeStatus && <small className="command-sigil-status" role="status">{badgeStatus}</small>}
             </div>
             <div className="command-hero-copy">
               <p className="section-kicker">Ultima Founding · The Argent Vigil</p>

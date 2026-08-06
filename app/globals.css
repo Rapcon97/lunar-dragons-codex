@@ -1690,8 +1690,6 @@ a { color: inherit; text-decoration: none; }
   filter: saturate(.78) brightness(.86) contrast(1.16) drop-shadow(0 14px 24px rgba(0, 0, 0, .75));
 }
 .command-sigil-vault > span { position: relative; z-index: 1; color: #53664f; font-size: var(--ui-text-7); letter-spacing: .2em; }
-.command-sigil-controls { position: relative; z-index: 2; display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; }
-.command-sigil-status { position: relative; z-index: 2; max-width: 220px; color: #71806c; font-size: var(--ui-text-7); letter-spacing: .1em; text-align: center; text-transform: uppercase; }
 .command-hero-copy { align-self: center; padding: 52px clamp(38px, 5vw, 74px); }
 .command-hero-copy h1 {
   margin: 12px 0 24px; color: #879b7d; font: 400 clamp(43px, 5.2vw, 72px)/.94 Georgia, "Times New Roman", serif;
@@ -3138,7 +3136,7 @@ body { color: var(--paper); font-size: var(--ui-text-15); }
 .strength-link, .command-dossier > a { font-size: var(--ui-text-9); line-height: 1.35; }
 .panel-heading h2 { color: #a2b098; font-size: 25px; }
 .panel-heading > span, .status-chip { font-size: var(--ui-text-9) !important; line-height: 1.35; }
-.command-sigil-vault > span, .command-sigil-status { color: #72826d; font-size: var(--ui-text-9); line-height: 1.45; }
+.command-sigil-vault > span { color: #72826d; font-size: var(--ui-text-9); line-height: 1.45; }
 .command-dossier > p { color: #74836e; font-size: var(--ui-text-9); }
 .command-dossier dt { color: #6f7f68; font-size: var(--ui-text-8); }
 .command-dossier dd { color: #93a38a; font-size: var(--ui-text-9); }
