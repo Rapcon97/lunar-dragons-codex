@@ -187,6 +187,17 @@ test("the Command nexus always renders the authenticated Lunar Dragons sigil", a
   assert.doesNotMatch(home, /type="file"/);
 });
 
+test("retired presentation elements stay outside the live Site runtime", async () => {
+  const [manifest, styles] = await Promise.all([
+    readFile("archive/retired-site-elements/README.md", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(manifest, /ImperialVoxTicker\.tsx\.retired/);
+  assert.match(manifest, /decree-of-reclamation-and-vigilance-v2\.png/);
+  assert.doesNotMatch(styles, /\.vox-screen|\.hero-panel|\.crest-wrap|\.upload-button|\.doctrine-panel/);
+});
+
 test("the terminal footer unifies viewer controls and the live chronometer", async () => {
   const [footer, adminMode, chronometer, layout, styles] = await Promise.all([
     readFile("app/_components/ArchiveTerminalFooter.tsx", "utf8"),
@@ -259,7 +270,7 @@ test("shared interface typography uses one semantic readability scale", async ()
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.workspace :is\(input, textarea, select\)\s*\{\s*font-size:\s*1rem;/s);
 
   assert.match(styles, /\.nav-icon\s*\{[^}]*width:\s*26px;[^}]*height:\s*26px/s);
-  assert.match(styles, /\.crest-shield b\s*\{[^}]*font-size:\s*13px/s);
+  assert.match(styles, /\.command-sigil-vault img\s*\{[^}]*width:\s*min\(215px, 82%\);[^}]*height:\s*215px/s);
   assert.match(styles, /\.system-register a > i\s*\{[^}]*font-size:\s*18px/s);
 });
 

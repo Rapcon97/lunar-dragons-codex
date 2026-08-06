@@ -126,6 +126,10 @@ Legacy `/api/gpt/*` compatibility routes remain supported for existing clients.
 
 The API is deliberately least-privilege. It does not expose delete, reset, complete-archive replacement, guest credential, or unrestricted database operations.
 
+## Retired interface archive
+
+Superseded UI components and unreferenced presentation assets are kept outside the runtime in [`archive/retired-site-elements`](archive/retired-site-elements/README.md). The accompanying manifest records why each item was retired and how to recover it without allowing obsolete material to clutter the active `app/` and `public/` trees.
+
 ### Lore safety
 
 - Omitted status on a new structured GPT entry defaults to `draft`.
