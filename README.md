@@ -70,6 +70,20 @@ npm run db:generate  # Generate a Drizzle migration after an approved schema cha
 
 ## Build and tests
 
+### Validation lanes
+
+Use the smallest safe lane for the change. The verifier inspects changed paths and automatically escalates to a stronger lane when protected files are present.
+
+```powershell
+npm run verify:ui        # CSS, presentation components, copy, icons and public assets
+npm run verify:standard  # UI behavior, navigation and ordinary application logic
+npm run verify:protected # API, auth, archive storage, schema, bindings or OpenAPI work
+```
+
+The UI lane runs one production build and the rendered-interface regressions. The standard lane runs the complete application suite. The protected lane adds the complete GPT API suite. Every lane also removes any build-copied `.dev.vars` file and verifies the Site’s logical bindings, excluded environment files and staging-resource isolation.
+
+Prefer batching several related presentation refinements into one validated release. Do not rerun a stronger lane when the exact source tree has already passed it.
+
 Run the focused GPT API regression suite:
 
 ```powershell
@@ -153,7 +167,7 @@ The production Site and its managed resources already exist. Routine work must r
 
 Before saving or deploying a Site version:
 
-1. Run `npm run test:gpt-api` and `npm run build`.
+1. Run the appropriate `npm run verify:*` lane. API, authentication, archive, schema, OpenAPI and binding changes require `npm run verify:protected`.
 2. Confirm `.openai/hosting.json` still targets the existing Site project and logical `DB` / `CHAPTER_ASSETS` bindings.
 3. Confirm the artifact contains no `.dev.vars`, `.env`, plaintext secrets, staging data, or staging resource IDs.
 4. Inspect additive D1 migrations and verify how Sites will apply them.

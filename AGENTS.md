@@ -244,6 +244,22 @@ Legacy `/api/gpt/*` routes remain compatibility routes until they are deliberate
 
 ## 13. Required validation
 
+### Proportional validation lanes
+
+Use the smallest safe validation lane and allow the verifier to escalate based on the changed paths:
+
+```powershell
+npm run verify:ui
+npm run verify:standard
+npm run verify:protected
+```
+
+- `verify:ui` is for presentation-only TSX/CSS, copy, icons and public assets. It runs one build plus rendered-interface tests.
+- `verify:standard` is for navigation, interaction and ordinary application behavior. It runs the complete application suite.
+- `verify:protected` is mandatory for API, authentication, archive storage, schema, migration, OpenAPI, binding or Worker changes. It runs both the application and GPT API suites.
+- The verifier automatically promotes a requested lane when protected or non-UI paths changed. Do not bypass that promotion.
+- Reuse a successful validation result while the source tree is unchanged. Do not rerun identical suites merely because commit, provenance, packaging and deployment are separate steps.
+
 After changes affecting any of the following:
 
 - `app/api/gpt/**`
