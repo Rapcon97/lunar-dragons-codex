@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { LoreCategory, LoreEntry } from "../archive-data";
-import { MAX_LORE_CONTENT_LENGTH } from "../lore-limits";
+import {
+  MAX_LORE_CONTENT_LENGTH,
+  MAX_LORE_SUBTITLE_LENGTH,
+  MAX_LORE_TITLE_LENGTH,
+} from "../lore-limits";
 import { LoreCogitatorPanel } from "./LoreCogitatorPanel";
 
 const categoryOptions: Array<{ value: LoreCategory; label: string }> = [
@@ -19,6 +23,7 @@ const categoryOptions: Array<{ value: LoreCategory; label: string }> = [
 type EditorDraft = {
   date: string;
   title: string;
+  subtitle: string;
   category: LoreCategory;
   content: string;
 };
@@ -28,10 +33,11 @@ function draftForEntry(entry: LoreEntry | null): EditorDraft {
     ? {
         date: entry.date,
         title: entry.title,
+        subtitle: entry.subtitle ?? "",
         category: entry.category,
         content: entry.content,
       }
-    : { date: "", title: "", category: "event", content: "" };
+    : { date: "", title: "", subtitle: "", category: "event", content: "" };
 }
 
 export function LoreEntryEditor({
@@ -174,10 +180,20 @@ export function LoreEntryEditor({
               <input
                 autoFocus
                 required
-                maxLength={240}
+                maxLength={MAX_LORE_TITLE_LENGTH}
                 value={draft.title}
                 onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                 placeholder="Enter the formal archival title"
+              />
+            </label>
+
+            <label className="lore-editor-subtitle-field">
+              RECORD SUBTITLE <small>OPTIONAL</small>
+              <input
+                maxLength={MAX_LORE_SUBTITLE_LENGTH}
+                value={draft.subtitle}
+                onChange={(event) => setDraft((current) => ({ ...current, subtitle: event.target.value }))}
+                placeholder="Add a secondary archival designation"
               />
             </label>
 

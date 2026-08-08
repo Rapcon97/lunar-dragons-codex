@@ -4,6 +4,12 @@ import {
 } from "./archive-data";
 import { loreCollectionFitsCapacity } from "./lore-limits";
 import {
+  boundedGPTContent,
+  GPT_SEARCH_RESULT_LIMIT,
+  paginateGPTLoreEntries,
+  type GPTLoreEntryListOptions,
+} from "./gpt-response-window";
+import {
   mutateChapterLore,
   readChapterArchive,
 } from "../storage/chapter-records";
@@ -12,6 +18,15 @@ export type GPTSearchResult = {
   category: string;
   title: string;
   content: string;
+  contentLength?: number;
+  contentTruncated?: boolean;
+  recordType?: "lore";
+  id?: string;
+  subtitle?: string;
+  date?: string;
+  status?: LoreEntry["status"];
+  createdAt?: number;
+  updatedAt?: number;
 };
 
 async function loadArchive() {
@@ -76,14 +91,16 @@ export async function getGPTLore() {
   };
 }
 
-export async function getGPTLoreEntries() {
+export async function getGPTLoreEntries(
+  options: Partial<GPTLoreEntryListOptions> = {},
+) {
   const { archive, source, persisted } = await loadArchive();
+  const page = paginateGPTLoreEntries(archive.loreEntries, options);
 
   return {
     source,
     persisted,
-    count: archive.loreEntries.length,
-    entries: archive.loreEntries,
+    ...page,
   };
 }
 
@@ -122,11 +139,11 @@ export async function searchGPTLore(query: string) {
     }
   }
 
-  for (let index = 0; index < archive.loreEntries.length; index += 1) {
-    const entry = archive.loreEntries[index];
+  for (const entry of archive.loreEntries) {
     const searchable = [
       entry.date,
       entry.title,
+      entry.subtitle ?? "",
       entry.category,
       entry.status,
       entry.content,
@@ -135,10 +152,20 @@ export async function searchGPTLore(query: string) {
       .toLowerCase();
 
     if (searchable.includes(normalizedQuery)) {
+      const bounded = boundedGPTContent(entry.content);
       results.push({
-        category: "timeline",
-        title: "Chronicle Entry",
-        content: archive.entries[index] ?? loreEntryToTimeline(entry),
+        category: entry.category,
+        title: entry.title,
+        content: bounded.content,
+        contentLength: bounded.contentLength,
+        contentTruncated: bounded.contentTruncated,
+        recordType: "lore",
+        id: entry.id,
+        ...(entry.subtitle ? { subtitle: entry.subtitle } : {}),
+        date: entry.date,
+        status: entry.status,
+        createdAt: entry.createdAt,
+        updatedAt: entry.updatedAt,
       });
     }
   }
@@ -215,11 +242,15 @@ export async function searchGPTLore(query: string) {
     }
   }
 
+  const boundedResults = results.slice(0, GPT_SEARCH_RESULT_LIMIT);
+
   return {
     query: normalizedQuery,
     count: results.length,
+    returned: boundedResults.length,
+    hasMore: results.length > boundedResults.length,
     source,
-    results,
+    results: boundedResults,
   };
 }
 
@@ -270,6 +301,7 @@ export async function appendGPTChronicleEntry(entry: string) {
 export type GPTLoreEntryInput = {
   date?: string;
   title?: string;
+  subtitle?: string;
   category?: LoreEntry["category"];
   status?: LoreEntry["status"];
   content: string;
@@ -284,6 +316,7 @@ export async function appendGPTLoreEntry(input: GPTLoreEntryInput) {
     id: crypto.randomUUID(),
     date,
     title: input.title?.trim() || firstClause.slice(0, 180),
+    ...(input.subtitle?.trim() ? { subtitle: input.subtitle.trim() } : {}),
     category: input.category ?? "event",
     status: input.status ?? "draft",
     content,
@@ -323,6 +356,7 @@ export async function appendGPTLoreEntry(input: GPTLoreEntryInput) {
 export type GPTLoreEntryUpdate = {
   date?: string;
   title?: string;
+  subtitle?: string;
   category?: LoreEntry["category"];
   status?: LoreEntry["status"];
   content?: string;
@@ -343,6 +377,10 @@ export async function updateGPTLoreEntry(
       ...existing,
       date: input.date !== undefined ? input.date.trim() : existing.date,
       title: input.title !== undefined ? input.title.trim() : existing.title,
+      subtitle:
+        input.subtitle !== undefined
+          ? input.subtitle.trim() || undefined
+          : existing.subtitle,
       category: input.category ?? existing.category,
       status: input.status ?? existing.status,
       content:

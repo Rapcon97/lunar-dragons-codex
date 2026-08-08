@@ -8,7 +8,7 @@ import type { OptimisticProposal } from "../storage/optimistic-write";
 export type LoreDraftInput = Pick<
   LoreEntry,
   "date" | "title" | "category" | "content"
->;
+> & { subtitle?: string };
 
 export type LoreEditorReason =
   | "capacity"
@@ -38,6 +38,7 @@ export function proposeLoreDraftCreation(
     id,
     date: input.date.trim(),
     title: input.title.trim(),
+    ...(input.subtitle?.trim() ? { subtitle: input.subtitle.trim() } : {}),
     category: input.category,
     status: "draft",
     content: input.content.trim(),
@@ -87,6 +88,10 @@ export function proposeLoreEditorUpdate(
     ...existing,
     date: input.date.trim(),
     title: input.title.trim(),
+    subtitle:
+      input.subtitle !== undefined
+        ? input.subtitle.trim() || undefined
+        : existing.subtitle,
     category: input.category,
     content: input.content.trim(),
     updatedAt: Math.max(now, existing.updatedAt + 1),

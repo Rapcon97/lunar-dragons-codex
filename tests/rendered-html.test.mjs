@@ -146,6 +146,12 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(sectionPage, /SEALED RECORD INDEX/);
   assert.match(sectionPage, /<DecreeRecord \/>/);
   assert.match(sectionPage, /selectedEntry\.content/);
+  assert.match(sectionPage, /selectedEntry\.subtitle &&[\s\S]*chronicle-record-subtitle/);
+  assert.doesNotMatch(
+    sectionPage,
+    /chronicle-index-copy[\s\S]{0,350}entry\.subtitle/,
+    "The Chronicle index must remain title-only",
+  );
   assert.match(sectionPage, /entry\.id\.startsWith\("legacy-"\)/);
   assert.match(sectionPage, /statusReadout\(selectedEntry\)/);
   assert.match(sectionPage, /<header className=\{selectedEntry \? "record-active" : undefined\}>[\s\S]*className="chronicle-reader-record-meta"[\s\S]*READ AUTHORITY · ARCHIVE VIEW[\s\S]*<\/header>/);
@@ -155,6 +161,7 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(styles, /\.workspace\.chronicles-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)/s);
   assert.match(styles, /\.chronicle-exload-grid\s*\{[^}]*grid-template-columns:\s*minmax\(290px, 29%\) minmax\(0, 1fr\)/s);
   assert.match(styles, /\.chronicle-record-content\s*\{[^}]*max-width:\s*86ch;[^}]*font:[^;]*\/1\.85/s);
+  assert.match(styles, /\.chronicle-record-subtitle\s*\{[^}]*font:[^;]*var\(--type-body\)\/1\.55/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-grid\s*\{\s*display:\s*block;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-scroll\s*\{\s*overflow:\s*visible;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-status\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);

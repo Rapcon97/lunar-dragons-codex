@@ -109,6 +109,27 @@ test("search endpoint preserves response contract", async () => {
   }
 });
 
+test("structured lore search exposes stable IDs without unbounded content", async () => {
+  const adapter = await read(paths.adapter);
+  const openapi = await read(paths.openapi);
+
+  for (const field of ["id", "date", "status", "createdAt", "updatedAt"]) {
+    assert.match(
+      adapter,
+      new RegExp(`\\b${field}\\s*:`),
+      `Structured search results must expose '${field}'`,
+    );
+    assert.match(
+      openapi,
+      new RegExp(`\\n\\s+${field}:`),
+      `OpenAPI search results must declare '${field}'`,
+    );
+  }
+
+  assert.match(adapter, /boundedGPTContent/);
+  assert.match(adapter, /GPT_SEARCH_RESULT_LIMIT/);
+});
+
 test("chronicle endpoint remains authenticated", async () => {
   const source = await read(paths.chronicle);
 
@@ -153,6 +174,19 @@ test("structured entries endpoint uses GPT adapter", async () => {
     /getGPTLoreEntries/,
     "Structured entries endpoint must read lore through getGPTLoreEntries",
   );
+});
+
+test("structured entries listing is paginated and full reads remain single-record", async () => {
+  const source = await read(paths.entries);
+  const openapi = await read(paths.openapi);
+
+  for (const parameter of ["offset", "limit", "includeContent"]) {
+    assert.match(source, new RegExp(`searchParams\\.get\\(\"${parameter}\"\\)`));
+    assert.match(openapi, new RegExp(`- name: ${parameter}`));
+  }
+
+  assert.match(source, /Full-content listing is limited to one record/);
+  assert.match(openapi, /Retrieve one record by ID for its complete content/);
 });
 
 test("GPT adapter exposes structured lore entries", async () => {
@@ -474,6 +508,11 @@ test("GPT Actions schema marks writes non-consequential without weakening runtim
   assert.match(source, /default:\s*draft/);
   assert.match(source, /date:[\s\S]*?maxLength:\s*80/);
   assert.match(source, /title:[\s\S]*?maxLength:\s*240/);
+  assert.equal(
+    source.match(/subtitle:[\s\S]*?maxLength:\s*360/g)?.length,
+    3,
+    "Response, create, and update schemas must expose the optional bounded subtitle",
+  );
   assert.equal(
     source.match(/maxLength:\s*64000/g)?.length,
     3,

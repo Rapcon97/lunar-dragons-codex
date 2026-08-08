@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     const result = await createAdminLoreDraft({
       date: parsed.value.date ?? "",
       title: parsed.value.title ?? "Untitled archival record",
+      subtitle: parsed.value.subtitle,
       category: parsed.value.category ?? "event",
       content: parsed.value.content,
     });

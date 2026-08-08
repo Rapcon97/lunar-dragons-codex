@@ -42,8 +42,9 @@ paths:
       operationId: searchLoreArchive
       summary: Search Lunar Dragons lore
       description: >
-        Searches indexed Lunar Dragons lore. Search before creating new lore
-        when the subject may already exist.
+        Searches indexed Lunar Dragons lore. Structured lore matches include
+        their stable ID and update timestamp. Results contain bounded previews;
+        retrieve one record by ID before updating it.
       parameters:
         - name: q
           in: query
@@ -72,8 +73,34 @@ paths:
       operationId: listLoreEntries
       summary: List all structured lore entries
       description: >
-        Returns all structured lore records with stable IDs, categories,
-        statuses, content, and timestamps.
+        Returns a bounded, paginated index of structured lore records with
+        stable IDs, categories, statuses, content previews, and timestamps.
+        Retrieve one record by ID for its complete content.
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          description: Zero-based record offset. Use nextOffset to continue.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          description: Records per page. Use 1 when requesting full content.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: includeContent
+          in: query
+          required: false
+          description: Return full content. Requires limit=1; otherwise previews are returned.
+          schema:
+            type: boolean
+            default: false
       responses:
         "200":
           description: All structured lore entries.
@@ -260,6 +287,10 @@ components:
           type: string
           maxLength: 240
           description: Human-readable lore title.
+        subtitle:
+          type: string
+          maxLength: 360
+          description: Optional secondary title shown only inside the opened Chronicle record.
         category:
           $ref: "#/components/schemas/LoreCategory"
         status:
@@ -267,7 +298,14 @@ components:
         content:
           type: string
           maxLength: 64000
-          description: Full lore text.
+          description: Full lore text for single-record reads; paginated lists return a bounded preview.
+        contentLength:
+          type: integer
+          minimum: 0
+          description: Original content length before any list or search preview truncation.
+        contentTruncated:
+          type: boolean
+          description: True when content is a bounded preview rather than the complete record.
         createdAt:
           type: integer
           format: int64
@@ -292,6 +330,10 @@ components:
           minLength: 1
           maxLength: 240
           description: Concise descriptive title.
+        subtitle:
+          type: string
+          maxLength: 360
+          description: Optional secondary archival designation.
         category:
           $ref: "#/components/schemas/LoreCategory"
         status:
@@ -319,6 +361,10 @@ components:
           minLength: 1
           maxLength: 240
           description: Replacement title.
+        subtitle:
+          type: string
+          maxLength: 360
+          description: Replacement secondary title. Supply an empty string to clear it.
         category:
           $ref: "#/components/schemas/LoreCategory"
         status:
@@ -335,6 +381,12 @@ components:
         - source
         - persisted
         - count
+        - returned
+        - offset
+        - limit
+        - hasMore
+        - nextOffset
+        - contentMode
         - entries
       properties:
         source:
@@ -348,6 +400,23 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/LoreEntry"
+        returned:
+          type: integer
+          minimum: 0
+        offset:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        hasMore:
+          type: boolean
+        nextOffset:
+          type: [integer, "null"]
+          minimum: 0
+        contentMode:
+          type: string
+          enum: [preview, full]
 
     LoreEntryResponse:
       type: object
@@ -399,12 +468,37 @@ components:
           type: string
         content:
           type: string
+        recordType:
+          type: string
+          enum: [lore]
+        id:
+          type: string
+          description: Stable structured lore ID when the result is a lore record.
+        subtitle:
+          type: string
+        date:
+          type: string
+        status:
+          $ref: "#/components/schemas/LoreStatus"
+        createdAt:
+          type: integer
+          format: int64
+        updatedAt:
+          type: integer
+          format: int64
+        contentLength:
+          type: integer
+          minimum: 0
+        contentTruncated:
+          type: boolean
 
     SearchResponse:
       type: object
       required:
         - query
         - count
+        - returned
+        - hasMore
         - source
         - results
       properties:
@@ -413,6 +507,11 @@ components:
         count:
           type: integer
           minimum: 0
+        returned:
+          type: integer
+          minimum: 0
+        hasMore:
+          type: boolean
         source:
           type: string
         results:

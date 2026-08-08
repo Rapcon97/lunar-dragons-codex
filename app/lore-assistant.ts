@@ -1,5 +1,8 @@
 import type { LoreCategory, LoreEntry } from "./archive-data";
-import { MAX_LORE_CONTENT_LENGTH } from "./lore-limits.ts";
+import {
+  MAX_LORE_CONTENT_LENGTH,
+  MAX_LORE_SUBTITLE_LENGTH,
+} from "./lore-limits.ts";
 
 export const LORE_ASSISTANT_MODEL = "gpt-5.6-terra";
 export const MAX_LORE_ASSISTANT_PROMPT_LENGTH = 4_000;
@@ -30,6 +33,7 @@ export type LoreAssistantDraft = {
   status: LoreEntry["status"];
   date: string;
   title: string;
+  subtitle: string;
   category: LoreCategory;
   content: string;
 };
@@ -42,7 +46,7 @@ export type LoreAssistantRequest = {
 
 export type LoreAssistantSuggestion = Pick<
   LoreAssistantDraft,
-  "date" | "title" | "category" | "content"
+  "date" | "title" | "subtitle" | "category" | "content"
 >;
 
 export type LoreAssistantAnswer = {
@@ -97,6 +101,7 @@ export function parseLoreAssistantRequest(value: unknown): ParseResult {
       "status",
       "date",
       "title",
+      "subtitle",
       "category",
       "content",
     ])
@@ -115,8 +120,9 @@ export function parseLoreAssistantRequest(value: unknown): ParseResult {
   }
   const date = stringWithin(value.draft.date, 80);
   const title = stringWithin(value.draft.title, 240);
+  const subtitle = stringWithin(value.draft.subtitle, MAX_LORE_SUBTITLE_LENGTH);
   const content = stringWithin(value.draft.content, MAX_LORE_CONTENT_LENGTH);
-  if (date === null || title === null || content === null) {
+  if (date === null || title === null || subtitle === null || content === null) {
     return invalid("The active lore draft exceeds the archive limits.");
   }
 
@@ -130,6 +136,7 @@ export function parseLoreAssistantRequest(value: unknown): ParseResult {
         status: value.draft.status as LoreEntry["status"],
         date,
         title,
+        subtitle,
         category: value.draft.category as LoreCategory,
         content,
       },
@@ -143,7 +150,7 @@ export function selectCanonLoreContext(
 ) {
   const canon = loreEntries.filter((entry) => entry.status === "canon");
   const terms = searchTerms(
-    `${request.message} ${request.draft.title} ${request.draft.category}`,
+    `${request.message} ${request.draft.title} ${request.draft.subtitle} ${request.draft.category}`,
   );
   const ranked = canon
     .map((entry, index) => ({
@@ -160,6 +167,7 @@ export function selectCanonLoreContext(
     const rendered = [
       `ID: ${entry.id}`,
       `TITLE: ${entry.title}`,
+      `SUBTITLE: ${entry.subtitle || "NONE"}`,
       `DATE: ${entry.date || "UNRECORDED"}`,
       `CATEGORY: ${entry.category}`,
       "STATUS: CANON",
@@ -238,17 +246,28 @@ export function parseLoreAssistantAnswer(
     if (!isRecord(value.suggestion)) return null;
     const date = stringWithin(value.suggestion.date, 80);
     const title = stringWithin(value.suggestion.title, 240);
+    const subtitle = stringWithin(
+      value.suggestion.subtitle,
+      MAX_LORE_SUBTITLE_LENGTH,
+    );
     const content = stringWithin(value.suggestion.content, MAX_LORE_CONTENT_LENGTH);
     const category = value.suggestion.category;
     if (
       date === null ||
       title === null ||
+      subtitle === null ||
       content === null ||
       !loreCategories.includes(category as LoreCategory)
     ) {
       return null;
     }
-    suggestion = { date, title, category: category as LoreCategory, content };
+    suggestion = {
+      date,
+      title,
+      subtitle,
+      category: category as LoreCategory,
+      content,
+    };
   }
 
   return {
@@ -303,10 +322,11 @@ const loreAssistantResponseFormat = {
             properties: {
               date: { type: "string" },
               title: { type: "string" },
+              subtitle: { type: "string" },
               category: { type: "string", enum: loreCategories },
               content: { type: "string" },
             },
-            required: ["date", "title", "category", "content"],
+            required: ["date", "title", "subtitle", "category", "content"],
           },
         ],
       },
@@ -330,6 +350,7 @@ function buildConsultationInput(
     `ID: ${request.draft.recordId ?? "UNASSIGNED NEW DRAFT"}`,
     `STATUS: ${request.draft.status.toUpperCase()}`,
     `TITLE: ${request.draft.title || "UNTITLED"}`,
+    `SUBTITLE: ${request.draft.subtitle || "NONE"}`,
     `DATE: ${request.draft.date || "UNRECORDED"}`,
     `CATEGORY: ${request.draft.category}`,
     "CONTENT:",
@@ -361,12 +382,14 @@ function extractOutputText(response: unknown) {
 
 function relevanceScore(entry: LoreEntry, terms: readonly string[]) {
   const title = entry.title.toLowerCase();
+  const subtitle = (entry.subtitle ?? "").toLowerCase();
   const category = entry.category.toLowerCase();
   const content = entry.content.toLowerCase();
   return terms.reduce(
     (score, term) =>
       score +
       (title.includes(term) ? 8 : 0) +
+      (subtitle.includes(term) ? 5 : 0) +
       (category.includes(term) ? 4 : 0) +
       (content.includes(term) ? 1 : 0),
     0,

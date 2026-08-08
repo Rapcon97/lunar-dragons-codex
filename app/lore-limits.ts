@@ -1,5 +1,8 @@
 export const MAX_LORE_CONTENT_LENGTH = 64_000;
 export const MAX_LORE_COLLECTION_BYTES = 512 * 1024;
+export const MAX_LORE_DATE_LENGTH = 80;
+export const MAX_LORE_TITLE_LENGTH = 240;
+export const MAX_LORE_SUBTITLE_LENGTH = 360;
 
 export const LORE_COLLECTION_CAPACITY_ERROR =
   "The structured lore collection exceeds the 512 KB archive capacity.";

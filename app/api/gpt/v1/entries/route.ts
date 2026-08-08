@@ -13,7 +13,48 @@ export async function GET(request: Request) {
   if (authResponse) return authResponse;
 
   try {
-    const lore = await getGPTLoreEntries();
+    const url = new URL(request.url);
+    const offsetValue = url.searchParams.get("offset");
+    const limitValue = url.searchParams.get("limit");
+    const includeContentValue = url.searchParams.get("includeContent");
+    const offset = offsetValue === null ? 0 : Number(offsetValue);
+    const limit = limitValue === null ? 20 : Number(limitValue);
+
+    if (!Number.isSafeInteger(offset) || offset < 0) {
+      return Response.json(
+        { error: "The entry offset must be a non-negative integer." },
+        { status: 400 },
+      );
+    }
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50) {
+      return Response.json(
+        { error: "The entry limit must be an integer from 1 to 50." },
+        { status: 400 },
+      );
+    }
+    if (
+      includeContentValue !== null &&
+      includeContentValue !== "true" &&
+      includeContentValue !== "false"
+    ) {
+      return Response.json(
+        { error: "includeContent must be true or false." },
+        { status: 400 },
+      );
+    }
+
+    const includeContent = includeContentValue === "true";
+    if (includeContent && limit !== 1) {
+      return Response.json(
+        {
+          error:
+            "Full-content listing is limited to one record. Use limit=1 or retrieve a record by ID.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const lore = await getGPTLoreEntries({ offset, limit, includeContent });
     return Response.json(lore, {
       headers: {
         "cache-control": "no-store",

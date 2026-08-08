@@ -1754,6 +1754,9 @@ function ChroniclesSection({
             ) : selectedEntry ? (
               <section className="chronicle-record-sheet" aria-labelledby={`chronicle-record-${selectedEntry.id}`}>
                 <h2 id={`chronicle-record-${selectedEntry.id}`}>{selectedEntry.title || "Untitled archive record"}</h2>
+                {selectedEntry.subtitle && (
+                  <p className="chronicle-record-subtitle">{selectedEntry.subtitle}</p>
+                )}
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
                 <p className="chronicle-record-content">{selectedEntry.content}</p>
                 {canEdit && (

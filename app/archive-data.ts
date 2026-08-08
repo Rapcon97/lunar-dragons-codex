@@ -1,4 +1,9 @@
-import { MAX_LORE_CONTENT_LENGTH } from "./lore-limits.ts";
+import {
+  MAX_LORE_CONTENT_LENGTH,
+  MAX_LORE_DATE_LENGTH,
+  MAX_LORE_SUBTITLE_LENGTH,
+  MAX_LORE_TITLE_LENGTH,
+} from "./lore-limits.ts";
 import { transmissionBodyFragments } from "./transmission-fragments.ts";
 
 export type ChapterIdentity = {
@@ -49,6 +54,7 @@ export type LoreEntry = {
   id: string;
   date: string;
   title: string;
+  subtitle?: string;
   category: LoreCategory;
   status: LoreStatus;
   content: string;
@@ -1735,18 +1741,25 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
           Math.floor(Number(candidate.updatedAt) || createdAt),
         );
 
+        const subtitle = text(
+          candidate.subtitle,
+          "",
+          MAX_LORE_SUBTITLE_LENGTH,
+        ).trim();
+
         return {
           id: text(
             candidate.id,
             `lore-imported-${index + 1}`,
             160,
           ),
-          date: text(candidate.date, "", 80),
+          date: text(candidate.date, "", MAX_LORE_DATE_LENGTH),
           title: text(
             candidate.title,
             `Lore Entry ${index + 1}`,
-            240,
+            MAX_LORE_TITLE_LENGTH,
           ),
+          ...(subtitle ? { subtitle } : {}),
           category,
           status,
           content,

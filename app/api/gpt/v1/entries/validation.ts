@@ -1,9 +1,17 @@
-import { MAX_LORE_CONTENT_LENGTH } from "../../../../lore-limits.ts";
+import {
+  MAX_LORE_CONTENT_LENGTH,
+  MAX_LORE_DATE_LENGTH,
+  MAX_LORE_SUBTITLE_LENGTH,
+  MAX_LORE_TITLE_LENGTH,
+} from "../../../../lore-limits.ts";
 
-export const MAX_LORE_DATE_LENGTH = 80;
-export const MAX_LORE_TITLE_LENGTH = 240;
 export const MAX_LORE_ENTRY_ID_LENGTH = 160;
-export { MAX_LORE_CONTENT_LENGTH };
+export {
+  MAX_LORE_CONTENT_LENGTH,
+  MAX_LORE_DATE_LENGTH,
+  MAX_LORE_SUBTITLE_LENGTH,
+  MAX_LORE_TITLE_LENGTH,
+};
 
 export const allowedLoreCategories = [
   "campaign",
@@ -29,6 +37,7 @@ type LoreStatus = (typeof allowedLoreStatuses)[number];
 export type ValidatedLoreCreate = {
   date?: string;
   title?: string;
+  subtitle?: string;
   category?: LoreCategory;
   status: LoreStatus;
   content: string;
@@ -37,6 +46,7 @@ export type ValidatedLoreCreate = {
 export type ValidatedLoreUpdate = {
   date?: string;
   title?: string;
+  subtitle?: string;
   category?: LoreCategory;
   status?: LoreStatus;
   content?: string;
@@ -49,6 +59,7 @@ type ValidationResult<Value> =
 const writeFields = new Set([
   "date",
   "title",
+  "subtitle",
   "category",
   "status",
   "content",
@@ -66,7 +77,7 @@ function validateKnownFields(body: Record<string, unknown>) {
 
 function validateOptionalText(
   body: Record<string, unknown>,
-  field: "date" | "title",
+  field: "date" | "title" | "subtitle",
   maxLength: number,
 ) {
   const value = body[field];
@@ -126,6 +137,12 @@ export function parseLoreCreateBody(
   if (dateError) return { ok: false, error: dateError };
   const titleError = validateOptionalText(body, "title", MAX_LORE_TITLE_LENGTH);
   if (titleError) return { ok: false, error: titleError };
+  const subtitleError = validateOptionalText(
+    body,
+    "subtitle",
+    MAX_LORE_SUBTITLE_LENGTH,
+  );
+  if (subtitleError) return { ok: false, error: subtitleError };
 
   if (body.category !== undefined && !validateCategory(body.category)) {
     return { ok: false, error: "Invalid lore entry category." };
@@ -144,6 +161,8 @@ export function parseLoreCreateBody(
       content: body.content.trim(),
       date: typeof body.date === "string" ? body.date.trim() : undefined,
       title: typeof body.title === "string" ? body.title.trim() : undefined,
+      subtitle:
+        typeof body.subtitle === "string" ? body.subtitle.trim() : undefined,
       category:
         typeof body.category === "string"
           ? (body.category as LoreCategory)
@@ -172,6 +191,12 @@ export function parseLoreUpdateBody(
   if (dateError) return { ok: false, error: dateError };
   const titleError = validateOptionalText(body, "title", MAX_LORE_TITLE_LENGTH);
   if (titleError) return { ok: false, error: titleError };
+  const subtitleError = validateOptionalText(
+    body,
+    "subtitle",
+    MAX_LORE_SUBTITLE_LENGTH,
+  );
+  if (subtitleError) return { ok: false, error: subtitleError };
 
   if (
     body.content !== undefined &&
@@ -197,6 +222,8 @@ export function parseLoreUpdateBody(
     value: {
       date: typeof body.date === "string" ? body.date.trim() : undefined,
       title: typeof body.title === "string" ? body.title.trim() : undefined,
+      subtitle:
+        typeof body.subtitle === "string" ? body.subtitle.trim() : undefined,
       category:
         typeof body.category === "string"
           ? (body.category as LoreCategory)

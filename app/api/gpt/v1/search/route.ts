@@ -38,6 +38,8 @@ export async function GET(request: Request) {
       {
         query: search.query,
         count: search.count,
+        returned: search.returned,
+        hasMore: search.hasMore,
         source: search.source,
         results: search.results,
       },

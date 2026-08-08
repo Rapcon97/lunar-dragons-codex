@@ -173,6 +173,7 @@ test("the on-site editor creates a structured draft without changing the canon t
     {
       date: " 056.M42 ",
       title: " The Unknown Anchorage ",
+      subtitle: " A provisional cartographic designation ",
       category: "world",
       content: " A provisional survey awaiting the Chapter Master's judgement. ",
     },
@@ -186,6 +187,7 @@ test("the on-site editor creates a structured draft without changing the canon t
     id: "new-draft-uuid",
     date: "056.M42",
     title: "The Unknown Anchorage",
+    subtitle: "A provisional cartographic designation",
     category: "world",
     status: "draft",
     content: "A provisional survey awaiting the Chapter Master's judgement.",
@@ -205,6 +207,7 @@ test("the on-site editor preserves record identity, status, creation time, and t
     {
       date: "Pre-008.M42",
       title: "Revised provenance dossier",
+      subtitle: "Bearer of the First Stone",
       category: "relic",
       content: "Revised review material, still awaiting judgement.",
     },
@@ -219,6 +222,7 @@ test("the on-site editor preserves record identity, status, creation time, and t
   assert.equal(proposal.value.entry.createdAt, 100);
   assert.equal(proposal.value.entry.updatedAt, 700);
   assert.equal(proposal.value.entry.title, "Revised provenance dossier");
+  assert.equal(proposal.value.entry.subtitle, "Bearer of the First Stone");
   assert.deepEqual(proposal.state.entries, current.entries);
   assert.equal(current.loreEntries[0].title, "Provenance and Antiquity of the Lunaris");
 });

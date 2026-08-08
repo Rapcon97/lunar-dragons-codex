@@ -34,6 +34,7 @@ function validRequest(overrides = {}) {
       status: "draft",
       date: "056.M42",
       title: "Provisional record",
+      subtitle: "A development record",
       category: "event",
       content: "A development proposal awaiting judgement.",
     },
@@ -119,6 +120,7 @@ test("assistant response validation preserves a complete proposal and filters in
         suggestion: {
           date: "056.M42",
           title: "A Revised Provisional Record",
+          subtitle: "Submitted for archival judgement",
           category: "event",
           content: "The revised complete record.",
         },
@@ -132,6 +134,7 @@ test("assistant response validation preserves a complete proposal and filters in
   assert.ok(answer);
   assert.deepEqual(answer.canonReferences, ["canon-1"]);
   assert.equal(answer.suggestion?.title, "A Revised Provisional Record");
+  assert.equal(answer.suggestion?.subtitle, "Submitted for archival judgement");
   assert.equal(answer.suggestion?.content, "The revised complete record.");
 });
 
