@@ -700,9 +700,10 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
 });
 
 test("the on-site lore editor is an Admin Mode-only structured-lore workflow", async () => {
-  const [sectionPage, editor, createRoute, updateRoute, domain, storage, styles] = await Promise.all([
+  const [sectionPage, editor, formattedContent, createRoute, updateRoute, domain, storage, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/_components/LoreEntryEditor.tsx", "utf8"),
+    readFile("app/_components/LoreFormattedContent.tsx", "utf8"),
     readFile("app/api/admin/lore/route.ts", "utf8"),
     readFile("app/api/admin/lore/[id]/route.ts", "utf8"),
     readFile("app/lore-editor.ts", "utf8"),
@@ -711,11 +712,12 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   ]);
 
   assert.match(sectionPage, /canEdit=\{canAdmin && isAdminMode\}/);
-  assert.match(sectionPage, /CREATE LORE DRAFT/);
+  assert.doesNotMatch(sectionPage, /CREATE LORE DRAFT|SEAL NEW RECORD/);
   assert.match(sectionPage, /<LoreEntryEditor/);
   assert.match(sectionPage, /EDIT RECORD/);
-  assert.match(sectionPage, /CANON LOCK ACTIVE/);
-  assert.doesNotMatch(sectionPage, /SEAL NEW RECORD/);
+  assert.match(sectionPage, /selectedEntry\.status === "draft" \|\| selectedEntry\.status === "review"/);
+  assert.doesNotMatch(sectionPage, /CANON LOCK ACTIVE/);
+  assert.match(sectionPage, /<LoreFormattedContent content=\{selectedEntry\.content\} \/>/);
   assert.doesNotMatch(sectionPage, /saveSection\("entries"/);
 
   assert.match(editor, /method: isCreating \? "POST" : "PATCH"/);
@@ -724,6 +726,16 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(editor, /expectedUpdatedAt: entry\.updatedAt/);
   assert.match(editor, /MAX_LORE_CONTENT_LENGTH/);
   assert.match(editor, /document\.body\.style\.overflow = "hidden"/);
+  assert.match(editor, /role="toolbar"/);
+  assert.match(editor, /applyInlineFormat/);
+  assert.match(editor, /applyLineFormat/);
+  assert.match(editor, /RECORD TITLE/);
+  assert.match(editor, /RECORD SUBTITLE/);
+  assert.match(formattedContent, /function renderInlineFormatting/);
+  assert.match(formattedContent, /<blockquote/);
+  assert.match(formattedContent, /<ul/);
+  assert.match(formattedContent, /<ol/);
+  assert.doesNotMatch(formattedContent, /dangerouslySetInnerHTML/);
 
   for (const route of [createRoute, updateRoute]) {
     assert.match(route, /getArchiveAdmin\(\)/);
@@ -744,5 +756,7 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(styles, /\.lore-editor-backdrop\s*\{[^}]*position:\s*fixed/s);
   assert.match(styles, /\.lore-editor-dialog\s*\{[^}]*width:\s*min\(/s);
   assert.match(styles, /\.lore-editor-content-field textarea\s*\{[^}]*min-height:/s);
+  assert.match(styles, /\.lore-format-toolbar\s*\{[^}]*display:\s*flex/s);
+  assert.match(styles, /\.chronicle-record-content h2,/);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lore-editor-dialog\s*\{[^}]*width:\s*100%/s);
 });

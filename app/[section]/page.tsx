@@ -8,6 +8,7 @@ import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { LoreEntryEditor } from "../_components/LoreEntryEditor";
+import { LoreFormattedContent } from "../_components/LoreFormattedContent";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream } from "../_components/RelayDataStream";
 import { SectorCartographyExperience } from "../_components/SectorCartographyExperience";
@@ -1649,7 +1650,6 @@ function ChroniclesSection({
               ? `D${String(statusCounts.draft).padStart(2, "0")} · R${String(statusCounts.review).padStart(2, "0")} · C${String(statusCounts.canon).padStart(2, "0")} · X${String(statusCounts.retconned).padStart(2, "0")}`
               : `${String(entries.length).padStart(2, "0")} CANON RECORDS`}
           </strong>
-          {canEdit && <button type="button" onClick={() => setEditorEntry(null)}>CREATE LORE DRAFT</button>}
         </div>
       </header>
 
@@ -1758,23 +1758,18 @@ function ChroniclesSection({
                   <p className="chronicle-record-subtitle">{selectedEntry.subtitle}</p>
                 )}
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
-                <p className="chronicle-record-content">{selectedEntry.content}</p>
-                {canEdit && (
+                <LoreFormattedContent content={selectedEntry.content} />
+                {canEdit && (selectedEntry.status === "draft" || selectedEntry.status === "review") && (
                   <div className="chronicle-record-editor-action">
                     <div>
                       <span>ON-SITE LORE EDITOR</span>
-                      <strong>
-                        {selectedEntry.status === "canon"
-                          ? "Canon content is locked. Return it to Draft before revising the record."
-                          : "Revise this structured record without changing its identity or development status."}
-                      </strong>
+                      <strong>Revise the title, subtitle, formatting, and complete record text without changing its identity or development status.</strong>
                     </div>
                     <button
                       type="button"
-                      disabled={selectedEntry.status === "canon"}
                       onClick={() => setEditorEntry(selectedEntry)}
                     >
-                      {selectedEntry.status === "canon" ? "CANON LOCK ACTIVE" : "EDIT RECORD"}
+                      EDIT RECORD
                     </button>
                   </div>
                 )}

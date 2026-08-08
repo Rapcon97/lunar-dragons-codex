@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { LoreCategory, LoreEntry } from "../archive-data";
 import {
   MAX_LORE_CONTENT_LENGTH,
@@ -54,6 +54,7 @@ export function LoreEntryEditor({
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"error" | "info">("error");
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const initialDraft = useMemo(() => draftForEntry(entry), [entry]);
   const isDirty = JSON.stringify(draft) !== JSON.stringify(initialDraft);
   const isCreating = entry === null;
@@ -88,6 +89,71 @@ export function LoreEntryEditor({
     if (!isDirty || window.confirm("Discard the unsaved lore revision?")) {
       onClose();
     }
+  }
+
+  function replaceContentSelection(
+    replacement: string,
+    selectionStart: number,
+    selectionEnd: number,
+  ) {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const nextContent =
+      textarea.value.slice(0, textarea.selectionStart) +
+      replacement +
+      textarea.value.slice(textarea.selectionEnd);
+    const insertionStart = textarea.selectionStart;
+    setDraft((current) => ({ ...current, content: nextContent }));
+    requestAnimationFrame(() => {
+      contentRef.current?.focus();
+      contentRef.current?.setSelectionRange(
+        insertionStart + selectionStart,
+        insertionStart + selectionEnd,
+      );
+    });
+  }
+
+  function applyInlineFormat(marker: "**" | "*") {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const selected = textarea.value.slice(textarea.selectionStart, textarea.selectionEnd);
+    const placeholder = marker === "**" ? "emphasised text" : "italic text";
+    const value = selected || placeholder;
+    replaceContentSelection(
+      `${marker}${value}${marker}`,
+      marker.length,
+      marker.length + value.length,
+    );
+  }
+
+  function applyLineFormat(format: "heading" | "bullet" | "numbered" | "quote") {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const lineStart = textarea.value.lastIndexOf("\n", textarea.selectionStart - 1) + 1;
+    const followingBreak = textarea.value.indexOf("\n", textarea.selectionEnd);
+    const lineEnd = followingBreak === -1 ? textarea.value.length : followingBreak;
+    textarea.setSelectionRange(lineStart, lineEnd);
+    const sourceLines = textarea.value.slice(lineStart, lineEnd).split("\n");
+    const replacement = sourceLines.map((line, index) => {
+      if (format === "heading") return `## ${line.replace(/^#{1,3}\s+/, "")}`;
+      if (format === "bullet") return `- ${line.replace(/^[-*]\s+/, "")}`;
+      if (format === "numbered") return `${index + 1}. ${line.replace(/^\d+\.\s+/, "")}`;
+      return `> ${line.replace(/^>\s?/, "")}`;
+    }).join("\n");
+    replaceContentSelection(replacement, 0, replacement.length);
+  }
+
+  function insertDivider() {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+    const prefix = textarea.selectionStart > 0 && !textarea.value.slice(0, textarea.selectionStart).endsWith("\n")
+      ? "\n\n"
+      : "";
+    const suffix = textarea.selectionEnd < textarea.value.length && !textarea.value.slice(textarea.selectionEnd).startsWith("\n")
+      ? "\n\n"
+      : "";
+    const replacement = `${prefix}---${suffix}`;
+    replaceContentSelection(replacement, replacement.length, replacement.length);
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -226,9 +292,22 @@ export function LoreEntryEditor({
               </select>
             </label>
 
-            <label className="lore-editor-content-field">
-              COMPLETE ARCHIVAL CONTENT
+            <div className="lore-editor-content-field">
+              <label className="lore-editor-content-label" htmlFor="lore-editor-content">
+                COMPLETE ARCHIVAL CONTENT
+              </label>
+              <div className="lore-format-toolbar" role="toolbar" aria-label="Lore text formatting tools">
+                <button type="button" onClick={() => applyLineFormat("heading")} title="Section heading">H2</button>
+                <button type="button" onClick={() => applyInlineFormat("**")} title="Bold"><strong>B</strong></button>
+                <button type="button" onClick={() => applyInlineFormat("*")} title="Italic"><em>I</em></button>
+                <button type="button" onClick={() => applyLineFormat("bullet")} title="Bulleted list">• LIST</button>
+                <button type="button" onClick={() => applyLineFormat("numbered")} title="Numbered list">1. LIST</button>
+                <button type="button" onClick={() => applyLineFormat("quote")} title="Quotation">QUOTE</button>
+                <button type="button" onClick={insertDivider} title="Section divider">RULE</button>
+              </div>
               <textarea
+                id="lore-editor-content"
+                ref={contentRef}
                 required
                 maxLength={MAX_LORE_CONTENT_LENGTH}
                 value={draft.content}
@@ -238,7 +317,7 @@ export function LoreEntryEditor({
               <small>
                 {draft.content.length.toLocaleString("en-GB")} / {MAX_LORE_CONTENT_LENGTH.toLocaleString("en-GB")} CHARACTERS
               </small>
-            </label>
+            </div>
             </div>
 
             {assistantOpen && (
