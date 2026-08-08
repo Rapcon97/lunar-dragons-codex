@@ -116,8 +116,17 @@ The application uses these server-side secret names:
 
 - `GUEST_SESSION_SECRET`
 - `GPT_API_KEY`
+- `OPENAI_API_KEY`
 
 No secret values belong in source control, documentation, screenshots, client-side code, or logs. Local values belong in `.dev.vars`; production values are managed through the existing Site environment.
+
+`GPT_API_KEY` authenticates the protected archive API used by the external Lunar Dragons GPT. `OPENAI_API_KEY` is a separate server-only credential used by the administrator Lore Cogitator to call the OpenAI Responses API. Neither key is exposed to browser code.
+
+## On-site Lore Cogitator
+
+The Chronicle editor includes an optional Lore Cogitator for authenticated ChatGPT administrators who have actively entered Admin Mode. It uses the authoritative Site-managed D1 archive and treats existing `canon` entries as the primary Lunar Dragons source. The currently open record and administrator instructions are development material, not canon authority.
+
+The Cogitator is advisory: a generated record must be explicitly loaded into the editor, reviewed, and saved by the administrator. It cannot publish, demote, delete, reset, or directly write archive records. Consultations are not persisted by the application.
 
 ## GPT API
 
