@@ -62,7 +62,7 @@ export function transmissionEventAnalysisLines(source: EventPresentationSource, 
     if (rootReliquariumNumber) lines.push(`> ROOT TRANSMISSION: ${rootReliquariumNumber}`);
   }
   if (kinds.has("duplicate-astropathic-echo")) {
-    lines.push("> Signal condition: ASTROPATHIC ECHO // REPEATED CONTENT");
+    lines.push("> Empyric condition: ASTROPATHIC ECHO // REPEATED THOUGHT-FORM");
     if (rootReliquariumNumber) lines.push(`> ROOT TRANSMISSION: ${rootReliquariumNumber}`);
   }
   return lines;

@@ -124,6 +124,19 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(sectionPage, /section === "chronicles" \? "chronicles-workspace"/);
   assert.match(sectionPage, /section === "chronicles" \? "chronicles-subpage"/);
   assert.match(sectionPage, /chronicleEntriesForViewer\(data\.loreEntries, canAdmin, isAdminMode\)/);
+  assert.match(sectionPage, /onArchiveRefresh=\{load\}/);
+  assert.match(sectionPage, /aria-label="Lore development status categories"/);
+  assert.match(sectionPage, /\["draft", "DRAFT", statusCounts\.draft\]/);
+  assert.match(sectionPage, /\["review", "REVIEW", statusCounts\.review\]/);
+  assert.match(sectionPage, /\["canon", "CANON", statusCounts\.canon\]/);
+  assert.match(sectionPage, /\["retconned", "RETCONNED", statusCounts\.retconned\]/);
+  assert.match(sectionPage, /\/api\/admin\/lore\/\$\{encodeURIComponent\(entry\.id\)\}\/\$\{publishing \? "publish" : "draft"\}/);
+  assert.match(sectionPage, /"x-lunar-admin-mode": "active"/);
+  assert.match(sectionPage, /PUBLISH TO CANON/);
+  assert.match(sectionPage, /RETURN TO DRAFT/);
+  assert.match(sectionPage, /expectedUpdatedAt: entry\.updatedAt/);
+  assert.match(styles, /\.chronicle-status-tabs\s*\{[^}]*grid-template-columns:\s*1\.35fr repeat\(4,/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-status-tabs\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
   assert.match(sectionPage, /LORE DEVELOPMENT INDEX/);
   assert.match(sectionPage, /DRAFT · UNSEALED/);
   assert.match(sectionPage, /REVIEW · AWAITING JUDGMENT/);
@@ -452,29 +465,50 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.doesNotMatch(relaySection, /role="dialog"|relay-dialog-backdrop/);
 });
 
-test("the shared transmission renderer exposes a responsive Signal Auspex", async () => {
-  const [stream, auspex, styles] = await Promise.all([
+test("the shared transmission renderer exposes a responsive Astropathic Auspex and dual interpretation layers", async () => {
+  const [stream, auspex, record, styles] = await Promise.all([
     readFile("app/_components/RelayDataStream.tsx", "utf8"),
     readFile("app/_components/TransmissionSignalAuspex.tsx", "utf8"),
+    readFile("app/_components/astropathic-record.ts", "utf8"),
     readFile("app/globals.css", "utf8"),
   ]);
 
-  assert.match(stream, /<TransmissionSignalAuspex analysis=\{analysis\} event=\{source\.event\} \/>/);
-  assert.match(auspex, /SIGNAL AUSPEX \/\/ RELIQUARIUM/);
+  assert.match(stream, /buildAstropathicRecordPresentation\(source, analysis\)/);
+  assert.match(stream, /<TransmissionSignalAuspex analysis=\{analysis\} event=\{source\.event\} record=\{astropathicRecord\} \/>/);
+  assert.match(stream, /REVEAL RAW IMPRESSION/);
+  assert.match(stream, /SANCTIONED INTERPRETATION \/\/ ACTIVE ARCHIVE LAYER/);
+  assert.match(stream, /UNSANCTIONED EMPYRIC IMPRESSION/);
+  assert.match(stream, /NOT A LITERAL TRANSCRIPT/);
+  assert.match(stream, /aria-expanded=\{showRawImpression\}/);
+  assert.match(stream, /setShowRawImpression\(false\)/);
+  assert.match(auspex, /ASTROPATHIC AUSPEX \/\/ RELIQUARIUM/);
+  assert.match(auspex, /EMPYRIC COHERENCE STABLE/);
   assert.match(auspex, /PROBABLE ORIGIN/);
-  assert.match(auspex, /TRIANGULATION/);
-  assert.match(auspex, /CIPHER AUTHORITY/);
-  assert.match(auspex, /RELAY PATH/);
+  assert.match(auspex, /PROVENANCE CONCORDANCE/);
+  assert.match(auspex, /THOUGHTMARK AUTHORITY/);
+  assert.match(auspex, /IMPERIAL CLEARANCE/);
+  assert.match(auspex, /ENCRYPTION PROTOCOL/);
+  assert.match(auspex, /CHOIR \/ RELAY PATH/);
   assert.match(auspex, /WARP EXPOSURE/);
-  assert.match(auspex, /SIGNAL LINEAGE/);
-  assert.match(auspex, /SIGNAL FIDELITY/);
+  assert.match(auspex, /CHOIR LINEAGE/);
+  assert.match(auspex, /CHOIR SIGNATURE/);
+  assert.match(auspex, /INTERPRETATION CONCORDANCE/);
+  assert.match(auspex, /SEMANTIC LOSS/);
+  assert.match(auspex, /ARCHIVE \/ COMMAND DISPOSITION/);
   assert.match(auspex, /ANOMALY REGISTER/);
   assert.match(auspex, /transmissionEventLabels\(event\)/);
   assert.match(auspex, /transmissionSignalFidelity\(analysis\)/);
   assert.match(auspex, /<details className="transmission-signal-auspex">/);
   assert.doesNotMatch(auspex, /<details className="transmission-signal-auspex" open>/);
+  assert.match(record, /export function buildAstropathicRecordPresentation/);
+  assert.match(record, /resolveTransmissionBody\(source\)/);
+  assert.match(record, /SUBJECT_IMPRESSIONS/);
+  assert.doesNotMatch(record, /Math\.random/);
   assert.match(styles, /\.transmission-signal-grid\s*\{[^}]*grid-template-columns:\s*1\.35fr repeat\(2,/s);
+  assert.match(styles, /\.astropathic-layer-control\s*\{/);
+  assert.match(styles, /\.astropathic-raw-impression\s*\{/);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.transmission-signal-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*?\.astropathic-layer-control\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });
 
 test("Phase 3 origin actions share one controlled resolver and safe Intel focus", async () => {
@@ -564,9 +598,10 @@ test("the unidentified-system draft renders only provisional non-navigable auspe
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.preliminary-contact-grid,\.preliminary-survey-briefs\s*\{\s*grid-template-columns:\s*1fr;/s);
 });
 
-test("Admin Mode exposes an isolated completed-sector simulacrum without a persistence path", async () => {
-  const [sectionPage, styles] = await Promise.all([
+test("Sector Intel exposes a non-persistent sector to system to planet cartography prototype", async () => {
+  const [sectionPage, experience, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/_components/SectorCartographyExperience.tsx", "utf8"),
     readFile("app/globals.css", "utf8"),
   ]);
 
@@ -574,16 +609,23 @@ test("Admin Mode exposes an isolated completed-sector simulacrum without a persi
   for (const system of ["SIMULACRUM ALPHA", "SIMULACRUM BETA", "SIMULACRUM GAMMA", "SIMULACRUM DELTA"]) {
     assert.match(sectionPage, new RegExp(system));
   }
-  assert.match(sectionPage, /const isTestChartActive = canEdit && showTestChart/);
-  assert.match(sectionPage, /const display = isTestChartActive \? completedSectorSimulacrum : isEditing \? draft : intel/);
-  assert.match(sectionPage, /\{canEdit && \([\s\S]*RETURN TO LIVE INTEL[\s\S]*VIEW COMPLETED CHART TEST/);
-  assert.match(sectionPage, /NOOSPHERIC SANDBOX \/\/ NON-CANON \/\/ NOT STORED/);
-  assert.match(sectionPage, /!isTestChartActive && originLocationId/);
-  assert.match(sectionPage, /NO LIVE ARCHIVE ROUTE/);
+  assert.match(sectionPage, /const usePrototype = isTestChartActive \|\| intel\.worlds\.length === 0/);
+  assert.match(sectionPage, /<SectorCartographyExperience/);
+  assert.match(experience, /COGITATING LOCAL SECTOR/);
+  assert.match(experience, /setView\(\{ kind: "system", systemIndex \}\)/);
+  assert.match(experience, /className="sector-warp-network"/);
+  assert.match(experience, /className="system-primary-star"/);
+  assert.match(experience, /className="system-orbit-ring"/);
+  assert.match(experience, /className="planet-dossier-modal" role="dialog" aria-modal="true"/);
+  assert.match(experience, /ORBITAL DISTANCES COMPRESSED · RELATIVE ORDER PRESERVED/);
+  assert.match(experience, /SIMULACRUM · NON-CANON · NOT STORED/);
+  assert.match(experience, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
   assert.doesNotMatch(sectionPage, /onSave\(completedSectorSimulacrum\)|setDraft\(completedSectorSimulacrum\)/);
-  assert.match(styles, /\.intel-simulacrum-warning\s*\{/);
-  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.intel-simulacrum-warning\s*\{[^}]*flex-direction:\s*column;/s);
-  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.intel-simulacrum-bodies p\s*\{[^}]*grid-template-columns:\s*1fr;/s);
+  assert.match(styles, /\.sector-cogitation-boot\s*\{/);
+  assert.match(styles, /\.system-orbit-ring\s*\{/);
+  assert.match(styles, /\.planet-dossier-backdrop\s*\{[^}]*position:\s*fixed;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.planet-dossier-modal\s*\{[^}]*width:\s*calc\(100vw - 20px\);/s);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test("the Lunaris dossier uses the sealed canon profile and current visual archive", async () => {

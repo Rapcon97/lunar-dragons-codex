@@ -101,7 +101,7 @@ export default function Home() {
             <div className="relay-header">
               <div>
                 <p className="section-kicker">Data Reliquarium 056//ASTROPATHICA</p>
-                <h2 id="relay-title">Vox-Missive Feed</h2>
+                <h2 id="relay-title">Astropathic Missive Feed</h2>
               </div>
               <div className="relay-signal"><i /><span>EXLOAD LINK ACTIVE</span><b>{archiveReady ? `${relayMessages.length} MISSIVES COGITATED` : "SYNCING MISSIVE INDEX"}</b></div>
             </div>
@@ -124,7 +124,7 @@ export default function Home() {
                 </button>
               )) : <p className="relay-empty">The choir listens into the dark between stars…</p>}
             </div>
-            <footer className="relay-footer"><span>&gt; DATA CORRUPTION: 0.00%</span><Link href="/relay">&gt;&gt; OPEN FULL RELAY</Link></footer>
+            <footer className="relay-footer"><span>&gt; EMPYRIC COHERENCE: COGITATING</span><Link href="/relay">&gt;&gt; OPEN FULL RELAY</Link></footer>
           </section>
 
           {selectedRelayMessage && (

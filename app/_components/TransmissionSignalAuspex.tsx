@@ -1,4 +1,5 @@
 import type { AstropathicEventMetadata } from "../archive-data";
+import type { AstropathicRecordPresentation } from "./astropathic-record";
 import type { TransmissionAnalysis } from "./relay-transmission";
 import { transmissionEventLabels } from "./transmission-event-presentation";
 
@@ -47,19 +48,21 @@ function warpTone(state: TransmissionAnalysis["warpExposureState"]) {
 export function TransmissionSignalAuspex({
   analysis,
   event,
+  record,
 }: {
   analysis: TransmissionAnalysis;
   event?: AstropathicEventMetadata;
+  record: AstropathicRecordPresentation;
 }) {
   const eventLabels = transmissionEventLabels(event);
   const fidelity = transmissionSignalFidelity(analysis);
-  const signalState = eventLabels[0] ?? (fidelity >= 90 ? "SIGNAL COHERENT" : fidelity >= 70 ? "SIGNAL DEGRADED" : "SIGNAL COMPROMISED");
+  const coherenceState = eventLabels[0] ?? (fidelity >= 90 ? "EMPYRIC COHERENCE STABLE" : fidelity >= 70 ? "EMPYRIC COHERENCE DEGRADED" : "EMPYRIC COHERENCE COMPROMISED");
 
   return (
     <details className="transmission-signal-auspex">
       <summary>
-        <span><i aria-hidden="true" />SIGNAL AUSPEX // RELIQUARIUM {analysis.reliquariumNumber}</span>
-        <b data-tone={eventLabels.length || fidelity < 70 ? "warning" : fidelity < 90 ? "partial" : "verified"}>{signalState}</b>
+        <span><i aria-hidden="true" />ASTROPATHIC AUSPEX // RELIQUARIUM {analysis.reliquariumNumber}</span>
+        <b data-tone={eventLabels.length || fidelity < 70 ? "warning" : fidelity < 90 ? "partial" : "verified"}>{coherenceState}</b>
       </summary>
       <div className="transmission-signal-grid">
         <div className="signal-source-fix">
@@ -68,15 +71,23 @@ export function TransmissionSignalAuspex({
           <span>{analysis.originBasis.replaceAll("-", " ").toUpperCase()}</span>
         </div>
         <div>
-          <small>TRIANGULATION</small>
+          <small>PROVENANCE CONCORDANCE</small>
           <strong data-tone={confidenceTone(analysis.triangulationState)}>{analysis.triangulationState}</strong>
         </div>
         <div>
-          <small>CIPHER AUTHORITY</small>
-          <strong>{analysis.clearanceGrade} // {analysis.encryptionProtocol}</strong>
+          <small>THOUGHTMARK AUTHORITY</small>
+          <strong>{record.thoughtmarkAuthority}</strong>
         </div>
         <div>
-          <small>RELAY PATH</small>
+          <small>IMPERIAL CLEARANCE</small>
+          <strong>{analysis.clearanceGrade}</strong>
+        </div>
+        <div>
+          <small>ENCRYPTION PROTOCOL</small>
+          <strong>{analysis.encryptionProtocol}</strong>
+        </div>
+        <div>
+          <small>CHOIR / RELAY PATH</small>
           <strong>{analysis.relayPathLabel}</strong>
         </div>
         <div>
@@ -84,14 +95,18 @@ export function TransmissionSignalAuspex({
           <strong data-tone={warpTone(analysis.warpExposureState)}>{analysis.warpExposureState}</strong>
         </div>
         <div>
-          <small>SIGNAL LINEAGE</small>
+          <small>CHOIR LINEAGE</small>
           <strong>{transmissionLineageLabel(event)}</strong>
+        </div>
+        <div>
+          <small>CHOIR SIGNATURE</small>
+          <strong>{record.choirSignature}</strong>
         </div>
       </div>
       <div className="transmission-signal-fidelity">
-        <span><small>SIGNAL FIDELITY</small><b>{fidelity}%</b></span>
+        <span><small>INTERPRETATION CONCORDANCE</small><b>{fidelity}%</b></span>
         <i aria-hidden="true"><b style={{ width: `${fidelity}%` }} /></i>
-        <span><small>GLYPH LOSS</small><b>{analysis.corruptionPercentage.toFixed(2)}% // {analysis.corruptionPattern}</b></span>
+        <span><small>SEMANTIC LOSS</small><b>{analysis.corruptionPercentage.toFixed(2)}% // {analysis.corruptionPattern}</b></span>
       </div>
       {eventLabels.length > 0 && (
         <div className="transmission-signal-events" aria-label={`Transmission anomalies: ${eventLabels.join(", ")}`}>
@@ -99,6 +114,10 @@ export function TransmissionSignalAuspex({
           {eventLabels.map((label) => <b key={label}>{label}</b>)}
         </div>
       )}
+      <div className="transmission-archive-disposition">
+        <small>ARCHIVE / COMMAND DISPOSITION</small>
+        <strong>{record.archiveDisposition}</strong>
+      </div>
     </details>
   );
 }

@@ -9,6 +9,7 @@ import { CartographyTransitionLink } from "../_components/CartographyTransitionL
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream } from "../_components/RelayDataStream";
+import { SectorCartographyExperience } from "../_components/SectorCartographyExperience";
 import { SidebarNavigation } from "../_components/SidebarNavigation";
 import { TransmissionEventFlags } from "../_components/TransmissionEventFlags";
 import { TransmissionOriginActions } from "../_components/TransmissionOriginActions";
@@ -128,6 +129,7 @@ export default function SectionPage() {
               canEdit={isAdminMode}
               entries={chronicleEntriesForViewer(data.loreEntries, canAdmin, isAdminMode)}
               legacyEntries={data.entries}
+              onArchiveRefresh={load}
               onSave={(value) => saveSection("entries", value)}
             />
           )}
@@ -356,8 +358,8 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
           </div>
           <div className="relay-inbox-status"><i /><span>EXLOAD LINK ACTIVE</span><b>{messages.length} MISSIVES COGITATED</b></div>
         </header>
-        <div className="relay-inbox-list" aria-label="Preserved soul-signals">
-          <header><span>VOX-MISSIVE INDEX</span><b>{Math.min(2, messages.length)} NEW SIGNALS</b></header>
+        <div className="relay-inbox-list" aria-label="Preserved astropathic missives">
+          <header><span>ASTROPATHIC MISSIVE INDEX</span><b>{Math.min(2, messages.length)} NEW TRANSMISSIONS</b></header>
           {messages.length ? messages.map((message, index) => (
             <button
               aria-pressed={message.id === selected?.id}
@@ -398,7 +400,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
                 />
               </div>
             </>
-          ) : <p className="relay-empty">The choir awaits a signal reliquary.</p>}
+          ) : <p className="relay-empty">The choir awaits an empyric impression.</p>}
         </article>
       </div>
     </section>
@@ -1140,6 +1142,24 @@ function SectorIntelSection({
     setMessage("");
   }
 
+  if (!isEditing) {
+    const usePrototype = isTestChartActive || intel.worlds.length === 0;
+    return (
+      <SectorCartographyExperience
+        canEdit={canEdit}
+        intel={usePrototype ? completedSectorSimulacrum : intel}
+        isPrototype={usePrototype}
+        onOpenEditor={() => {
+          setShowTestChart(false);
+          setDraft(intel);
+          setIsEditing(true);
+          setSelectedWorldIndex(null);
+          setMessage("");
+        }}
+      />
+    );
+  }
+
   return (
     <div className={`${isEditing ? "sector-intel editing" : "sector-intel"}${isTestChartActive ? " simulacrum-active" : ""}`}>
       <section className="panel intel-theatre-header">
@@ -1512,21 +1532,29 @@ function ChroniclesSection({
   canEdit,
   entries,
   legacyEntries,
+  onArchiveRefresh,
   onSave,
 }: {
   canEdit: boolean;
   entries: LoreEntry[];
   legacyEntries: string[];
+  onArchiveRefresh: () => Promise<void>;
   onSave: (value: string[]) => Promise<boolean>;
 }) {
   const [note, setNote] = useState("");
   const [selectedId, setSelectedId] = useState("decree");
   const [isComposing, setIsComposing] = useState(false);
+  const [activeStatus, setActiveStatus] = useState<"all" | LoreEntry["status"]>("all");
+  const [transitioningId, setTransitioningId] = useState("");
+  const [publicationStatus, setPublicationStatus] = useState("");
   const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
   const statusCounts = entries.reduce(
     (counts, entry) => ({ ...counts, [entry.status]: counts[entry.status] + 1 }),
     { draft: 0, review: 0, canon: 0, retconned: 0 } as Record<LoreEntry["status"], number>,
   );
+  const visibleEntries = canEdit && activeStatus !== "all"
+    ? entries.filter((entry) => entry.status === activeStatus)
+    : entries;
 
   function statusReadout(entry: LoreEntry) {
     if (entry.status === "canon") return "CANON · SEALED";
@@ -1540,6 +1568,64 @@ function ChroniclesSection({
       setSelectedId("decree");
     }
   }, [entries, selectedId]);
+
+  useEffect(() => {
+    if (!canEdit && activeStatus !== "all") setActiveStatus("all");
+  }, [activeStatus, canEdit]);
+
+  function selectStatus(status: "all" | LoreEntry["status"]) {
+    setActiveStatus(status);
+    const firstRecord = status === "all"
+      ? entries[0]
+      : entries.find((entry) => entry.status === status);
+    setSelectedId(firstRecord?.id ?? "decree");
+    setPublicationStatus("");
+  }
+
+  async function transitionEntry(entry: LoreEntry, target: "canon" | "draft") {
+    const publishing = target === "canon";
+    const confirmed = window.confirm(
+      publishing
+        ? `Publish "${entry.title || "Untitled archival record"}" as established canon?\n\nThis record will become visible in the public Chronicles.`
+        : `Return "${entry.title || "Untitled archival record"}" to draft?\n\nThis record will be removed from the public Chronicles.`,
+    );
+    if (!confirmed) return;
+
+    setTransitioningId(entry.id);
+    setPublicationStatus("");
+    try {
+      const response = await fetch(
+        `/api/admin/lore/${encodeURIComponent(entry.id)}/${publishing ? "publish" : "draft"}`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-lunar-admin-mode": "active",
+          },
+          body: JSON.stringify({ expectedUpdatedAt: entry.updatedAt }),
+        },
+      );
+      const result = (await response.json()) as { entry?: LoreEntry; error?: string };
+      if (!response.ok || !result.entry) {
+        throw new Error(result.error || "The lore status could not be changed.");
+      }
+
+      setActiveStatus(target);
+      await onArchiveRefresh();
+      setSelectedId(result.entry.id);
+      setPublicationStatus(
+        publishing
+          ? `CANON SEALED // ${result.entry.title}`
+          : `DRAFT RESTORED // ${result.entry.title}`,
+      );
+    } catch (error) {
+      setPublicationStatus(
+        error instanceof Error ? error.message : "The lore status could not be changed.",
+      );
+    } finally {
+      setTransitioningId("");
+    }
+  }
 
   async function addEntry() {
     if (!note.trim()) return;
@@ -1596,6 +1682,35 @@ function ChroniclesSection({
         </div>
       )}
 
+      {canEdit && (
+        <nav className="chronicle-status-tabs" aria-label="Lore development status categories">
+          {([
+            ["all", "ALL RECORDS", entries.length],
+            ["draft", "DRAFT", statusCounts.draft],
+            ["review", "REVIEW", statusCounts.review],
+            ["canon", "CANON", statusCounts.canon],
+            ["retconned", "RETCONNED", statusCounts.retconned],
+          ] as const).map(([status, label, count]) => (
+            <button
+              type="button"
+              key={status}
+              data-status={status}
+              aria-pressed={activeStatus === status}
+              onClick={() => selectStatus(status)}
+            >
+              <span>{label}</span>
+              <strong>{String(count).padStart(2, "0")}</strong>
+            </button>
+          ))}
+        </nav>
+      )}
+
+      {publicationStatus && (
+        <p className="chronicle-publication-status" role="status">
+          {publicationStatus}
+        </p>
+      )}
+
       <div className="chronicle-exload-grid">
         <aside className="chronicle-exload-index" aria-label={canEdit ? "Structured lore development record index" : "Canonical Chronicle record index"}>
           <header>
@@ -1617,7 +1732,7 @@ function ChroniclesSection({
               </span>
             </button>
 
-            {entries.length ? entries.map((entry, index) => (
+            {visibleEntries.length ? visibleEntries.map((entry, index) => (
               <button
                 type="button"
                 className={`chronicle-index-entry ${selectedId === entry.id ? "selected" : ""}`}
@@ -1633,7 +1748,13 @@ function ChroniclesSection({
                 </span>
               </button>
             )) : (
-              <p className="chronicle-index-empty">{canEdit ? "NO STRUCTURED LORE RECORDS ARE AVAILABLE." : "NO CANONICAL DEEDS HAVE YET BEEN ENTERED UNDER SEAL."}</p>
+              <p className="chronicle-index-empty">
+                {canEdit && activeStatus !== "all"
+                  ? `NO ${activeStatus.toUpperCase()} RECORDS ARE HELD IN THE ARCHIVE.`
+                  : canEdit
+                    ? "NO STRUCTURED LORE RECORDS ARE AVAILABLE."
+                    : "NO CANONICAL DEEDS HAVE YET BEEN ENTERED UNDER SEAL."}
+              </p>
             )}
           </div>
         </aside>
@@ -1664,6 +1785,37 @@ function ChroniclesSection({
                 <h2 id={`chronicle-record-${selectedEntry.id}`}>{selectedEntry.title || "Untitled archive record"}</h2>
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
                 <p className="chronicle-record-content">{selectedEntry.content}</p>
+                {canEdit && (selectedEntry.status === "review" || selectedEntry.status === "canon") && (
+                  <div
+                    className="chronicle-record-publication"
+                    data-action={selectedEntry.status === "review" ? "publish" : "draft"}
+                  >
+                    <div>
+                      <span>{selectedEntry.status === "review" ? "CANON PROMOTION" : "CANON WITHDRAWAL"}</span>
+                      <strong>
+                        {selectedEntry.status === "review"
+                          ? "Publish this reviewed record to the public Chronicle."
+                          : "Return this record to Draft and remove it from the public Chronicle."}
+                      </strong>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={Boolean(transitioningId)}
+                      onClick={() => void transitionEntry(
+                        selectedEntry,
+                        selectedEntry.status === "review" ? "canon" : "draft",
+                      )}
+                    >
+                      {transitioningId === selectedEntry.id
+                        ? selectedEntry.status === "review"
+                          ? "SEALING RECORD..."
+                          : "UNSEALING RECORD..."
+                        : selectedEntry.status === "review"
+                          ? "PUBLISH TO CANON"
+                          : "RETURN TO DRAFT"}
+                    </button>
+                  </div>
+                )}
                 <footer className="chronicle-record-footer">
                   <div><span>RECORD IDENT</span><strong>{selectedEntry.id}</strong></div>
                   <div><span>ENTERED</span><strong>{archiveTimestamp(selectedEntry.createdAt)}</strong></div>

@@ -12,6 +12,7 @@ import {
   type TransmissionSourceMetadata,
   type TransmissionTranscriptLine,
 } from "./relay-transmission";
+import { buildAstropathicRecordPresentation } from "./astropathic-record";
 import { TransmissionSignalAuspex } from "./TransmissionSignalAuspex";
 
 export type RelayStreamLine = TransmissionTranscriptLine;
@@ -35,11 +36,16 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
   const [activeLineIndex, setActiveLineIndex] = useState(-1);
   const [phase, setPhase] = useState<RenderPhase>("typing");
   const [completedStreamKey, setCompletedStreamKey] = useState<string | null>(null);
+  const [showRawImpression, setShowRawImpression] = useState(false);
   const transcript = useMemo(
     () => formatTransmissionTranscript(source),
     [source.agency, source.body, source.event, source.id, source.preview, source.priority, source.received, source.receivedAt, source.subject, source.transmission],
   );
   const { analysis, lines: presentedLines } = transcript;
+  const astropathicRecord = useMemo(
+    () => buildAstropathicRecordPresentation(source, analysis),
+    [analysis, source],
+  );
   const corruptionProfile = analysis.corruption;
   const preparedLines = useMemo(
     () => presentedLines.map((line, lineIndex) => prepareTransmissionLine(line, corruptionProfile, lineIndex)),
@@ -185,6 +191,10 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
     };
   }, [completedStreamKey, streamKey]);
 
+  useEffect(() => {
+    setShowRawImpression(false);
+  }, [streamKey]);
+
   return (
     <div className={`relay-data-stream ${className}`.trim()} role="document" aria-label={ariaLabel}>
       {phase !== "complete" && (
@@ -197,7 +207,7 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
         </button>
       )}
       <span className="relay-data-accessible">{accessibleTranscript}</span>
-      <TransmissionSignalAuspex analysis={analysis} event={source.event} />
+      <TransmissionSignalAuspex analysis={analysis} event={source.event} record={astropathicRecord} />
       <div className="relay-data-visual" aria-hidden="true">
         {renderedLines.slice(0, presentedLines.length).map((text, index) => {
           const line = presentedLines[index];
@@ -215,6 +225,43 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
           );
         })}
       </div>
+      {phase === "complete" && (
+        <section className="astropathic-layer-control" aria-label="Astropathic interpretation layers">
+          <div>
+            <span>SANCTIONED INTERPRETATION // ACTIVE ARCHIVE LAYER</span>
+            <small>Choir impressions have been rendered into command-readable language.</small>
+          </div>
+          <button
+            aria-controls={`${streamKey}-raw-impression`}
+            aria-expanded={showRawImpression}
+            onClick={() => setShowRawImpression((current) => !current)}
+            type="button"
+          >
+            {showRawImpression ? "SEAL RAW IMPRESSION" : "REVEAL RAW IMPRESSION"}
+          </button>
+          {showRawImpression && (
+            <div className="astropathic-raw-impression" id={`${streamKey}-raw-impression`} role="region" aria-label="Raw astropathic impression">
+              <header>
+                <span>UNSANCTIONED EMPYRIC IMPRESSION</span>
+                <b>NOT A LITERAL TRANSCRIPT</b>
+              </header>
+              <p>
+                The receiving choir retained the following pre-verbal residues before sanctioned interpretation.
+                Images and sensations are symbolic, incomplete and subject to the receiver&apos;s own mind.
+              </p>
+              <dl>
+                {astropathicRecord.rawImpression.map((fragment, index) => (
+                  <div key={`${fragment.kind}-${index}`}>
+                    <dt>{fragment.kind}</dt>
+                    <dd>{fragment.text}</dd>
+                  </div>
+                ))}
+              </dl>
+              <footer>{astropathicRecord.choirStatus}</footer>
+            </div>
+          )}
+        </section>
+      )}
       {phase === "complete" && afterComplete && (
         <div className="relay-data-after-complete">{afterComplete}</div>
       )}

@@ -25,6 +25,7 @@ import {
   transmissionCharacterDelay,
   transmissionClosing,
 } from "../app/_components/relay-transmission.ts";
+import { buildAstropathicRecordPresentation } from "../app/_components/astropathic-record.ts";
 import {
   transmissionEventAnalysisLines,
   transmissionEventLabels,
@@ -395,6 +396,44 @@ test("the shared formatter produces identical Command and Relay transcripts", ()
   assert.ok(commandTranscript.lines.some((line) => line.text === TRANSMISSION_CONTENT_MARKER));
 });
 
+test("every transmission receives one sanctioned interpretation and a deterministic hidden raw impression", () => {
+  const fixture = source({ id: "dual-layer-fixture", subject: "Convoy passage requested" });
+  const analysis = analyzeTransmission(fixture);
+  const first = buildAstropathicRecordPresentation(fixture, analysis);
+  const second = buildAstropathicRecordPresentation({ ...fixture }, analyzeTransmission({ ...fixture }));
+
+  assert.deepEqual(first, second);
+  assert.equal(first.sanctionedInterpretation, fixture.body);
+  assert.equal(first.rawImpression.length, 4);
+  assert.deepEqual(first.rawImpression.map((fragment) => fragment.kind), ["VISION", "EMOTION", "CONCEPT", "MNEMONIC KEY"]);
+  assert.match(first.thoughtmarkAuthority, /OFFICIO PREFECTUS/);
+  assert.match(first.choirSignature, /CHOIR|THOUGHTMARK|NOOSPHERIC|CANT/);
+  assert.match(first.archiveDisposition, /COMMAND JUDGEMENT/);
+});
+
+test("subject-specific raw impressions remain symbolic and partial records never expose sealed body fragments", () => {
+  const fullBody = "The first permitted phrase remains visible. The second phrase must remain sealed. The third phrase must also remain sealed.";
+  const fixture = source({
+    id: "dual-layer-partial",
+    subject: "Kharon cipher inquiry",
+    body: fullBody,
+    event: {
+      version: 1,
+      kinds: ["partial-transmission"],
+      rootTransmissionId: "dual-layer-partial",
+      nominalReceivedAt: "2026-08-08T12:00:00.000Z",
+      fragment: { index: 1, total: 3, algorithmVersion: 1 },
+    },
+  });
+  const record = buildAstropathicRecordPresentation(fixture, analyzeTransmission(fixture));
+  const presented = JSON.stringify(record);
+
+  assert.match(record.sanctionedInterpretation, /first permitted phrase/i);
+  assert.doesNotMatch(record.sanctionedInterpretation, /second phrase|third phrase/i);
+  assert.doesNotMatch(presented, /second phrase|third phrase/i);
+  assert.match(record.rawImpression.map((fragment) => fragment.text).join(" "), /black seal|KHARON/i);
+});
+
 test("terminal analysis uses categorical states and immersive labels", () => {
   const { analysis, lines } = formatTransmissionTranscript(source());
   const text = lines.map((line) => line.text).join("\n");
@@ -415,6 +454,9 @@ test("terminal analysis uses categorical states and immersive labels", () => {
   assert.match(text, /> Probable origin:/);
   assert.match(text, new RegExp(`> Receiving locus: ${RECEIVING_LOCUS}`));
   assert.match(text, new RegExp(`> Operational theatre: ${OPERATIONAL_THEATRE}`));
+  assert.match(text, /> Choir reception attempts:/);
+  assert.match(text, /> Record subject:/);
+  assert.doesNotMatch(text, /VOX-MISSIVE CONTENT|Exload-communion attempts/);
 });
 
 test("clearance and encryption remain separate institutional determinations", () => {

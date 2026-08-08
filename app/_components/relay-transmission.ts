@@ -83,7 +83,7 @@ export type FormattedTransmissionTranscript = {
 
 export const RECEIVING_LOCUS = "LUNARIS";
 export const OPERATIONAL_THEATRE = "NORTHERN NACHMUND APPROACHES";
-export const TRANSMISSION_CONTENT_MARKER = ">> VOX-MISSIVE CONTENT // EXLOAD FOLLOWS";
+export const TRANSMISSION_CONTENT_MARKER = ">> SANCTIONED INTERPRETATION // EXLOAD FOLLOWS";
 
 export const TRANSMISSION_TIMING = {
   characterMs: 38,
@@ -480,6 +480,17 @@ export function transmissionClosing(
     : IMPERIAL_TRANSMISSION_CLOSING;
 }
 
+export function resolveTransmissionBody(source: TransmissionSourceMetadata) {
+  const storedBody = source.body?.trim() || source.preview?.trim() || "TRANSMISSION BODY UNRECOVERED.";
+  if (!source.event?.kinds.includes("partial-transmission") || !source.event.fragment) return storedBody;
+  return transmissionBodyFragment(
+    storedBody,
+    source.event.rootTransmissionId,
+    source.event.fragment.index,
+    source.event.fragment.total,
+  ) || "TRANSMISSION FRAGMENT UNRECOVERED.";
+}
+
 function romanNumeral(value: number) {
   const numerals = [
     [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
@@ -497,15 +508,7 @@ function romanNumeral(value: number) {
 
 export function formatTransmissionTranscript(source: TransmissionSourceMetadata): FormattedTransmissionTranscript {
   const analysis = analyzeTransmission(source);
-  const storedBody = source.body?.trim() || source.preview?.trim() || "TRANSMISSION BODY UNRECOVERED.";
-  const body = source.event?.kinds.includes("partial-transmission") && source.event.fragment
-    ? transmissionBodyFragment(
-        storedBody,
-        source.event.rootTransmissionId,
-        source.event.fragment.index,
-        source.event.fragment.total,
-      ) || "TRANSMISSION FRAGMENT UNRECOVERED."
-    : storedBody;
+  const body = resolveTransmissionBody(source);
   const bodyLines = body.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((line) => line.trim()).filter(Boolean) ?? [body];
   const closing = transmissionClosing(source, body);
   const rootReliquariumNumber = source.event?.parentTransmissionId
@@ -525,10 +528,10 @@ export function formatTransmissionTranscript(source: TransmissionSourceMetadata)
     ...eventLines.map((text): TransmissionTranscriptLine => ({ text, section: "analysis" })),
     ...(source.received ? [{ text: `> Data-stamp: ${source.received}`, section: "analysis" as const }] : []),
     { text: `> Timestamp integrity: ${analysis.timestampIntegrityState}`, section: "analysis" },
-    { text: `> Exload-communion attempts: ${romanNumeral(analysis.communionAttempts)}`, section: "analysis" },
+    { text: `> Choir reception attempts: ${romanNumeral(analysis.communionAttempts)}`, section: "analysis" },
     { text: "", section: "analysis", gap: true },
     { text: TRANSMISSION_CONTENT_MARKER, section: "analysis", command: true },
-    { text: `> Subject ident: ${source.subject}`, section: "analysis" },
+    { text: `> Record subject: ${source.subject}`, section: "analysis" },
     ...bodyLines.map((line): TransmissionTranscriptLine => ({ text: `> ${line}`, section: "content" })),
     ...(closing ? [{ text: `> ${closing}`, section: "content" as const, closing: true }] : []),
     { text: "", section: "terminal-footer", gap: true },
