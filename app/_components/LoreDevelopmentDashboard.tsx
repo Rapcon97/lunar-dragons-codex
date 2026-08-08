@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import type { LoreEntry, LoreStatus } from "../archive-data";
+import { LoreStatusControl } from "./LoreStatusControl";
 
 const loreStatusGroups: Array<{
   status: LoreStatus;
@@ -75,56 +75,7 @@ export function LoreDevelopmentDashboard({
   isAdminMode: boolean;
   onPublished: () => Promise<void>;
 }) {
-  const [transitioningId, setTransitioningId] = useState("");
-  const [publicationStatus, setPublicationStatus] = useState("");
-
   if (!canAdmin || !isAdminMode) return null;
-
-  async function transitionEntry(entry: LoreEntry, target: "canon" | "draft") {
-    const publishing = target === "canon";
-    const confirmed = window.confirm(
-      publishing
-        ? `Publish "${entry.title || "Untitled archival record"}" as established canon?\n\nThis record will become visible in the public Chronicles.`
-        : `Return "${entry.title || "Untitled archival record"}" to draft?\n\nThis record will be removed from the public Chronicles.`,
-    );
-    if (!confirmed) return;
-
-    setTransitioningId(entry.id);
-    setPublicationStatus("");
-    try {
-      const response = await fetch(
-        `/api/admin/lore/${encodeURIComponent(entry.id)}/${publishing ? "publish" : "draft"}`,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-lunar-admin-mode": "active",
-          },
-          body: JSON.stringify({ expectedUpdatedAt: entry.updatedAt }),
-        },
-      );
-      const result = (await response.json()) as {
-        entry?: LoreEntry;
-        error?: string;
-      };
-      if (!response.ok || !result.entry) {
-        throw new Error(result.error || "Publication failed.");
-      }
-
-      await onPublished();
-      setPublicationStatus(
-        publishing
-          ? `CANON SEALED // ${result.entry.title}`
-          : `DRAFT RESTORED // ${result.entry.title}`,
-      );
-    } catch (error) {
-      setPublicationStatus(
-        error instanceof Error ? error.message : "The lore record could not be published.",
-      );
-    } finally {
-      setTransitioningId("");
-    }
-  }
 
   return (
     <section
@@ -146,12 +97,6 @@ export function LoreDevelopmentDashboard({
           <small>ADMINISTRATOR CLEARANCE</small>
         </div>
       </div>
-
-      {publicationStatus && (
-        <p className="lore-publication-status" role="status">
-          {publicationStatus}
-        </p>
-      )}
 
       <div className="lore-development-groups">
         {loreStatusGroups.map((group) => {
@@ -231,36 +176,10 @@ export function LoreDevelopmentDashboard({
                       <div className="lore-record-complete">
                         <span>COMPLETE ARCHIVAL CONTENT</span>
                         <p>{entry.content}</p>
-                        {(entry.status === "review" || entry.status === "canon") && (
-                          <div
-                            className="lore-record-publication"
-                            data-action={entry.status === "review" ? "publish" : "draft"}
-                          >
-                            <span>
-                              {entry.status === "review"
-                                ? "CANON PROMOTION REQUIRES EXPLICIT ADMINISTRATOR JUDGEMENT"
-                                : "RETURNING THIS RECORD TO DRAFT REMOVES IT FROM PUBLIC CHRONICLES"}
-                            </span>
-                            <button
-                              type="button"
-                              disabled={Boolean(transitioningId)}
-                              onClick={() =>
-                                void transitionEntry(
-                                  entry,
-                                  entry.status === "review" ? "canon" : "draft",
-                                )
-                              }
-                            >
-                              {transitioningId === entry.id
-                                ? entry.status === "review"
-                                  ? "SEALING RECORD..."
-                                  : "UNSEALING RECORD..."
-                                : entry.status === "review"
-                                  ? "PUBLISH TO CANON"
-                                  : "RETURN TO DRAFT"}
-                            </button>
-                          </div>
-                        )}
+                        <LoreStatusControl
+                          entry={entry}
+                          onChanged={async () => onPublished()}
+                        />
                       </div>
                     </details>
                   ))}

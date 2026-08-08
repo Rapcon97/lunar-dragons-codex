@@ -18,8 +18,10 @@ import {
 import {
   proposeLoreDraftReturn,
   proposeLorePublication,
+  proposeLoreStatusTransition,
   type LoreDraftReturnReason,
   type LorePublicationReason,
+  type LoreStatusTransitionReason,
 } from "../app/lore-publication";
 import {
   proposeLoreDraftCreation,
@@ -294,6 +296,22 @@ export function returnCanonLoreEntryToDraft(
 ): Promise<OptimisticResult<{ entry: LoreEntry }, LoreDraftReturnReason>> {
   return mutateChapterLore((current) =>
     proposeLoreDraftReturn(current, id, expectedUpdatedAt, Date.now()),
+  );
+}
+
+export function updateLoreEntryStatus(
+  id: string,
+  targetStatus: LoreEntry["status"],
+  expectedUpdatedAt: number,
+): Promise<OptimisticResult<{ entry: LoreEntry }, LoreStatusTransitionReason>> {
+  return mutateChapterLore((current) =>
+    proposeLoreStatusTransition(
+      current,
+      id,
+      targetStatus,
+      expectedUpdatedAt,
+      Date.now(),
+    ),
   );
 }
 

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   proposeLoreDraftReturn,
   proposeLorePublication,
+  proposeLoreStatusTransition,
 } from "../app/lore-publication.ts";
 import {
   proposeLoreDraftCreation,
@@ -142,6 +143,70 @@ test("draft return retains a shared timeline line while another canon record use
   const proposal = proposeLoreDraftReturn(current, canon.id, 200, 500);
   assert.equal(proposal.ok, true);
   if (proposal.ok) assert.equal(proposal.state.entries.length, 1);
+});
+
+test("manual status control supports every explicit lore category without changing identity", () => {
+  const statuses = ["draft", "review", "canon", "retconned"];
+  const timelineLine =
+    "Pre-008.M42 — The oldest surviving provenance is submitted for judgement.";
+
+  for (const sourceStatus of statuses) {
+    for (const targetStatus of statuses) {
+      if (sourceStatus === targetStatus) continue;
+      const current = reviewState();
+      current.loreEntries[0] = {
+        ...current.loreEntries[0],
+        status: sourceStatus,
+      };
+      current.entries = sourceStatus === "canon" ? [timelineLine] : [];
+
+      const proposal = proposeLoreStatusTransition(
+        current,
+        current.loreEntries[0].id,
+        targetStatus,
+        200,
+        500,
+      );
+      assert.equal(proposal.ok, true, `${sourceStatus} to ${targetStatus}`);
+      if (!proposal.ok) continue;
+      assert.equal(proposal.value.entry.status, targetStatus);
+      assert.equal(proposal.value.entry.id, current.loreEntries[0].id);
+      assert.equal(proposal.value.entry.createdAt, 100);
+      assert.equal(proposal.value.entry.updatedAt, 500);
+      assert.deepEqual(
+        proposal.state.entries,
+        targetStatus === "canon" ? [timelineLine] : [],
+      );
+    }
+  }
+});
+
+test("manual status control rejects missing, stale, and unchanged records", () => {
+  const current = reviewState();
+  assert.deepEqual(
+    proposeLoreStatusTransition(current, "missing", "draft", 200, 500),
+    { ok: false, reason: "not-found" },
+  );
+  assert.deepEqual(
+    proposeLoreStatusTransition(
+      current,
+      current.loreEntries[0].id,
+      "draft",
+      199,
+      500,
+    ),
+    { ok: false, reason: "stale" },
+  );
+  assert.deepEqual(
+    proposeLoreStatusTransition(
+      current,
+      current.loreEntries[0].id,
+      "review",
+      200,
+      500,
+    ),
+    { ok: false, reason: "unchanged" },
+  );
 });
 
 test("Chronicles exposes non-canon lore only to administrators in active Admin Mode", () => {

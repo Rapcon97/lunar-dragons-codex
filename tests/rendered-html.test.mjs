@@ -62,11 +62,13 @@ test("Phase 4 event presentation is shared and relay persistence rejects stale w
 });
 
 test("the lore development dashboard requires admin capability and active Admin Mode", async () => {
-  const [dashboard, sectionPage, publicationRoute, draftRoute, publicationDomain] = await Promise.all([
+  const [dashboard, statusControl, sectionPage, publicationRoute, draftRoute, statusRoute, publicationDomain] = await Promise.all([
     readFile("app/_components/LoreDevelopmentDashboard.tsx", "utf8"),
+    readFile("app/_components/LoreStatusControl.tsx", "utf8"),
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/api/admin/lore/[id]/publish/route.ts", "utf8"),
     readFile("app/api/admin/lore/[id]/draft/route.ts", "utf8"),
+    readFile("app/api/admin/lore/[id]/status/route.ts", "utf8"),
     readFile("app/lore-publication.ts", "utf8"),
   ]);
 
@@ -90,13 +92,15 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.match(dashboard, /entry\.updatedAt/);
   assert.doesNotMatch(dashboard, /method:\s*["']DELETE|resetChapterArchive/);
   assert.doesNotMatch(sectionPage, /RESET SHARED RECORDS|Reset shared archive|onReset=/);
-  assert.match(dashboard, /entry\.status === "review"/);
-  assert.match(dashboard, /PUBLISH TO CANON/);
-  assert.match(dashboard, /RETURN TO DRAFT/);
-  assert.match(dashboard, /entry\.status === "review" \|\| entry\.status === "canon"/);
-  assert.match(dashboard, /removed from the public Chronicles/);
-  assert.match(dashboard, /window\.confirm/);
-  assert.match(dashboard, /"x-lunar-admin-mode": "active"/);
+  assert.match(dashboard, /<LoreStatusControl/);
+  for (const status of ["draft", "review", "canon", "retconned"]) {
+    assert.match(statusControl, new RegExp(`value: "${status}"`));
+  }
+  assert.match(statusControl, /APPLY STATUS/);
+  assert.match(statusControl, /removed from the public Chronicles/);
+  assert.match(statusControl, /window\.confirm/);
+  assert.match(statusControl, /"x-lunar-admin-mode": "active"/);
+  assert.match(statusControl, /expectedUpdatedAt: entry\.updatedAt/);
   assert.match(publicationRoute, /getArchiveAdmin\(\)/);
   assert.match(publicationRoute, /isSameOriginRequest\(request\)/);
   assert.match(publicationRoute, /x-lunar-admin-mode/);
@@ -107,6 +111,12 @@ test("the lore development dashboard requires admin capability and active Admin 
   assert.match(draftRoute, /x-lunar-admin-mode/);
   assert.match(draftRoute, /returnCanonLoreEntryToDraft/);
   assert.doesNotMatch(draftRoute, /DELETE|resetChapterArchive|GPT_API_KEY/);
+  assert.match(statusRoute, /getArchiveAdmin\(\)/);
+  assert.match(statusRoute, /isSameOriginRequest\(request\)/);
+  assert.match(statusRoute, /x-lunar-admin-mode/);
+  assert.match(statusRoute, /updateLoreEntryStatus/);
+  assert.match(statusRoute, /validStatuses/);
+  assert.doesNotMatch(statusRoute, /DELETE|resetChapterArchive|GPT_API_KEY/);
   assert.match(publicationDomain, /existing\.status !== "review"/);
   assert.match(publicationDomain, /existing\.updatedAt !== expectedUpdatedAt/);
   assert.match(publicationDomain, /status: "canon"/);
@@ -130,11 +140,9 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(sectionPage, /\["review", "REVIEW", statusCounts\.review\]/);
   assert.match(sectionPage, /\["canon", "CANON", statusCounts\.canon\]/);
   assert.match(sectionPage, /\["retconned", "RETCONNED", statusCounts\.retconned\]/);
-  assert.match(sectionPage, /\/api\/admin\/lore\/\$\{encodeURIComponent\(entry\.id\)\}\/\$\{publishing \? "publish" : "draft"\}/);
-  assert.match(sectionPage, /"x-lunar-admin-mode": "active"/);
-  assert.match(sectionPage, /PUBLISH TO CANON/);
-  assert.match(sectionPage, /RETURN TO DRAFT/);
-  assert.match(sectionPage, /expectedUpdatedAt: entry\.updatedAt/);
+  assert.match(sectionPage, /<LoreStatusControl/);
+  assert.match(sectionPage, /setActiveStatus\(changedEntry\.status\)/);
+  assert.match(sectionPage, /STATUS SEALED/);
   assert.match(styles, /\.chronicle-status-tabs\s*\{[^}]*grid-template-columns:\s*1\.35fr repeat\(4,/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-status-tabs\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
   assert.match(sectionPage, /LORE DEVELOPMENT INDEX/);

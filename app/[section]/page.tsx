@@ -9,6 +9,7 @@ import { CartographyTransitionLink } from "../_components/CartographyTransitionL
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { LoreEntryEditor } from "../_components/LoreEntryEditor";
 import { LoreFormattedContent } from "../_components/LoreFormattedContent";
+import { LoreStatusControl } from "../_components/LoreStatusControl";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream } from "../_components/RelayDataStream";
 import { SectorCartographyExperience } from "../_components/SectorCartographyExperience";
@@ -1540,7 +1541,6 @@ function ChroniclesSection({
   const [selectedId, setSelectedId] = useState(() => entries[0]?.id ?? "");
   const [editorEntry, setEditorEntry] = useState<LoreEntry | null | undefined>(undefined);
   const [activeStatus, setActiveStatus] = useState<"all" | LoreEntry["status"]>("all");
-  const [transitioningId, setTransitioningId] = useState("");
   const [publicationStatus, setPublicationStatus] = useState("");
   const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
   const statusCounts = entries.reduce(
@@ -1575,51 +1575,6 @@ function ChroniclesSection({
       : entries.find((entry) => entry.status === status);
     setSelectedId(firstRecord?.id ?? "decree");
     setPublicationStatus("");
-  }
-
-  async function transitionEntry(entry: LoreEntry, target: "canon" | "draft") {
-    const publishing = target === "canon";
-    const confirmed = window.confirm(
-      publishing
-        ? `Publish "${entry.title || "Untitled archival record"}" as established canon?\n\nThis record will become visible in the public Chronicles.`
-        : `Return "${entry.title || "Untitled archival record"}" to draft?\n\nThis record will be removed from the public Chronicles.`,
-    );
-    if (!confirmed) return;
-
-    setTransitioningId(entry.id);
-    setPublicationStatus("");
-    try {
-      const response = await fetch(
-        `/api/admin/lore/${encodeURIComponent(entry.id)}/${publishing ? "publish" : "draft"}`,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-lunar-admin-mode": "active",
-          },
-          body: JSON.stringify({ expectedUpdatedAt: entry.updatedAt }),
-        },
-      );
-      const result = (await response.json()) as { entry?: LoreEntry; error?: string };
-      if (!response.ok || !result.entry) {
-        throw new Error(result.error || "The lore status could not be changed.");
-      }
-
-      setActiveStatus(target);
-      await onArchiveRefresh();
-      setSelectedId(result.entry.id);
-      setPublicationStatus(
-        publishing
-          ? `CANON SEALED // ${result.entry.title}`
-          : `DRAFT RESTORED // ${result.entry.title}`,
-      );
-    } catch (error) {
-      setPublicationStatus(
-        error instanceof Error ? error.message : "The lore status could not be changed.",
-      );
-    } finally {
-      setTransitioningId("");
-    }
   }
 
   function archiveTimestamp(value: number) {
@@ -1770,36 +1725,18 @@ function ChroniclesSection({
                 )}
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
                 <LoreFormattedContent content={selectedEntry.content} />
-                {canEdit && (selectedEntry.status === "review" || selectedEntry.status === "canon") && (
-                  <div
-                    className="chronicle-record-publication"
-                    data-action={selectedEntry.status === "review" ? "publish" : "draft"}
-                  >
-                    <div>
-                      <span>{selectedEntry.status === "review" ? "CANON PROMOTION" : "CANON WITHDRAWAL"}</span>
-                      <strong>
-                        {selectedEntry.status === "review"
-                          ? "Publish this reviewed record to the public Chronicle."
-                          : "Return this record to Draft and remove it from the public Chronicle."}
-                      </strong>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={Boolean(transitioningId)}
-                      onClick={() => void transitionEntry(
-                        selectedEntry,
-                        selectedEntry.status === "review" ? "canon" : "draft",
-                      )}
-                    >
-                      {transitioningId === selectedEntry.id
-                        ? selectedEntry.status === "review"
-                          ? "SEALING RECORD..."
-                          : "UNSEALING RECORD..."
-                        : selectedEntry.status === "review"
-                          ? "PUBLISH TO CANON"
-                          : "RETURN TO DRAFT"}
-                    </button>
-                  </div>
+                {canEdit && (
+                  <LoreStatusControl
+                    entry={selectedEntry}
+                    onChanged={async (changedEntry) => {
+                      setActiveStatus(changedEntry.status);
+                      await onArchiveRefresh();
+                      setSelectedId(changedEntry.id);
+                      setPublicationStatus(
+                        `STATUS SEALED // ${changedEntry.title} // ${changedEntry.status.toUpperCase()}`,
+                      );
+                    }}
+                  />
                 )}
                 <footer className="chronicle-record-footer">
                   <div><span>RECORD IDENT</span><strong>{selectedEntry.id}</strong></div>

@@ -4355,6 +4355,55 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   color: #d1dccb;
 }
 .chronicle-record-publication button:disabled { opacity: .55; cursor: wait; }
+.lore-status-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 210px) auto;
+  align-items: end;
+  gap: 14px;
+  margin-top: 34px;
+  border: 1px solid #40503b;
+  padding: 15px 16px;
+  background: rgba(20, 30, 17, .38);
+}
+.lore-status-control > div { display: grid; gap: 5px; min-width: 0; }
+.lore-status-control > div span,
+.lore-status-control label > span {
+  color: #71836b;
+  font: var(--type-meta) "Courier New", monospace;
+  letter-spacing: .12em;
+}
+.lore-status-control > div strong {
+  color: #98a890;
+  font: 400 var(--type-body-small)/1.45 Georgia, serif;
+}
+.lore-status-control label { display: grid; gap: 6px; }
+.lore-status-control select,
+.lore-status-control button {
+  min-height: 40px;
+  border: 1px solid #65775d;
+  padding: 9px 12px;
+  background: #080b07;
+  color: #a8b9a0;
+  font: var(--type-control) "Courier New", monospace;
+  letter-spacing: .09em;
+}
+.lore-status-control button { cursor: pointer; }
+.lore-status-control select:focus-visible,
+.lore-status-control button:hover:not(:disabled),
+.lore-status-control button:focus-visible {
+  outline: none;
+  border-color: #9aaf90;
+  color: #d1dccb;
+}
+.lore-status-control button:disabled,
+.lore-status-control select:disabled { opacity: .55; cursor: not-allowed; }
+.lore-status-control > p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #9eaf96;
+  font: var(--type-meta) "Courier New", monospace;
+  letter-spacing: .08em;
+}
 .lore-editor-backdrop {
   position: fixed;
   z-index: 9800;
@@ -4947,6 +4996,9 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     flex-direction: column;
   }
   .chronicle-record-publication button { width: 100%; }
+  .lore-status-control { grid-template-columns: 1fr; align-items: stretch; }
+  .lore-status-control button,
+  .lore-status-control select { width: 100%; }
   .chronicle-record-footer { grid-template-columns: 1fr; padding-top: 46px; }
   .chronicle-reader-scroll > .decree-record {
     grid-template-columns: 1fr;
