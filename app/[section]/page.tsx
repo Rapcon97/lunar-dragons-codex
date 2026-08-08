@@ -7,6 +7,7 @@ import { useAdminMode } from "../_components/AdminMode";
 import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
+import { LoreEntryEditor } from "../_components/LoreEntryEditor";
 import { PlanetClassificationArchive } from "../_components/PlanetClassificationArchive";
 import { RelayDataStream } from "../_components/RelayDataStream";
 import { SectorCartographyExperience } from "../_components/SectorCartographyExperience";
@@ -126,11 +127,9 @@ export default function SectionPage() {
           {section === "companies" && <CompaniesSection canEdit={isAdminMode} roster={data.companies} onSave={(value) => saveSection("companies", value)} />}
           {section === "chronicles" && (
             <ChroniclesSection
-              canEdit={isAdminMode}
+              canEdit={canAdmin && isAdminMode}
               entries={chronicleEntriesForViewer(data.loreEntries, canAdmin, isAdminMode)}
-              legacyEntries={data.entries}
               onArchiveRefresh={load}
-              onSave={(value) => saveSection("entries", value)}
             />
           )}
           {section === "intel" && <SectorIntelSection canEdit={isAdminMode} intel={data.sectorIntel} onSave={(value) => saveSection("sectorIntel", value)} originLocationId={searchParams.get("origin")} />}
@@ -1531,19 +1530,14 @@ function SectorIntelSection({
 function ChroniclesSection({
   canEdit,
   entries,
-  legacyEntries,
   onArchiveRefresh,
-  onSave,
 }: {
   canEdit: boolean;
   entries: LoreEntry[];
-  legacyEntries: string[];
   onArchiveRefresh: () => Promise<void>;
-  onSave: (value: string[]) => Promise<boolean>;
 }) {
-  const [note, setNote] = useState("");
   const [selectedId, setSelectedId] = useState("decree");
-  const [isComposing, setIsComposing] = useState(false);
+  const [editorEntry, setEditorEntry] = useState<LoreEntry | null | undefined>(undefined);
   const [activeStatus, setActiveStatus] = useState<"all" | LoreEntry["status"]>("all");
   const [transitioningId, setTransitioningId] = useState("");
   const [publicationStatus, setPublicationStatus] = useState("");
@@ -1627,15 +1621,6 @@ function ChroniclesSection({
     }
   }
 
-  async function addEntry() {
-    if (!note.trim()) return;
-    const next = [`M42.??? — ${note.trim()}`, ...legacyEntries];
-    if (await onSave(next)) {
-      setNote("");
-      setIsComposing(false);
-    }
-  }
-
   function archiveTimestamp(value: number) {
     if (!Number.isFinite(value) || value <= 0) return "ARCHIVE STAMP UNRECORDED";
     return new Intl.DateTimeFormat("en-GB", {
@@ -1664,23 +1649,9 @@ function ChroniclesSection({
               ? `D${String(statusCounts.draft).padStart(2, "0")} · R${String(statusCounts.review).padStart(2, "0")} · C${String(statusCounts.canon).padStart(2, "0")} · X${String(statusCounts.retconned).padStart(2, "0")}`
               : `${String(entries.length).padStart(2, "0")} CANON RECORDS`}
           </strong>
-          {canEdit && <button type="button" onClick={() => setIsComposing((current) => !current)}>{isComposing ? "CLOSE SEALING RITE" : "SEAL NEW RECORD"}</button>}
+          {canEdit && <button type="button" onClick={() => setEditorEntry(null)}>CREATE LORE DRAFT</button>}
         </div>
       </header>
-
-      {canEdit && isComposing && (
-        <div className="chronicle-exload-compose">
-          <label htmlFor="chronicle-new-record">NEW CANONICAL ENTRY · ADMIN AUTHORITY</label>
-          <input
-            id="chronicle-new-record"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            onKeyDown={(event) => event.key === "Enter" && addEntry()}
-            placeholder="Record a battle, oath, loss, or discovery…"
-          />
-          <button type="button" onClick={addEntry}>SEAL ENTRY</button>
-        </div>
-      )}
 
       {canEdit && (
         <nav className="chronicle-status-tabs" aria-label="Lore development status categories">
@@ -1785,6 +1756,25 @@ function ChroniclesSection({
                 <h2 id={`chronicle-record-${selectedEntry.id}`}>{selectedEntry.title || "Untitled archive record"}</h2>
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
                 <p className="chronicle-record-content">{selectedEntry.content}</p>
+                {canEdit && (
+                  <div className="chronicle-record-editor-action">
+                    <div>
+                      <span>ON-SITE LORE EDITOR</span>
+                      <strong>
+                        {selectedEntry.status === "canon"
+                          ? "Canon content is locked. Return it to Draft before revising the record."
+                          : "Revise this structured record without changing its identity or development status."}
+                      </strong>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={selectedEntry.status === "canon"}
+                      onClick={() => setEditorEntry(selectedEntry)}
+                    >
+                      {selectedEntry.status === "canon" ? "CANON LOCK ACTIVE" : "EDIT RECORD"}
+                    </button>
+                  </div>
+                )}
                 {canEdit && (selectedEntry.status === "review" || selectedEntry.status === "canon") && (
                   <div
                     className="chronicle-record-publication"
@@ -1828,6 +1818,23 @@ function ChroniclesSection({
           </div>
         </article>
       </div>
+      {canEdit && editorEntry !== undefined && (
+        <LoreEntryEditor
+          entry={editorEntry}
+          onClose={() => setEditorEntry(undefined)}
+          onSaved={async (savedEntry) => {
+            await onArchiveRefresh();
+            setSelectedId(savedEntry.id);
+            setActiveStatus(savedEntry.status);
+            setPublicationStatus(
+              editorEntry
+                ? `REVISION SEALED // ${savedEntry.title}`
+                : `DRAFT CREATED // ${savedEntry.title}`,
+            );
+            setEditorEntry(undefined);
+          }}
+        />
+      )}
     </section>
   );
 }

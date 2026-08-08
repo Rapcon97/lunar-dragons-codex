@@ -679,3 +679,51 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
   assert.match(styles, /\.lunaris-recognition-extract dt\s*\{[^}]*--type-control/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lunaris-recognition-plate > header\s*\{[^}]*flex-direction:\s*column/s);
 });
+
+test("the on-site lore editor is an Admin Mode-only structured-lore workflow", async () => {
+  const [sectionPage, editor, createRoute, updateRoute, domain, storage, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/_components/LoreEntryEditor.tsx", "utf8"),
+    readFile("app/api/admin/lore/route.ts", "utf8"),
+    readFile("app/api/admin/lore/[id]/route.ts", "utf8"),
+    readFile("app/lore-editor.ts", "utf8"),
+    readFile("storage/chapter-records.ts", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(sectionPage, /canEdit=\{canAdmin && isAdminMode\}/);
+  assert.match(sectionPage, /CREATE LORE DRAFT/);
+  assert.match(sectionPage, /<LoreEntryEditor/);
+  assert.match(sectionPage, /EDIT RECORD/);
+  assert.match(sectionPage, /CANON LOCK ACTIVE/);
+  assert.doesNotMatch(sectionPage, /SEAL NEW RECORD/);
+  assert.doesNotMatch(sectionPage, /saveSection\("entries"/);
+
+  assert.match(editor, /method: isCreating \? "POST" : "PATCH"/);
+  assert.match(editor, /"x-lunar-admin-mode": "active"/);
+  assert.match(editor, /status: "draft"/);
+  assert.match(editor, /expectedUpdatedAt: entry\.updatedAt/);
+  assert.match(editor, /MAX_LORE_CONTENT_LENGTH/);
+  assert.match(editor, /document\.body\.style\.overflow = "hidden"/);
+
+  for (const route of [createRoute, updateRoute]) {
+    assert.match(route, /getArchiveAdmin\(\)/);
+    assert.match(route, /isSameOriginRequest\(request\)/);
+    assert.match(route, /x-lunar-admin-mode/);
+  }
+  assert.match(createRoute, /parsed\.value\.status !== "draft"/);
+  assert.match(updateRoute, /expectedUpdatedAt/);
+  assert.match(updateRoute, /canon-locked/);
+
+  assert.match(domain, /status: "draft"/);
+  assert.match(domain, /existing\.status === "canon"/);
+  assert.match(domain, /existing\.updatedAt !== expectedUpdatedAt/);
+  assert.match(domain, /id,/);
+  assert.match(storage, /createAdminLoreDraft/);
+  assert.match(storage, /updateAdminLoreEntry/);
+
+  assert.match(styles, /\.lore-editor-backdrop\s*\{[^}]*position:\s*fixed/s);
+  assert.match(styles, /\.lore-editor-dialog\s*\{[^}]*width:\s*min\(/s);
+  assert.match(styles, /\.lore-editor-content-field textarea\s*\{[^}]*min-height:/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lore-editor-dialog\s*\{[^}]*width:\s*100%/s);
+});

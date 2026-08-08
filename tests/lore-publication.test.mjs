@@ -5,6 +5,10 @@ import {
   proposeLoreDraftReturn,
   proposeLorePublication,
 } from "../app/lore-publication.ts";
+import {
+  proposeLoreDraftCreation,
+  proposeLoreEditorUpdate,
+} from "../app/lore-editor.ts";
 import { chronicleEntriesForViewer } from "../app/chronicle-visibility.ts";
 
 function reviewState() {
@@ -159,5 +163,91 @@ test("Chronicles exposes non-canon lore only to administrators in active Admin M
   assert.deepEqual(
     chronicleEntriesForViewer(entries, false, true).map((entry) => entry.id),
     ["canon"],
+  );
+});
+
+test("the on-site editor creates a structured draft without changing the canon timeline", () => {
+  const current = reviewState();
+  const proposal = proposeLoreDraftCreation(
+    current,
+    {
+      date: " 056.M42 ",
+      title: " The Unknown Anchorage ",
+      category: "world",
+      content: " A provisional survey awaiting the Chapter Master's judgement. ",
+    },
+    "new-draft-uuid",
+    600,
+  );
+
+  assert.equal(proposal.ok, true);
+  if (!proposal.ok) return;
+  assert.deepEqual(proposal.value.entry, {
+    id: "new-draft-uuid",
+    date: "056.M42",
+    title: "The Unknown Anchorage",
+    category: "world",
+    status: "draft",
+    content: "A provisional survey awaiting the Chapter Master's judgement.",
+    createdAt: 600,
+    updatedAt: 600,
+  });
+  assert.deepEqual(proposal.state.entries, current.entries);
+  assert.equal(current.loreEntries.length, 1);
+});
+
+test("the on-site editor preserves record identity, status, creation time, and the canon mirror", () => {
+  const current = reviewState();
+  current.entries = ["008.M42 - An established canon record."];
+  const proposal = proposeLoreEditorUpdate(
+    current,
+    current.loreEntries[0].id,
+    {
+      date: "Pre-008.M42",
+      title: "Revised provenance dossier",
+      category: "relic",
+      content: "Revised review material, still awaiting judgement.",
+    },
+    200,
+    700,
+  );
+
+  assert.equal(proposal.ok, true);
+  if (!proposal.ok) return;
+  assert.equal(proposal.value.entry.id, current.loreEntries[0].id);
+  assert.equal(proposal.value.entry.status, "review");
+  assert.equal(proposal.value.entry.createdAt, 100);
+  assert.equal(proposal.value.entry.updatedAt, 700);
+  assert.equal(proposal.value.entry.title, "Revised provenance dossier");
+  assert.deepEqual(proposal.state.entries, current.entries);
+  assert.equal(current.loreEntries[0].title, "Provenance and Antiquity of the Lunaris");
+});
+
+test("the on-site editor rejects stale writes, duplicate lore, and direct canon editing", () => {
+  const current = reviewState();
+  const input = {
+    date: current.loreEntries[0].date,
+    title: current.loreEntries[0].title,
+    category: current.loreEntries[0].category,
+    content: current.loreEntries[0].content,
+  };
+
+  assert.deepEqual(
+    proposeLoreEditorUpdate(current, current.loreEntries[0].id, input, 199, 700),
+    { ok: false, reason: "stale" },
+  );
+
+  const canon = {
+    ...current,
+    loreEntries: [{ ...current.loreEntries[0], status: "canon" }],
+  };
+  assert.deepEqual(
+    proposeLoreEditorUpdate(canon, canon.loreEntries[0].id, input, 200, 700),
+    { ok: false, reason: "canon-locked" },
+  );
+
+  assert.deepEqual(
+    proposeLoreDraftCreation(current, input, "duplicate", 700),
+    { ok: false, reason: "duplicate" },
   );
 });

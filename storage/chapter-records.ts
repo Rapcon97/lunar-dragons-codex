@@ -21,6 +21,12 @@ import {
   type LoreDraftReturnReason,
   type LorePublicationReason,
 } from "../app/lore-publication";
+import {
+  proposeLoreDraftCreation,
+  proposeLoreEditorUpdate,
+  type LoreDraftInput,
+  type LoreEditorReason,
+} from "../app/lore-editor";
 
 const ARCHIVE_ID = "lunar-dragons";
 const MAX_LORE_WRITE_ATTEMPTS = 3;
@@ -288,6 +294,37 @@ export function returnCanonLoreEntryToDraft(
 ): Promise<OptimisticResult<{ entry: LoreEntry }, LoreDraftReturnReason>> {
   return mutateChapterLore((current) =>
     proposeLoreDraftReturn(current, id, expectedUpdatedAt, Date.now()),
+  );
+}
+
+export function createAdminLoreDraft(
+  input: LoreDraftInput,
+): Promise<
+  OptimisticResult<
+    { entry: LoreEntry; count: number },
+    Extract<LoreEditorReason, "capacity" | "duplicate">
+  >
+> {
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  return mutateChapterLore((current) =>
+    proposeLoreDraftCreation(current, input, id, now),
+  );
+}
+
+export function updateAdminLoreEntry(
+  id: string,
+  input: LoreDraftInput,
+  expectedUpdatedAt: number,
+): Promise<OptimisticResult<{ entry: LoreEntry }, LoreEditorReason>> {
+  return mutateChapterLore((current) =>
+    proposeLoreEditorUpdate(
+      current,
+      id,
+      input,
+      expectedUpdatedAt,
+      Date.now(),
+    ),
   );
 }
 
