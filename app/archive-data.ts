@@ -494,6 +494,204 @@ const transmissionMetadataBySubject = {
     originState: "PROBABLE",
     timestampState: "VERIFIED",
   },
+  "Translation beacon silence": {
+    originLabel: "NAVIS IMPERIALIS // NORTHERN APPROACHES",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "nachmund-corridor",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "INCONCLUSIVE",
+    timestampState: "VERIFIED",
+  },
+  "Evacuation corridor petition": {
+    originLabel: "ASTRA MILITARUM // ARGENT VIGIL FIELD COMMAND",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Promethium reserve shortfall": {
+    originLabel: "DEPARTMENTO MUNITORUM // FORWARD LOGISTICS",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "nachmund-corridor",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Tithe remission petition": {
+    originLabel: "ADMINISTRATUM // NIHILUS TITHES OFFICE",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "distant Imperium Nihilus",
+    routeClass: "contested-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "PARTIAL",
+  },
+  "Noospheric quarantine advisory": {
+    originLabel: "ADEPTUS MECHANICUS // QUARANTINE CANT",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "mechanicus-burst",
+    warpExposure: "MINOR",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Reactor relic provenance dispute": {
+    originLabel: "ADEPTUS MECHANICUS // RECLAMATION CONCLAVE",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "nachmund-corridor",
+    transmissionMethod: "mechanicus-burst",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "INCONCLUSIVE",
+    timestampState: "VERIFIED",
+  },
+  "Choir casualty return": {
+    originLabel: "ADEPTUS ASTRA TELEPATHICA // CHOIR MUSTER",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "astropathic",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Null-silence interval": {
+    originLabel: "ASTROPATHICA // RELAY PATH UNRESOLVED",
+    originRegion: "UNRESOLVED",
+    originBand: "anomalous source",
+    routeClass: "unresolved",
+    transmissionMethod: "warp-echo",
+    warpExposure: "SEVERE",
+    identityState: "PARTIAL",
+    originState: "UNRECOVERED",
+    timestampState: "CONTRADICTORY",
+  },
+  "Chart discrepancy under seal": {
+    originLabel: "NAVIS NOBILITE // BONDED CHART ARCHIVE",
+    originRegion: "GREAT RIFT",
+    originBand: "unstable Rift crossing",
+    routeClass: "rift-crossing",
+    transmissionMethod: "navigational-choir",
+    warpExposure: "SEVERE",
+    identityState: "CONFIRMED",
+    originState: "PARTIAL",
+    timestampState: "PARTIAL",
+  },
+  "Gellar breach testimony demanded": {
+    originLabel: "ORDO MALLEUS // SANCTIFIED BLACK CHANNEL",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "contested-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "VERIFIED",
+    originState: "INCONCLUSIVE",
+    timestampState: "VERIFIED",
+  },
+  "Uncatalogued biosignature seizure": {
+    originLabel: "ORDO XENOS // FIELD CONCLAVE",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "contested-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Convent distress petition": {
+    originLabel: "ADEPTA SORORITAS // CONVENT SIGNAL",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "distant Imperium Nihilus",
+    routeClass: "contested-relay",
+    transmissionMethod: "astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "CONFIRMED",
+    originState: "INCONCLUSIVE",
+    timestampState: "PARTIAL",
+  },
+  "Extradition writ submitted": {
+    originLabel: "ADEPTUS ARBITES // JUDGES' CIRCUIT",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "VERIFIED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Regimental honour dispute": {
+    originLabel: "OFFICIO PREFECTUS // COMMISSARIAT REVIEW",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "nachmund-corridor",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Derelict salvage adjudication": {
+    originLabel: "NAVIS IMPERIALIS // SALVAGE COURT",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "nearby Argent Vigil",
+    routeClass: "argent-vigil-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MINOR",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Medical stores diversion request": {
+    originLabel: "DEPARTMENTO MUNITORUM // MEDICAE ALLOTMENT",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "northern Nachmund theatre",
+    routeClass: "nachmund-corridor",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "MODERATE",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "VERIFIED",
+  },
+  "Sanctified remains passage": {
+    originLabel: "ADEPTUS MINISTORUM // MORTUARY PROCESSION",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "distant Imperium Nihilus",
+    routeClass: "contested-relay",
+    transmissionMethod: "astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "CONFIRMED",
+    originState: "PROBABLE",
+    timestampState: "PARTIAL",
+  },
+  "Warranted passage exchange": {
+    originLabel: "ROGUE TRADER DYNASTY // WARRANTED CHANNEL",
+    originRegion: "IMPERIUM NIHILUS",
+    originBand: "distant Imperium Nihilus",
+    routeClass: "contested-relay",
+    transmissionMethod: "encrypted-astropathic",
+    warpExposure: "ELEVATED",
+    identityState: "CONFIRMED",
+    originState: "INCONCLUSIVE",
+    timestampState: "PARTIAL",
+  },
   "To those who hold the sundered road": {
     originLabel: "ADEPTUS TERRA // LORD COMMANDER'S STRATEGIUM",
     originRegion: "IMPERIUM SANCTUS",
@@ -560,7 +758,7 @@ const transmissionMetadataBySubject = {
   },
 } as const satisfies Record<string, AstropathicTransmissionMetadata>;
 
-const astropathicMessageTemplates = ([
+const legacyAstropathicMessageTemplates = ([
   { agency: "Adeptus Terra", subject: "Compliance return overdue", preview: "The strategic command archive respectfully requests the present disposition of the Argent Vigil and its restored systems.", body: "Chapter Master, the strategic command archive has not received the current compliance return entered under warrant 008.M42/DR-017. Adeptus Terra respectfully requests the disposition of the Lunar Dragons, the status of every system restored under the Nachmund Charge, and the location of the Gift of Luna. Any omission will be entered as a failure of record, not of service.", priority: "PRIMUS" },
   { agency: "Navis Imperialis", subject: "Convoy passage requested", preview: "Task Group Helios petitions for Astartes overwatch through the Moonward Passage during its next translation window.", body: "Task Group Helios will attempt translation through the Moonward Passage within the next sanctioned window. Three troop transports, two munition hulks and the hospital ship Mercy of Juno require Astartes overwatch. Naval command requests a Lunar Dragons escort from Draconis Gate to the Selene anchorage and confirmation of any hostile contacts along the route.", priority: "ACTION" },
   { agency: "Adeptus Mechanicus", subject: "Veil Anchor 7 telemetry", preview: "The station's machine-spirit reports a widening variance. Escort is requested for a Magos reclamation cohort.", body: "Veil Anchor 7 reports a widening variance in the Vesper Rift containment lattice. The station's machine-spirit has repeated the same warning cant for nineteen cycles and now refuses nonessential commands. A Magos reclamation cohort is prepared to translate, but requires Chapter escort and permission to draw upon the fleet's Gellar specialists.", priority: "URGENT" },
@@ -577,6 +775,35 @@ const astropathicMessageTemplates = ([
   ...template,
   transmission: transmissionMetadataBySubject[template.subject],
 })) satisfies ReadonlyArray<Omit<AstropathicMessage, "id" | "received" | "receivedAt">>;
+
+const expandedAstropathicMessageTemplates = ([
+  { agency: "Navis Imperialis", subject: "Translation beacon silence", preview: "A sanctioned translation beacon has fallen silent; the Navy requests comparison against the Lunaris passive augur record.", body: "Chapter Master, a sanctioned beacon on the northern approaches has ceased all challenge-response cant. No distress flare was observed and the last authenticated burst reported nominal operation. Naval command respectfully requests comparison against the Lunaris passive augur record before a recovery cutter is committed to the dark.", priority: "NOTICE" },
+  { agency: "Astra Militarum", subject: "Evacuation corridor petition", preview: "A field command petitions the Chapter to judge whether its refugee convoy may attempt the contested passage.", body: "Chapter Master, a field command has assembled six damaged transports and the surviving population of three forward bastions. The corridor ahead remains contested and the regiment cannot protect the convoy without abandoning its guns. We petition the Lunar Dragons to advise whether passage should be attempted, delayed, or placed beneath Astartes overwatch.", priority: "URGENT" },
+  { agency: "Departmento Munitorum", subject: "Promethium reserve shortfall", preview: "Forward logistics reports that three dependent formations will exhaust motive-fuel before their next sanctioned allotment.", body: "The forward reserve has fallen below the quantity required to sustain three dependent formations through the next operational cycle. Munitorum command submits two remedies for the Chapter Master's judgment: divert the nearest fleet allotment, or suspend offensive movement until a replacement convoy is secured. Either decision will be entered against the Argent Vigil ledger.", priority: "ACTION" },
+  { agency: "Administratum", subject: "Tithe remission petition", preview: "An isolated Imperial holding petitions for temporary remission after its population and harvest records became mutually impossible.", body: "An isolated holding has submitted population, harvest and casualty returns that cannot all be true at once. Its prefect petitions for temporary tithe remission while surviving registrars reconstruct the rolls. The Administratum respectfully requests the Chapter Master's testimony concerning the world's present service and whether its failure should be recorded as incapacity, dereliction or consequence of war.", priority: "PETITION" },
+  { agency: "Adeptus Mechanicus", subject: "Noospheric quarantine advisory", preview: "A recovered cogitator stack is broadcasting an unauthorized devotional recursion across every compatible receiver.", body: "Recovered logic-stacks now repeat an unauthorized devotional recursion across every compatible noospheric receiver. The pattern is neither scrapcode nor any approved Martian cant. Quarantine is advised. The Mechanicus requests sealed transfer of the primary stack and permission to silence all secondary instances aboard vessels under Chapter protection.", priority: "SEALED" },
+  { agency: "Adeptus Mechanicus", subject: "Reactor relic provenance dispute", preview: "Two forge delegations claim the same ancient reactor component under incompatible chains of custody.", body: "Two forge delegations assert lawful custody over an ancient plasma-regulator recovered from a void wreck. Both chains of provenance bear valid seals, yet their chronologies overlap by eleven centuries. Neither delegation accepts arbitration by the other. The Reclamation Conclave requests the Chapter Master's witness concerning the circumstances of recovery before a binding machine-judgment is rendered.", priority: "NOTICE" },
+  { agency: "Adeptus Astra Telepathica", subject: "Choir casualty return", preview: "A relay choir submits its dead, blinded and exhausted after forcing one final message through the storm.", body: "Chapter Master, the relay choir submits its casualty return following the last forced communion: nine dead, seventeen blinded, and thirty-one judged unfit for further contact. The surviving astropaths can maintain emergency reception or attempt one outbound transmission, but not both. The Choir Mistress requests your disposition before the next watch begins.", priority: "ACTION" },
+  { agency: "Astropathica", subject: "Null-silence interval", preview: "For seven minutes every soul-bound receiver heard nothing—not static, distance, or the familiar pressure of the warp.", body: "For seven minutes and thirteen seconds every soul-bound receiver within the choir experienced absolute null-silence. No static, distance-pressure or hostile presence was perceived. The silence ended simultaneously when an unidentified voice spoke the words 'not yet found'. The origin, speaker and direction remain unrecovered. The choir advises observation without reply.", priority: "URGENT" },
+  { agency: "Navis Nobilite", subject: "Chart discrepancy under seal", preview: "Three bonded Navigators independently remember a passage that does not exist in any sanctioned chart.", body: "Three bonded Navigators independently describe the same passage through the storm, including identical turns and stellar impressions, yet no sanctioned chart records such a route. None recalls learning it. The Navis Nobilite submits the discrepancy under seal and requests comparison against the Lunaris translation logs before the memory is tested in the warp.", priority: "SEALED" },
+  { agency: "Ordo Malleus", subject: "Gellar breach testimony demanded", preview: "An inquisitorial seal requires the unabridged testimony of survivors from a vessel whose Gellar field failed and returned.", body: "By formal demand of the Ordo Malleus, preserve and surrender the unabridged testimony of all survivors recovered from the vessel whose Gellar field failed in translation. No confession, dream account, medical sample or devotional object is to be destroyed before examination. The Chapter will designate the place of transfer and ensure that no unexamined survivor departs it.", priority: "SEALED" },
+  { agency: "Ordo Xenos", subject: "Uncatalogued biosignature seizure", preview: "A field conclave orders the isolation of an organism recovered alive from an apparently lifeless wreck.", body: "By seal of the Ordo Xenos, isolate the uncatalogued organism recovered from the derelict and preserve every sensor record preceding its discovery. The specimen imitated a human vital pattern only after entering custody. No vivisection, gene comparison or psychic contact is authorised without the receiving inquisitor present. Confirm containment through the black channel.", priority: "SEALED" },
+  { agency: "Adepta Sororitas", subject: "Convent distress petition", preview: "A distant convent reports that its outer walls hold, but its water, ammunition and choir are failing.", body: "Chapter Master, the Sisters of a distant convent report that their outer walls remain unbroken while water, ammunition and choir strength approach exhaustion. They do not request rescue from their vows. They petition only that the Chapter judge whether their position still serves the wider war, or whether the surviving faithful should be withdrawn before the final gate is closed.", priority: "URGENT" },
+  { agency: "Adeptus Arbites", subject: "Extradition writ submitted", preview: "The Judges' Circuit submits a sealed writ for a voidmaster sheltering beneath a disputed naval commission.", body: "The Judges' Circuit submits an extradition writ for a voidmaster accused of murdering an Imperial tithe assessor and seizing the victim's seal. The accused now shelters aboard a vessel claiming naval protection. The Arbites request the Chapter Master's recognition of the writ and safe conduct for the arrest cadre. Jurisdictional annexes follow under seal.", priority: "PRIMUS" },
+  { agency: "Officio Prefectus", subject: "Regimental honour dispute", preview: "Two surviving regiments claim the same battle honour and accuse the other of abandoning the field.", body: "Two surviving regiments claim sole right to the honour of the Broken Gate. Each accuses the other of withdrawing before the breach was secured, and both cite fallen officers who cannot testify. The Officio Prefectus requests the Chapter Master's assessment of the action so the honour may be granted, shared, or struck from both standards.", priority: "NOTICE" },
+  { agency: "Navis Imperialis", subject: "Derelict salvage adjudication", preview: "Three Imperial claimants dispute custody of a weapons-bearing derelict recovered inside the Vigil's operational reach.", body: "A weapons-bearing derelict has been secured by three Imperial parties whose salvage warrants overlap. The Navy claims its guns, the Mechanicus its machine-spirit, and a chartered captain the hull by right of first grapple. Naval command requests the Chapter Master's provisional adjudication before the dispute becomes armed. No claimant is to board the command decks meanwhile.", priority: "ACTION" },
+  { agency: "Departmento Munitorum", subject: "Medical stores diversion request", preview: "A medicae allotment bound for the front may be diverted to a plague-stricken refugee flotilla by Chapter order.", body: "A medicae allotment sufficient for one campaign month is presently held aboard a delayed transport. Forward hospitals possess nine days of reserve. A nearby refugee flotilla reports a spreading fever and requests the same stores. Munitorum command submits the diversion to the Chapter Master's judgment and requires the order under seal before any cargo is moved.", priority: "ACTION" },
+  { agency: "Adeptus Ministorum", subject: "Sanctified remains passage", preview: "A mortuary procession petitions safe passage for the recovered dead of an isolated Imperial world.", body: "The Ministorum petitions safe passage for a mortuary procession carrying the identified remains of soldiers, confessors and voidsmen recovered after long isolation. The dead are not relics and no claim of sainthood is advanced. Their names have been restored to the record; the priests ask only that they be returned to consecrated ground beneath Imperial guard.", priority: "PETITION" },
+  { agency: "Rogue Trader Dynasty", subject: "Warranted passage exchange", preview: "A warranted captain offers recent charts and fuel in exchange for escort through a route the dynasty refuses to name openly.", body: "Chapter Master, a warranted captain offers recent translation charts, refined promethium and the disposition of two hostile raider groups in exchange for limited escort through a passage withheld from this transmission. The dynasty will submit its warrant, cargo and route under seal before agreement. It requests only that the Chapter state whether such negotiation will be heard.", priority: "PETITION" },
+] as const).map((template) => ({
+  ...template,
+  transmission: transmissionMetadataBySubject[template.subject],
+})) satisfies ReadonlyArray<Omit<AstropathicMessage, "id" | "received" | "receivedAt">>;
+
+const astropathicMessageTemplates = [
+  ...legacyAstropathicMessageTemplates,
+  ...expandedAstropathicMessageTemplates,
+] satisfies ReadonlyArray<Omit<AstropathicMessage, "id" | "received" | "receivedAt">>;
 
 const notableAstropathicMessageTemplates = ([
   { agency: "Roboute Guilliman · Lord Commander", subject: "To those who hold the sundered road", preview: "A general crusade address carries a brief, authenticated acknowledgement of the Argent Vigil.", body: "Lunar Dragons, your vigil lies far from the triumphal routes and the eyes of Terra, but it is not unseen. The passage between the divided Imperium is preserved as often by endurance as by conquest. Hold what you have reclaimed. Record what has been lost. Spend lives only where their sacrifice purchases a future for those who remain. Your duty is not yet concluded. — Roboute Guilliman, Lord Commander of the Imperium", priority: "PRIMUS" },
@@ -615,9 +842,11 @@ function hashText(value: string) {
  */
 export const PHASE_4_EVENT_ACTIVATION_EPOCH = "2026-08-05T00:00:00.000Z";
 export const PHASE_4_DERIVED_EVENT_ACTIVATION_EPOCH = "2026-08-06T00:00:00.000Z";
+export const ASTROPATHIC_LIBRARY_EXPANSION_EPOCH = "2026-08-09T00:00:00.000Z";
 
 const PHASE_4_EVENT_ACTIVATION_TIME = Date.parse(PHASE_4_EVENT_ACTIVATION_EPOCH);
 const PHASE_4_DERIVED_EVENT_ACTIVATION_TIME = Date.parse(PHASE_4_DERIVED_EVENT_ACTIVATION_EPOCH);
+const ASTROPATHIC_LIBRARY_EXPANSION_TIME = Date.parse(ASTROPATHIC_LIBRARY_EXPANSION_EPOCH);
 const PHASE_4_EVENT_SEED_VERSION = "relay-event:v1";
 const PHASE_4_DERIVED_EVENT_SEED_VERSION = "relay-event:v2";
 
@@ -1108,7 +1337,10 @@ function nominalAstropathicPlanForDay(day: Date): NominalRelayPlan {
     }
   }
 
-  const templateOrder = astropathicMessageTemplates
+  const templatePool = normalizedDay.getTime() < ASTROPATHIC_LIBRARY_EXPANSION_TIME
+    ? legacyAstropathicMessageTemplates
+    : astropathicMessageTemplates;
+  const templateOrder = templatePool
     .map((_, index) => ({ index, rank: hashText(`${key}:template:${index}`) }))
     .sort((left, right) => left.rank - right.rank || left.index - right.index)
     .map(({ index }) => index);
@@ -1118,7 +1350,7 @@ function nominalAstropathicPlanForDay(day: Date): NominalRelayPlan {
     const isNotableTransmission = notable && index === 0;
     const template = isNotableTransmission
       ? notableAstropathicMessageTemplates[hashText(`${key}:notable-template`) % notableAstropathicMessageTemplates.length]
-      : astropathicMessageTemplates[templateOrder[normalTemplateIndex++ % templateOrder.length]];
+      : templatePool[templateOrder[normalTemplateIndex++ % templateOrder.length]];
     const scheduledAt = new Date(Date.UTC(
       normalizedDay.getUTCFullYear(),
       normalizedDay.getUTCMonth(),

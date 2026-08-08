@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  ASTROPATHIC_LIBRARY_EXPANSION_EPOCH,
   PHASE_4_DERIVED_EVENT_ACTIVATION_EPOCH,
   PHASE_4_EVENT_ACTIVATION_EPOCH,
   applyDailyAstropathicMessages,
@@ -116,6 +117,61 @@ test("only due messages are revealed and later refreshes expose later arrivals",
 test("timestamps and message identities are deterministic for a date", () => {
   const day = dateAt(41);
   assert.deepEqual(astropathicScheduleForDay(day), astropathicScheduleForDay(new Date(day)));
+});
+
+test("expanded message library activates without rewriting earlier deterministic schedules", () => {
+  assert.equal(ASTROPATHIC_LIBRARY_EXPANSION_EPOCH, "2026-08-09T00:00:00.000Z");
+  assert.deepEqual(
+    astropathicScheduleForDay(new Date("2026-08-08T12:00:00.000Z")).messages.map((message) => message.subject),
+    [
+      "Vigil IX relief appeal",
+      "Veil Anchor 7 telemetry",
+      "Convoy passage requested",
+      "Compliance return overdue",
+    ],
+  );
+});
+
+test("expanded message library supplies diverse explicit-metadata transmissions", () => {
+  const expandedSubjects = new Set([
+    "Translation beacon silence",
+    "Evacuation corridor petition",
+    "Promethium reserve shortfall",
+    "Tithe remission petition",
+    "Noospheric quarantine advisory",
+    "Reactor relic provenance dispute",
+    "Choir casualty return",
+    "Null-silence interval",
+    "Chart discrepancy under seal",
+    "Gellar breach testimony demanded",
+    "Uncatalogued biosignature seizure",
+    "Convent distress petition",
+    "Extradition writ submitted",
+    "Regimental honour dispute",
+    "Derelict salvage adjudication",
+    "Medical stores diversion request",
+    "Sanctified remains passage",
+    "Warranted passage exchange",
+  ]);
+  const observed = new Map();
+  const start = Date.parse(ASTROPATHIC_LIBRARY_EXPANSION_EPOCH);
+
+  for (let offset = 0; offset < 365; offset += 1) {
+    const day = new Date(start + (offset * 86_400_000) + (12 * 60 * 60 * 1_000));
+    for (const message of astropathicScheduleForDay(day).messages) {
+      if (expandedSubjects.has(message.subject)) observed.set(message.subject, message);
+    }
+  }
+
+  assert.deepEqual([...observed.keys()].sort(), [...expandedSubjects].sort());
+  for (const message of observed.values()) {
+    assert.ok(message.transmission);
+    assert.ok(message.transmission.originLabel);
+    assert.ok(message.transmission.originBand);
+    assert.ok(message.transmission.routeClass);
+    assert.ok(message.transmission.transmissionMethod);
+    assert.equal(message.transmission.originLocationId, undefined);
+  }
 });
 
 test("refreshes do not create duplicate Relay messages", () => {
