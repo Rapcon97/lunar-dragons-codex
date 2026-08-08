@@ -1537,7 +1537,7 @@ function ChroniclesSection({
   entries: LoreEntry[];
   onArchiveRefresh: () => Promise<void>;
 }) {
-  const [selectedId, setSelectedId] = useState("decree");
+  const [selectedId, setSelectedId] = useState(() => entries[0]?.id ?? "");
   const [editorEntry, setEditorEntry] = useState<LoreEntry | null | undefined>(undefined);
   const [activeStatus, setActiveStatus] = useState<"all" | LoreEntry["status"]>("all");
   const [transitioningId, setTransitioningId] = useState("");
@@ -1559,8 +1559,8 @@ function ChroniclesSection({
   }
 
   useEffect(() => {
-    if (selectedId !== "decree" && !entries.some((entry) => entry.id === selectedId)) {
-      setSelectedId("decree");
+    if (!selectedId || (selectedId !== "decree" && !entries.some((entry) => entry.id === selectedId))) {
+      setSelectedId(entries[0]?.id ?? "decree");
     }
   }, [entries, selectedId]);
 
@@ -1746,9 +1746,20 @@ function ChroniclesSection({
                 </div>
               </div>
             )}
-            <small>{canEdit ? "ADMIN AUTHORITY · DEVELOPMENT VIEW" : "READ AUTHORITY · ARCHIVE VIEW"}</small>
+            <div className="chronicle-reader-actions">
+              <small>{canEdit ? "ADMIN AUTHORITY · DEVELOPMENT VIEW" : "READ AUTHORITY · ARCHIVE VIEW"}</small>
+              {canEdit && selectedEntry && (selectedEntry.status === "draft" || selectedEntry.status === "review") && (
+                <button
+                  type="button"
+                  className="chronicle-reader-edit-button"
+                  onClick={() => setEditorEntry(selectedEntry)}
+                >
+                  EDIT RECORD
+                </button>
+              )}
+            </div>
           </header>
-          <div className="chronicle-reader-scroll" tabIndex={0}>
+          <div className="chronicle-reader-scroll" key={selectedId} tabIndex={0}>
             {selectedId === "decree" ? (
               <DecreeRecord />
             ) : selectedEntry ? (
@@ -1759,20 +1770,6 @@ function ChroniclesSection({
                 )}
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
                 <LoreFormattedContent content={selectedEntry.content} />
-                {canEdit && (selectedEntry.status === "draft" || selectedEntry.status === "review") && (
-                  <div className="chronicle-record-editor-action">
-                    <div>
-                      <span>ON-SITE LORE EDITOR</span>
-                      <strong>Revise the title, subtitle, formatting, and complete record text without changing its identity or development status.</strong>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setEditorEntry(selectedEntry)}
-                    >
-                      EDIT RECORD
-                    </button>
-                  </div>
-                )}
                 {canEdit && (selectedEntry.status === "review" || selectedEntry.status === "canon") && (
                   <div
                     className="chronicle-record-publication"

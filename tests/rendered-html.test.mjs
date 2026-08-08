@@ -507,6 +507,8 @@ test("the shared transmission renderer exposes a responsive Astropathic Auspex a
   assert.match(auspex, /CHOIR LINEAGE/);
   assert.match(auspex, /CHOIR SIGNATURE/);
   assert.match(auspex, /INTERPRETATION CONCORDANCE/);
+  assert.match(auspex, /className="transmission-signal-fidelity-marker"/);
+  assert.match(auspex, /left: `clamp\(4px, \$\{fidelity\}%, calc\(100% - 4px\)\)`/);
   assert.match(auspex, /SEMANTIC INTEGRITY/);
   assert.match(auspex, /MNEMONIC LOSS/);
   assert.match(auspex, /EMOTIVE CONTAMINATION/);
@@ -516,6 +518,7 @@ test("the shared transmission renderer exposes a responsive Astropathic Auspex a
   assert.match(auspex, /ARCHIVE \/ COMMAND DISPOSITION/);
   assert.match(auspex, /ANOMALY REGISTER/);
   assert.match(auspex, /transmissionEventLabels\(event\)/);
+  assert.match(styles, /\.transmission-signal-fidelity-marker\s*\{[^}]*position:\s*absolute;[^}]*height:\s*17px;/s);
   assert.match(auspex, /transmissionSignalFidelity\(analysis\)/);
   assert.match(auspex, /<details className="transmission-signal-auspex">/);
   assert.doesNotMatch(auspex, /<details className="transmission-signal-auspex" open>/);
@@ -715,7 +718,11 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.doesNotMatch(sectionPage, /CREATE LORE DRAFT|SEAL NEW RECORD/);
   assert.match(sectionPage, /<LoreEntryEditor/);
   assert.match(sectionPage, /EDIT RECORD/);
+  assert.match(sectionPage, /useState\(\(\) => entries\[0\]\?\.id \?\? ""\)/);
+  assert.match(sectionPage, /className="chronicle-reader-actions"[\s\S]*className="chronicle-reader-edit-button"/);
+  assert.match(sectionPage, /className="chronicle-reader-scroll" key=\{selectedId\}/);
   assert.match(sectionPage, /selectedEntry\.status === "draft" \|\| selectedEntry\.status === "review"/);
+  assert.doesNotMatch(sectionPage, /chronicle-record-editor-action/);
   assert.doesNotMatch(sectionPage, /CANON LOCK ACTIVE/);
   assert.match(sectionPage, /<LoreFormattedContent content=\{selectedEntry\.content\} \/>/);
   assert.doesNotMatch(sectionPage, /saveSection\("entries"/);
@@ -754,6 +761,8 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(storage, /updateAdminLoreEntry/);
 
   assert.match(styles, /\.lore-editor-backdrop\s*\{[^}]*position:\s*fixed/s);
+  assert.match(styles, /\.chronicle-reader-edit-button\s*\{[^}]*border:\s*1px solid #73896b/s);
+  assert.doesNotMatch(styles, /\.chronicle-record-editor-action/);
   assert.match(styles, /\.lore-editor-dialog\s*\{[^}]*width:\s*min\(/s);
   assert.match(styles, /\.lore-editor-content-field textarea\s*\{[^}]*min-height:/s);
   assert.match(styles, /\.lore-format-toolbar\s*\{[^}]*display:\s*flex/s);

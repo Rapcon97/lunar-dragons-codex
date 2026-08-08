@@ -3452,8 +3452,30 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .transmission-signal-fidelity > span { display: flex; align-items: baseline; gap: 8px; }
 .transmission-signal-fidelity > span:last-child { justify-content: flex-end; text-align: right; }
 .transmission-signal-fidelity b { color: #829a79; font-size: var(--ui-text-7); font-weight: 400; }
-.transmission-signal-fidelity > i { height: 5px; position: relative; overflow: hidden; border: 1px solid #31422f; background: repeating-linear-gradient(90deg, #080e08 0 8px, #182417 8px 9px); }
+.transmission-signal-fidelity > i { height: 7px; position: relative; overflow: visible; border: 1px solid #31422f; background: repeating-linear-gradient(90deg, #080e08 0 8px, #182417 8px 9px); }
 .transmission-signal-fidelity > i > b { height: 100%; display: block; background: repeating-linear-gradient(90deg, #6e8867 0 8px, #8ba280 8px 9px); box-shadow: 0 0 8px rgba(111, 164, 96, .3); }
+.transmission-signal-fidelity-marker {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: 2px;
+  height: 17px;
+  border: 0;
+  background: #b8d6ae;
+  box-shadow: 0 0 7px rgba(159, 211, 145, .78);
+  transform: translate(-50%, -50%);
+}
+.transmission-signal-fidelity-marker::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border: 1px solid #bddbb4;
+  background: #172316;
+  transform: translateX(-50%) rotate(45deg);
+}
 .transmission-signal-events { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 7px 10px; }
 .transmission-signal-events b { border: 1px solid #5a4334; padding: 3px 6px; color: #a87a58; font-size: var(--ui-text-6); font-weight: 400; letter-spacing: .1em; }
 .transmission-archive-disposition {
@@ -4164,6 +4186,31 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   margin: 0;
 }
 .chronicle-reader-record-meta .chronicle-record-signifiers span { white-space: nowrap; }
+.chronicle-exload-reader > header .chronicle-reader-actions {
+  min-width: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.chronicle-reader-edit-button {
+  min-height: 34px;
+  border: 1px solid #73896b;
+  padding: 8px 12px;
+  background: rgba(38, 61, 33, .38);
+  color: #b7c8af;
+  font: var(--type-control) "Courier New", monospace;
+  letter-spacing: .1em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chronicle-reader-edit-button:hover,
+.chronicle-reader-edit-button:focus-visible {
+  outline: none;
+  border-color: #a9c29f;
+  background: rgba(54, 83, 47, .52);
+  color: #e0eadb;
+}
 .chronicle-reader-scroll {
   flex: 1 1 auto;
   padding: clamp(24px, 3.4vw, 60px);
@@ -4308,45 +4355,6 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   color: #d1dccb;
 }
 .chronicle-record-publication button:disabled { opacity: .55; cursor: wait; }
-.chronicle-record-editor-action {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 22px;
-  margin-top: 34px;
-  border: 1px solid #344831;
-  padding: 15px 16px;
-  background: rgba(23, 38, 20, .32);
-}
-.chronicle-record-editor-action > div { display: grid; gap: 5px; min-width: 0; }
-.chronicle-record-editor-action span {
-  color: #71836b;
-  font: var(--type-meta) "Courier New", monospace;
-  letter-spacing: .12em;
-}
-.chronicle-record-editor-action strong {
-  color: #98a890;
-  font: 400 var(--type-body-small)/1.45 Georgia, serif;
-}
-.chronicle-record-editor-action button {
-  flex: 0 0 auto;
-  min-height: 38px;
-  border: 1px solid #65775d;
-  padding: 9px 13px;
-  background: #080b07;
-  color: #a8b9a0;
-  font: var(--type-control) "Courier New", monospace;
-  letter-spacing: .09em;
-  cursor: pointer;
-}
-.chronicle-record-editor-action button:hover:not(:disabled),
-.chronicle-record-editor-action button:focus-visible {
-  outline: none;
-  border-color: #9aaf90;
-  color: #d1dccb;
-}
-.chronicle-record-editor-action button:disabled { opacity: .5; cursor: not-allowed; }
-
 .lore-editor-backdrop {
   position: fixed;
   z-index: 9800;
@@ -4843,7 +4851,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
   }
-  .chronicle-exload-reader > header.record-active > small { grid-column: 2; grid-row: 1; }
+  .chronicle-exload-reader > header.record-active > .chronicle-reader-actions { grid-column: 2; grid-row: 1; }
   .chronicle-reader-record-meta {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -4909,7 +4917,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .chronicle-index-entry { min-height: 84px; padding: 14px 12px; }
   .chronicle-exload-reader > header { align-items: flex-start; padding: 11px 12px; }
   .chronicle-exload-reader > header.record-active { grid-template-columns: minmax(0, 1fr) auto; }
-  .chronicle-exload-reader > header.record-active > small { grid-column: 2; grid-row: 1; }
+  .chronicle-exload-reader > header.record-active > .chronicle-reader-actions { grid-column: 2; grid-row: 1; }
   .chronicle-reader-record-meta {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -4924,7 +4932,13 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     gap: 6px;
   }
   .chronicle-reader-record-meta .chronicle-record-signifiers span { white-space: normal; }
-  .chronicle-exload-reader > header small { max-width: 38%; white-space: normal; text-align: right; }
+  .chronicle-exload-reader > header .chronicle-reader-actions {
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .chronicle-exload-reader > header .chronicle-reader-actions small { max-width: none; white-space: normal; text-align: right; }
+  .chronicle-reader-edit-button { width: 100%; }
   .chronicle-reader-scroll { overflow: visible; padding: 24px 16px 36px; }
   .chronicle-record-sheet h2 { font-size: clamp(1.8rem, 9vw, 2.55rem); }
   .chronicle-record-content { font-size: var(--ui-text-16); line-height: 1.7; }
@@ -5117,8 +5131,6 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .lore-cogitator-input button { width: 100%; }
   .lore-editor-dialog form > footer { align-items: stretch; flex-direction: column; padding: 11px; }
   .lore-editor-dialog form > footer div { display: grid; grid-template-columns: 1fr 1fr; }
-  .chronicle-record-editor-action { align-items: stretch; flex-direction: column; }
-  .chronicle-record-editor-action button { width: 100%; }
 }
 
 .chronicle-index-copy small,

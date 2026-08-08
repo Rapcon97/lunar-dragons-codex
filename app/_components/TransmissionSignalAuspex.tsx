@@ -115,7 +115,13 @@ export function TransmissionSignalAuspex({
       </div>
       <div className="transmission-signal-fidelity">
         <span><small>INTERPRETATION CONCORDANCE</small><b>{fidelity}%</b></span>
-        <i aria-hidden="true"><b style={{ width: `${fidelity}%` }} /></i>
+        <i aria-hidden="true">
+          <b style={{ width: `${fidelity}%` }} />
+          <em
+            className="transmission-signal-fidelity-marker"
+            style={{ left: `clamp(4px, ${fidelity}%, calc(100% - 4px))` }}
+          />
+        </i>
         <span><small>RECONSTRUCTION CONFIDENCE</small><b>{analysis.degradation.reconstructionConfidence}%</b></span>
       </div>
       {eventLabels.length > 0 && (
