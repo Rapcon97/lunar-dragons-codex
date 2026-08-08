@@ -359,7 +359,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(home, /document\.body\.style\.overflow = "hidden"/);
 
   assert.match(renderer, /formatTransmissionTranscript\(source\)/);
-  assert.match(renderer, /prepareTransmissionLine\(line, corruptionProfile, lineIndex\)/);
+  assert.match(renderer, /prepareTransmissionLine\(line\)/);
   assert.doesNotMatch(renderer, /corruptTransmissionMetadataValue|transmissionMetadataValueCanCorrupt/);
   assert.match(renderer, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
   assert.match(renderer, /setRenderedLines\(completedLines\)/);
@@ -374,7 +374,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(renderer, /className="relay-data-visual" aria-hidden="true"/);
   assert.match(renderer, /activeLineIndex === index/);
   assert.match(renderer, /setActiveLineIndex\(finalCursorIndex\)/);
-  assert.match(renderer, /formatCorruptionPercentage\(currentPercentage\)/);
+  assert.doesNotMatch(renderer, /formatCorruptionPercentage|currentPercentage|corruptionProfile/);
   assert.match(renderer, /completedStreamKey === streamKey/);
   assert.match(renderer, /setCompletedStreamKey\(streamKey\)/);
   assert.match(renderer, /renderedLines\.slice\(0, presentedLines\.length\)/);
@@ -387,7 +387,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(helper, /metadataValuePauseMs:\s*200/);
   assert.match(helper, /retrievalDotMs:\s*500/);
   assert.match(helper, /retrievalDotCount:\s*4/);
-  assert.match(helper, /const ORIGIN_CORRUPTION_RANGES/);
+  assert.match(helper, /const ORIGIN_INTERFERENCE_RANGES/);
   assert.match(helper, /"internal Lunaris": \[0, 0\.5\]/);
   assert.match(helper, /"unstable Rift crossing": \[15, 35\]/);
   assert.match(helper, /"anomalous source": \[12, 30\]/);
@@ -407,13 +407,16 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.doesNotMatch(helper, /\{ text: `> Data corruption query:/);
   assert.doesNotMatch(helper, /\{ text: `> Data corruption pattern:/);
   assert.doesNotMatch(helper, /> Origin band:/);
-  assert.match(helper, /line\.section === "content"/);
+  assert.match(helper, /renderSanctionedInterpretation\(source, analysis\.degradation\)/);
   assert.match(helper, /section: "analysis"/);
   assert.match(helper, /section: "terminal-footer"/);
-  assert.match(helper, /const CORRUPTION_GLYPHS = \["█", "▓", "▒", "░"/);
-  assert.match(helper, /const MACHINE_CANT_FRAGMENTS = \["\+\+", "\/\/\/", "::", "0x", "\[NOOS\]"/);
-  assert.match(helper, /const SEVERE_CANT_FRAGMENTS = \["\[SIG-LOSS\]", "\[DATA-NULL\]", "\[REDACTED\]"/);
-  assert.match(helper, /hashTransmissionValue\(`\$\{profile\.seed\}:\$\{lineIndex\}:\$\{characterIndex\}`\)/);
+  assert.match(helper, /export function buildAstropathicDegradationProfile/);
+  assert.match(helper, /export function renderSanctionedInterpretation/);
+  assert.match(helper, /AstropathicDegradationSeverity/);
+  assert.match(helper, /INTERPRETIVE AMBIGUITY/);
+  assert.match(helper, /archivalRedaction/);
+  assert.match(helper, /CRYPTEX UNRESOLVED/);
+  assert.doesNotMatch(helper, /CORRUPTION_GLYPHS|MACHINE_CANT_FRAGMENTS|SEVERE_CANT_FRAGMENTS|corruptTransmissionText/);
   assert.match(helper, /IMPERIAL_TRANSMISSION_CLOSING = "The Emperor protects\."/);
   assert.match(helper, /MECHANICUS_TRANSMISSION_CLOSING = "By the Omnissiah's will\."/);
   assert.match(helper, /TERMINAL_MACHINE_BLESSING = "\+\+\+ HAIL THE OMNISSIAH, PRAISE THE MACHINE GOD \+\+\+"/);
@@ -429,6 +432,10 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(styles, /\.relay-data-cursor\.pause\s*\{[^}]*relay-stream-cursor \.6s/s);
   assert.match(styles, /\.relay-data-cursor\.complete\s*\{[^}]*relay-stream-cursor 1s/s);
   assert.match(styles, /\.relay-data-stream \.stream-blessing\s*\{[^}]*color:\s*#8f514d/s);
+  assert.match(styles, /\.relay-data-stream \.stream-uncertainty-semantic\s*\{/);
+  assert.match(styles, /\.relay-data-stream \.stream-uncertainty-empyric\s*\{/);
+  assert.match(styles, /\.relay-data-stream \.stream-uncertainty-redaction\s*\{/);
+  assert.match(styles, /\.relay-data-stream \.stream-uncertainty-cipher\s*\{/);
   assert.match(styles, /\.relay-data-instant\s*\{/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.relay-data-stream p, \.relay-data-cursor\s*\{[^}]*animation:\s*none !important/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.relay-dialog\s*\{[^}]*height:\s*calc\(100dvh - 16px\)/s);
@@ -482,7 +489,7 @@ test("the shared transmission renderer exposes a responsive Astropathic Auspex a
   assert.match(stream, /aria-expanded=\{showRawImpression\}/);
   assert.match(stream, /setShowRawImpression\(false\)/);
   assert.match(auspex, /ASTROPATHIC AUSPEX \/\/ RELIQUARIUM/);
-  assert.match(auspex, /EMPYRIC COHERENCE STABLE/);
+  assert.match(auspex, /analysis\.degradation\.severity/);
   assert.match(auspex, /PROBABLE ORIGIN/);
   assert.match(auspex, /PROVENANCE CONCORDANCE/);
   assert.match(auspex, /THOUGHTMARK AUTHORITY/);
@@ -493,7 +500,12 @@ test("the shared transmission renderer exposes a responsive Astropathic Auspex a
   assert.match(auspex, /CHOIR LINEAGE/);
   assert.match(auspex, /CHOIR SIGNATURE/);
   assert.match(auspex, /INTERPRETATION CONCORDANCE/);
-  assert.match(auspex, /SEMANTIC LOSS/);
+  assert.match(auspex, /SEMANTIC INTEGRITY/);
+  assert.match(auspex, /MNEMONIC LOSS/);
+  assert.match(auspex, /EMOTIVE CONTAMINATION/);
+  assert.match(auspex, /ARCHIVAL REDACTION/);
+  assert.match(auspex, /CIPHER STATUS/);
+  assert.match(auspex, /RECONSTRUCTION CONFIDENCE/);
   assert.match(auspex, /ARCHIVE \/ COMMAND DISPOSITION/);
   assert.match(auspex, /ANOMALY REGISTER/);
   assert.match(auspex, /transmissionEventLabels\(event\)/);
@@ -501,7 +513,7 @@ test("the shared transmission renderer exposes a responsive Astropathic Auspex a
   assert.match(auspex, /<details className="transmission-signal-auspex">/);
   assert.doesNotMatch(auspex, /<details className="transmission-signal-auspex" open>/);
   assert.match(record, /export function buildAstropathicRecordPresentation/);
-  assert.match(record, /resolveTransmissionBody\(source\)/);
+  assert.match(record, /renderSanctionedInterpretation\(source, analysis\.degradation\)/);
   assert.match(record, /SUBJECT_IMPRESSIONS/);
   assert.doesNotMatch(record, /Math\.random/);
   assert.match(styles, /\.transmission-signal-grid\s*\{[^}]*grid-template-columns:\s*1\.35fr repeat\(2,/s);

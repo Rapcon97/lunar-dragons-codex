@@ -3,22 +3,12 @@ import type { AstropathicRecordPresentation } from "./astropathic-record";
 import type { TransmissionAnalysis } from "./relay-transmission";
 import { transmissionEventLabels } from "./transmission-event-presentation";
 
-const WARP_FIDELITY_PENALTY: Record<TransmissionAnalysis["warpExposureState"], number> = {
-  NEGLIGIBLE: 0,
-  MINOR: 2,
-  MODERATE: 5,
-  ELEVATED: 9,
-  SEVERE: 15,
-  EXTREMIS: 22,
-};
-
 function shortTransmissionId(value: string) {
   return value.length > 18 ? `...${value.slice(-15)}` : value;
 }
 
 export function transmissionSignalFidelity(analysis: TransmissionAnalysis) {
-  const loss = (analysis.corruptionPercentage * 1.65) + WARP_FIDELITY_PENALTY[analysis.warpExposureState];
-  return Math.max(3, Math.min(100, Math.round(100 - loss)));
+  return analysis.degradation.interpretationConcordance;
 }
 
 export function transmissionLineageLabel(event?: AstropathicEventMetadata) {
@@ -56,7 +46,7 @@ export function TransmissionSignalAuspex({
 }) {
   const eventLabels = transmissionEventLabels(event);
   const fidelity = transmissionSignalFidelity(analysis);
-  const coherenceState = eventLabels[0] ?? (fidelity >= 90 ? "EMPYRIC COHERENCE STABLE" : fidelity >= 70 ? "EMPYRIC COHERENCE DEGRADED" : "EMPYRIC COHERENCE COMPROMISED");
+  const coherenceState = eventLabels[0] ?? analysis.degradation.severity;
 
   return (
     <details className="transmission-signal-auspex">
@@ -102,11 +92,31 @@ export function TransmissionSignalAuspex({
           <small>CHOIR SIGNATURE</small>
           <strong>{record.choirSignature}</strong>
         </div>
+        <div>
+          <small>SEMANTIC INTEGRITY</small>
+          <strong>{analysis.degradation.semanticIntegrity}</strong>
+        </div>
+        <div>
+          <small>MNEMONIC LOSS</small>
+          <strong>{analysis.degradation.mnemonicLoss}</strong>
+        </div>
+        <div>
+          <small>EMOTIVE CONTAMINATION</small>
+          <strong>{analysis.degradation.emotiveContamination}</strong>
+        </div>
+        <div>
+          <small>ARCHIVAL REDACTION</small>
+          <strong>{analysis.degradation.archivalRedaction}</strong>
+        </div>
+        <div>
+          <small>CIPHER STATUS</small>
+          <strong>{analysis.degradation.cipherStatus}</strong>
+        </div>
       </div>
       <div className="transmission-signal-fidelity">
         <span><small>INTERPRETATION CONCORDANCE</small><b>{fidelity}%</b></span>
         <i aria-hidden="true"><b style={{ width: `${fidelity}%` }} /></i>
-        <span><small>SEMANTIC LOSS</small><b>{analysis.corruptionPercentage.toFixed(2)}% // {analysis.corruptionPattern}</b></span>
+        <span><small>RECONSTRUCTION CONFIDENCE</small><b>{analysis.degradation.reconstructionConfidence}%</b></span>
       </div>
       {eventLabels.length > 0 && (
         <div className="transmission-signal-events" aria-label={`Transmission anomalies: ${eventLabels.join(", ")}`}>

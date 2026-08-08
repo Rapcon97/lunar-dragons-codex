@@ -3467,6 +3467,11 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .relay-data-stream .stream-command { padding-top: 5px; color: var(--relay-command-color); font-weight: 700; text-shadow: 0 0 9px rgba(105, 151, 94, .14); }
 .relay-data-stream .stream-gap { height: 17px; padding: 0; }
 .relay-data-stream .stream-content { padding-left: 4ch; color: #a8baa0; }
+.relay-data-stream .stream-uncertainty { margin-block: 2px; }
+.relay-data-stream .stream-uncertainty-semantic { color: #b2b38e; }
+.relay-data-stream .stream-uncertainty-empyric { color: #ad695f; text-shadow: 0 0 8px rgba(173, 105, 95, .16); }
+.relay-data-stream .stream-uncertainty-redaction { color: #9e7b70; letter-spacing: .055em; }
+.relay-data-stream .stream-uncertainty-cipher { color: #9e916e; }
 .relay-data-stream .stream-closing { padding-top: 11px; color: #b2c2aa; font-style: italic; }
 .relay-data-stream .stream-blessing { color: #8f514d; font-weight: 700; letter-spacing: .055em; text-shadow: 0 0 8px rgba(143, 81, 77, .18); }
 .relay-data-cursor {

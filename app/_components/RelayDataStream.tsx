@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   appendTransmissionRetrievalDots,
   formatTransmissionTranscript,
-  formatCorruptionPercentage,
   prepareTransmissionLine,
   splitTransmissionMetadata,
   TRANSMISSION_TIMING,
@@ -46,10 +45,9 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
     () => buildAstropathicRecordPresentation(source, analysis),
     [analysis, source],
   );
-  const corruptionProfile = analysis.corruption;
   const preparedLines = useMemo(
-    () => presentedLines.map((line, lineIndex) => prepareTransmissionLine(line, corruptionProfile, lineIndex)),
-    [corruptionProfile, presentedLines],
+    () => presentedLines.map((line) => prepareTransmissionLine(line)),
+    [presentedLines],
   );
   const completedLines = useMemo(() => preparedLines.map((text, lineIndex) => (
     isRetrievalCommand(presentedLines[lineIndex], text)
@@ -57,13 +55,8 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
       : text
   )), [preparedLines, presentedLines]);
   const accessibleTranscript = useMemo(
-    () => presentedLines.map((line) => {
-      if (line.corruption) {
-        return `> Data corruption query: ${formatCorruptionPercentage(corruptionProfile.percentage)}`;
-      }
-      return line.gap ? "" : line.text;
-    }).join("\n"),
-    [corruptionProfile.percentage, presentedLines],
+    () => presentedLines.map((line) => line.gap ? "" : line.text).join("\n"),
+    [presentedLines],
   );
 
   useEffect(() => {
@@ -130,17 +123,6 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
       setPhase("pause");
       if (!(await wait(TRANSMISSION_TIMING.metadataValuePauseMs))) return false;
       setPhase("typing");
-
-      if (line.corruption) {
-        const steps = Math.max(8, Math.min(24, Math.ceil(corruptionProfile.percentage)));
-        for (let step = 0; step <= steps; step += 1) {
-          if (cancelled) return false;
-          const currentPercentage = corruptionProfile.percentage * (step / steps);
-          replaceLine(lineIndex, `${metadata.label} ${formatCorruptionPercentage(currentPercentage)}`);
-          if (!(await wait(TRANSMISSION_TIMING.corruptionStepMs))) return false;
-        }
-        return true;
-      }
 
       return typeSegment(lineIndex, metadata.label, metadata.value, transmissionCharacterDelay);
     }
@@ -214,7 +196,7 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
           if (!line) return null;
           return (
             <p
-              className={`${line.command ? "stream-command " : ""}${line.section === "content" ? "stream-content " : ""}${line.section === "analysis" ? "stream-analysis " : ""}${line.section === "terminal-footer" ? "stream-terminal-footer " : ""}${line.closing ? "stream-closing " : ""}${line.blessing ? "stream-blessing " : ""}${line.gap ? "stream-gap" : ""}`}
+              className={`${line.command ? "stream-command " : ""}${line.section === "content" ? "stream-content " : ""}${line.section === "analysis" ? "stream-analysis " : ""}${line.section === "terminal-footer" ? "stream-terminal-footer " : ""}${line.uncertainty ? `stream-uncertainty stream-uncertainty-${line.uncertainty} ` : ""}${line.closing ? "stream-closing " : ""}${line.blessing ? "stream-blessing " : ""}${line.gap ? "stream-gap" : ""}`}
               key={`${streamKey}-typed-${index}`}
             >
               {text}

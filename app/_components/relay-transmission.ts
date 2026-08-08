@@ -36,23 +36,49 @@ export type TransmissionTranscriptLine = {
   text: string;
   section: TransmissionTranscriptSection;
   command?: boolean;
-  corruption?: boolean;
+  uncertainty?: "semantic" | "empyric" | "redaction" | "cipher";
   gap?: boolean;
   closing?: boolean;
   blessing?: boolean;
 };
 
-export type TransmissionCorruptionBand =
+export type TransmissionSignalBand =
   | "local"
   | "same-system"
   | "nearby-inter-system"
   | "long-range"
   | "warp-anomalous";
 
-export type TransmissionCorruptionProfile = {
-  band: TransmissionCorruptionBand;
-  percentage: number;
+export type AstropathicDegradationSeverity =
+  | "I — COHERENT"
+  | "II — DEGRADED"
+  | "III — FRACTURED"
+  | "IV — COMPROMISED"
+  | "V — INCOHERENT";
+
+export type AstropathicDegradationPhenomenon =
+  | "SEMANTIC LOSS"
+  | "INTERPRETIVE AMBIGUITY"
+  | "THOUGHT-ECHO"
+  | "MNEMONIC BLEED"
+  | "EMOTIVE SATURATION"
+  | "CHRONOMETRIC DISJUNCTION"
+  | "IDENTITY OVERLAP"
+  | "EMPYRIC CONTAMINATION";
+
+export type AstropathicDegradationProfile = {
+  signalBand: TransmissionSignalBand;
   seed: number;
+  severity: AstropathicDegradationSeverity;
+  interpretationConcordance: number;
+  reconstructionConfidence: number;
+  semanticIntegrity: "STABLE" | "DEGRADED" | "FRACTURED" | "COMPROMISED" | "INCOHERENT";
+  mnemonicLoss: "NEGLIGIBLE" | "MINOR" | "SIGNIFICANT" | "SEVERE" | "EXTREME";
+  emotiveContamination: "NEGLIGIBLE" | "MINOR" | "MODERATE" | "SEVERE" | "EXTREMIS";
+  archivalRedaction: "NONE" | "PRESENT // IMPERIAL AUTHORITY" | "PRESENT // ORDO XENOS";
+  cipherStatus: "RESOLVED" | "PARTIAL RECOVERY" | "CRYPTEX UNRESOLVED";
+  phenomena: AstropathicDegradationPhenomenon[];
+  intrusiveThought?: string;
 };
 
 export type TransmissionAnalysis = {
@@ -70,9 +96,7 @@ export type TransmissionAnalysis = {
   timestampIntegrityState: AnalysisState;
   warpExposureState: WarpExposureState;
   communionAttempts: number;
-  corruptionPercentage: number;
-  corruptionPattern: "SPARSE GLYPH LOSS" | "DEGRADED BINHARIC" | "CANT FRAGMENTATION" | "REDACTION LOSS";
-  corruption: TransmissionCorruptionProfile;
+  degradation: AstropathicDegradationProfile;
   originBasis: "metadata" | "explicit" | "inferred" | "receiving-theatre-fallback";
 };
 
@@ -94,14 +118,13 @@ export const TRANSMISSION_TIMING = {
   lineBreakMs: 200,
   retrievalDotMs: 500,
   retrievalDotCount: 4,
-  corruptionStepMs: 40,
 } as const;
 
 export const IMPERIAL_TRANSMISSION_CLOSING = "The Emperor protects.";
 export const MECHANICUS_TRANSMISSION_CLOSING = "By the Omnissiah's will.";
 export const TERMINAL_MACHINE_BLESSING = "+++ HAIL THE OMNISSIAH, PRAISE THE MACHINE GOD +++";
 
-const ORIGIN_CORRUPTION_RANGES: Record<TransmissionOriginBand, readonly [number, number]> = {
+const ORIGIN_INTERFERENCE_RANGES: Record<TransmissionOriginBand, readonly [number, number]> = {
   "internal Lunaris": [0, 0.5],
   "same system": [0.1, 1.5],
   "nearby Argent Vigil": [0.5, 4],
@@ -112,7 +135,7 @@ const ORIGIN_CORRUPTION_RANGES: Record<TransmissionOriginBand, readonly [number,
   "anomalous source": [12, 30],
 };
 
-const ORIGIN_TO_CORRUPTION_BAND: Record<TransmissionOriginBand, TransmissionCorruptionBand> = {
+const ORIGIN_TO_SIGNAL_BAND: Record<TransmissionOriginBand, TransmissionSignalBand> = {
   "internal Lunaris": "local",
   "same system": "same-system",
   "nearby Argent Vigil": "nearby-inter-system",
@@ -133,11 +156,6 @@ const COMMUNION_ATTEMPT_RANGES: Record<TransmissionOriginBand, readonly [number,
   "unstable Rift crossing": [24, 48],
   "anomalous source": [30, 64],
 };
-
-const LOW_CORRUPTION_GLYPHS = ["░", "╱", "", "::"] as const;
-const CORRUPTION_GLYPHS = ["█", "▓", "▒", "░", "╳", "╱", "╲", "│", "║", "╬", "†", "‡", "ϟ", "Ƶ", "҂", "⌁", "⌇", "⫷", "⫸"] as const;
-const MACHINE_CANT_FRAGMENTS = ["++", "///", "::", "0x", "[NOOS]", "[CANT]", "[VOX-ERR]"] as const;
-const SEVERE_CANT_FRAGMENTS = ["[SIG-LOSS]", "[DATA-NULL]", "[REDACTED]", "++::++", "///0x///", "҂҂", "ϟϟ"] as const;
 
 export function hashTransmissionValue(value: string) {
   let hash = 2166136261;
@@ -352,21 +370,14 @@ function warpExposureState(source: TransmissionSourceMetadata, originBand: Trans
   return deterministicChoice(source, "warp-exposure", choices[originBand]);
 }
 
-function corruptionPattern(percentage: number): TransmissionAnalysis["corruptionPattern"] {
-  if (percentage <= 0.5) return "SPARSE GLYPH LOSS";
-  if (percentage <= 4) return "DEGRADED BINHARIC";
-  if (percentage <= 14) return "CANT FRAGMENTATION";
-  return "REDACTION LOSS";
-}
-
-function derivedCorruptionPercentage(
+function derivedInterferenceScore(
   source: TransmissionSourceMetadata,
   originBand: TransmissionOriginBand,
   grade: ImperialClearanceGrade,
   protocol: EncryptionProtocol,
 ) {
-  const [minimum, maximum] = ORIGIN_CORRUPTION_RANGES[originBand];
-  const fraction = (analysisHash(source, "corruption-percentage") % 10001) / 10000;
+  const [minimum, maximum] = ORIGIN_INTERFERENCE_RANGES[originBand];
+  const fraction = (analysisHash(source, "semantic-interference") % 10001) / 10000;
   const base = minimum + ((maximum - minimum) * fraction);
   const routeModifier = ((analysisHash(source, "route-channel-modifier") % 101) - 50) / 100;
   const clearanceModifier: Record<ImperialClearanceGrade, number> = {
@@ -390,6 +401,118 @@ function derivedCorruptionPercentage(
   ).toFixed(2));
 }
 
+const WARP_INTERPRETATION_PENALTY: Record<WarpExposureState, number> = {
+  NEGLIGIBLE: 0,
+  MINOR: 2,
+  MODERATE: 5,
+  ELEVATED: 9,
+  SEVERE: 15,
+  EXTREMIS: 22,
+};
+
+export function astropathicSeverityForConcordance(concordance: number): AstropathicDegradationSeverity {
+  if (concordance >= 90) return "I — COHERENT";
+  if (concordance >= 75) return "II — DEGRADED";
+  if (concordance >= 55) return "III — FRACTURED";
+  if (concordance >= 30) return "IV — COMPROMISED";
+  return "V — INCOHERENT";
+}
+
+function severityIndex(severity: AstropathicDegradationSeverity) {
+  return (["I — COHERENT", "II — DEGRADED", "III — FRACTURED", "IV — COMPROMISED", "V — INCOHERENT"] as const)
+    .indexOf(severity);
+}
+
+function degradationPhenomena(
+  source: TransmissionSourceMetadata,
+  severity: AstropathicDegradationSeverity,
+) {
+  const level = severityIndex(severity);
+  if (level <= 0) return [];
+
+  const pools: readonly AstropathicDegradationPhenomenon[][] = [
+    [],
+    ["INTERPRETIVE AMBIGUITY", "SEMANTIC LOSS", "EMOTIVE SATURATION"],
+    ["SEMANTIC LOSS", "INTERPRETIVE AMBIGUITY", "THOUGHT-ECHO", "MNEMONIC BLEED", "EMOTIVE SATURATION", "CHRONOMETRIC DISJUNCTION"],
+    ["SEMANTIC LOSS", "INTERPRETIVE AMBIGUITY", "THOUGHT-ECHO", "MNEMONIC BLEED", "EMOTIVE SATURATION", "CHRONOMETRIC DISJUNCTION", "IDENTITY OVERLAP"],
+    ["SEMANTIC LOSS", "INTERPRETIVE AMBIGUITY", "THOUGHT-ECHO", "MNEMONIC BLEED", "EMOTIVE SATURATION", "CHRONOMETRIC DISJUNCTION", "IDENTITY OVERLAP"],
+  ];
+  const count = [0, 1, 3, 5, 7][level];
+  const pool = pools[level];
+  const start = analysisHash(source, "degradation-phenomena") % pool.length;
+  const phenomena = Array.from({ length: count }, (_, index) => pool[(start + index) % pool.length]);
+  const uniquePhenomena = [...new Set(phenomena)];
+  const explicitIntrusion = /secondary thought-presence|intrusive thought-form|unattributed voice/i.test(metadataText(source));
+  const rareIntrusion = level >= 3 && analysisHash(source, "empyric-intrusion") % 257 === 0;
+  if ((explicitIntrusion || rareIntrusion) && !uniquePhenomena.includes("EMPYRIC CONTAMINATION")) {
+    uniquePhenomena.push("EMPYRIC CONTAMINATION");
+  }
+  return uniquePhenomena;
+}
+
+function archivalRedactionState(source: TransmissionSourceMetadata): AstropathicDegradationProfile["archivalRedaction"] {
+  const text = `${source.subject} ${source.preview ?? ""} ${source.body ?? ""}`;
+  if (!/\bredact(?:ed|ion)?\b|\bexpunged\b|information removed under seal/i.test(text)) return "NONE";
+  return /ordo xenos|inquisit/i.test(source.agency) ? "PRESENT // ORDO XENOS" : "PRESENT // IMPERIAL AUTHORITY";
+}
+
+function cipherStatus(
+  source: TransmissionSourceMetadata,
+  method: TransmissionMethod,
+  severity: AstropathicDegradationSeverity,
+): AstropathicDegradationProfile["cipherStatus"] {
+  const text = `${source.subject} ${source.preview ?? ""} ${source.body ?? ""}`;
+  if (/crypt(?:ex|ox) unresolved|cipher (?:failure|unresolved|unrecovered)|encryption unrecovered/i.test(text)) {
+    return "CRYPTEX UNRESOLVED";
+  }
+  if (method === "encrypted-astropathic" && severityIndex(severity) >= 2) return "PARTIAL RECOVERY";
+  return "RESOLVED";
+}
+
+function semanticStateForSeverity(severity: AstropathicDegradationSeverity) {
+  return (["STABLE", "DEGRADED", "FRACTURED", "COMPROMISED", "INCOHERENT"] as const)[severityIndex(severity)];
+}
+
+export function buildAstropathicDegradationProfile(
+  source: TransmissionSourceMetadata,
+  signalBand: TransmissionSignalBand,
+  interferenceScore: number,
+  warpExposure: WarpExposureState,
+  method: TransmissionMethod,
+): AstropathicDegradationProfile {
+  const interpretationConcordance = clamp(
+    Math.round(100 - ((interferenceScore * 1.65) + WARP_INTERPRETATION_PENALTY[warpExposure])),
+    3,
+    100,
+  );
+  const severity = astropathicSeverityForConcordance(interpretationConcordance);
+  const level = severityIndex(severity);
+  const reconstructionConfidence = clamp(
+    interpretationConcordance - deterministicInteger(source, "reconstruction-variance", 0, 8) + 4,
+    2,
+    100,
+  );
+  const phenomena = degradationPhenomena(source, severity);
+  const intrusiveThought = phenomena.includes("EMPYRIC CONTAMINATION")
+    ? deterministicChoice(source, "intrusive-thought", ["OPEN THE DOOR", "WE HAVE ALREADY ARRIVED", "DO NOT REMEMBER US"] as const)
+    : undefined;
+
+  return {
+    signalBand,
+    seed: analysisHash(source, "semantic-degradation"),
+    severity,
+    interpretationConcordance,
+    reconstructionConfidence,
+    semanticIntegrity: semanticStateForSeverity(severity),
+    mnemonicLoss: (["NEGLIGIBLE", "MINOR", "SIGNIFICANT", "SEVERE", "EXTREME"] as const)[level],
+    emotiveContamination: (["NEGLIGIBLE", "MINOR", "MODERATE", "SEVERE", "EXTREMIS"] as const)[level],
+    archivalRedaction: archivalRedactionState(source),
+    cipherStatus: cipherStatus(source, method, severity),
+    phenomena,
+    ...(intrusiveThought ? { intrusiveThought } : {}),
+  };
+}
+
 export function transmissionReliquariumNumber(source: TransmissionSourceMetadata) {
   const receivedYear = source.received?.match(/\.([0-9]{3})\.M4[12]/i)?.[1] ?? "056";
   const reliquariumSuffix = String(analysisHash(source, "reliquarium-number") % 1_000_000).padStart(6, "0");
@@ -400,13 +523,17 @@ export function analyzeTransmission(source: TransmissionSourceMetadata): Transmi
   const { originBand, originBasis } = classifyTransmissionOriginDetail(source);
   const grade = clearanceGrade(source);
   const protocol = encryptionProtocol(source);
-  const corruptionPercentage = derivedCorruptionPercentage(source, originBand, grade, protocol);
+  const method = transmissionMethod(source, originBand);
+  const warpExposure = source.transmission?.warpExposure ?? warpExposureState(source, originBand);
+  const interferenceScore = derivedInterferenceScore(source, originBand, grade, protocol);
   const [minimumAttempts, maximumAttempts] = COMMUNION_ATTEMPT_RANGES[originBand];
-  const corruption: TransmissionCorruptionProfile = {
-    band: ORIGIN_TO_CORRUPTION_BAND[originBand],
-    percentage: corruptionPercentage,
-    seed: analysisHash(source, "corruption-pattern"),
-  };
+  const degradation = buildAstropathicDegradationProfile(
+    source,
+    ORIGIN_TO_SIGNAL_BAND[originBand],
+    interferenceScore,
+    warpExposure,
+    method,
+  );
 
   return {
     reliquariumNumber: transmissionReliquariumNumber(source),
@@ -414,7 +541,7 @@ export function analyzeTransmission(source: TransmissionSourceMetadata): Transmi
     originRegion: source.transmission?.originRegion ?? originRegion(originBand),
     ...(source.transmission?.originLocationId ? { originLocationId: source.transmission.originLocationId } : {}),
     probableOriginLabel: source.transmission?.originLabel ?? probableOriginLabel(originBand, originBasis),
-    transmissionMethod: transmissionMethod(source, originBand),
+    transmissionMethod: method,
     clearanceGrade: grade,
     encryptionProtocol: protocol,
     identityState: source.transmission?.identityState ?? identityState(source, originBand),
@@ -423,25 +550,23 @@ export function analyzeTransmission(source: TransmissionSourceMetadata): Transmi
     timestampIntegrityState: source.event?.kinds.some((kind) => kind === "contradictory-timestamp" || kind === "future-dated")
       ? timestampIntegrityState(source, originBand)
       : source.transmission?.timestampState ?? timestampIntegrityState(source, originBand),
-    warpExposureState: source.transmission?.warpExposure ?? warpExposureState(source, originBand),
+    warpExposureState: warpExposure,
     communionAttempts: deterministicInteger(source, "communion-attempts", minimumAttempts, maximumAttempts),
-    corruptionPercentage,
-    corruptionPattern: corruptionPattern(corruptionPercentage),
-    corruption,
+    degradation,
     originBasis,
   };
 }
 
-export function classifyTransmissionSource(source: TransmissionSourceMetadata): TransmissionCorruptionBand {
-  return ORIGIN_TO_CORRUPTION_BAND[classifyTransmissionOrigin(source)];
+export function classifyTransmissionSource(source: TransmissionSourceMetadata): TransmissionSignalBand {
+  return ORIGIN_TO_SIGNAL_BAND[classifyTransmissionOrigin(source)];
 }
 
-export function transmissionCorruptionProfile(source: TransmissionSourceMetadata): TransmissionCorruptionProfile {
-  return analyzeTransmission(source).corruption;
+export function transmissionDegradationProfile(source: TransmissionSourceMetadata): AstropathicDegradationProfile {
+  return analyzeTransmission(source).degradation;
 }
 
-export function formatCorruptionPercentage(value: number) {
-  return `${value.toFixed(2)}%`;
+export function formatConfidencePercentage(value: number) {
+  return `${Math.round(value)}%`;
 }
 
 export function transmissionCharacterDelay(character: string) {
@@ -491,6 +616,107 @@ export function resolveTransmissionBody(source: TransmissionSourceMetadata) {
   ) || "TRANSMISSION FRAGMENT UNRECOVERED.";
 }
 
+function semanticCluster(source: TransmissionSourceMetadata, readableBody: string) {
+  const text = `${source.subject} ${readableBody}`.toLowerCase();
+  if (/echo|return|remember|home|argent psalm/.test(text)) return ["RETURN", "REMEMBER", "HOME"];
+  if (/convoy|passage|escort|route|translation/.test(text)) return ["PASSAGE", "ESCORT", "DELAY"];
+  if (/shell|munition|ammunition|battery|armament/.test(text)) return ["RESERVE", "DENIAL", "PRIORITY"];
+  if (/relief|fortress|bastion|defender|siege/.test(text)) return ["RELIEF", "HOLD", "WITHDRAW"];
+  if (/archive|relic|founding|record|vault/.test(text)) return ["RECORD", "WITNESS", "SEAL"];
+  return ["REQUEST", "WARNING", "REPORT"];
+}
+
+function phenomenonNotes(
+  source: TransmissionSourceMetadata,
+  readableBody: string,
+  profile: AstropathicDegradationProfile,
+) {
+  const cluster = semanticCluster(source, readableBody);
+  const notes: string[] = [];
+  for (const phenomenon of profile.phenomena) {
+    if (phenomenon === "SEMANTIC LOSS") notes.push("[SEMANTIC LOSS — SECONDARY DETAIL UNRECOVERED]");
+    if (phenomenon === "INTERPRETIVE AMBIGUITY") {
+      notes.push(`The following concept achieved partial concordance: [${cluster.join(" / ")}]. No single interpretation achieved sanction.`);
+    }
+    if (phenomenon === "THOUGHT-ECHO") notes.push(`[ECHO: ${cluster[0]} — ${cluster[0]} — ${cluster[0]}]`);
+    if (phenomenon === "MNEMONIC BLEED") notes.push("[MNEMONIC INTRUSION — ORIGIN UNCONFIRMED]");
+    if (phenomenon === "EMOTIVE SATURATION") notes.push("[GRIEF RESPONSE OBSCURES SECONDARY CONTENT]");
+    if (phenomenon === "CHRONOMETRIC DISJUNCTION") notes.push("[TEMPORAL ORDER INDETERMINATE]");
+    if (phenomenon === "IDENTITY OVERLAP") notes.push("[ORIGINATOR / RELAY CONFLATION]");
+    if (phenomenon === "EMPYRIC CONTAMINATION") {
+      notes.push("[SECONDARY THOUGHT-PRESENCE DETECTED]");
+      notes.push(`All receiving Astropaths independently perceived [INTRUSIVE THOUGHT-FORM: ${profile.intrusiveThought}]. No compatible mnemonic structure was found within the originating impression.`);
+    }
+  }
+  return notes;
+}
+
+const ARGENT_PSALM_SANCTIONED_INTERPRETATION = [
+  "Choir Primus reports detection of a partial Soul-Bound signature provisionally associated with the missing vessel Argent Psalm.",
+  "The impression manifested beyond the Vesper Rift. Provenance remains unresolved.",
+  "The originating thought-form repeatedly conveyed [RETURN / REMEMBER / HOME]. No single interpretation achieved sufficient concordance for sanction.",
+  "A secondary impression indicates the vessel was [DAMAGED / ABANDONED / DEAD], though the choir could not establish whether this concept referred to the Argent Psalm, its crew, or another presence associated with the transmission.",
+  "A significant portion of the received impression remains unrecoverable due to severe empyric interference.",
+  "Immediately before termination, all receiving Astropaths independently perceived the concept:",
+  "THE MOON REMEMBERS.",
+  "This mnemonic does not conform to the preceding thought-pattern and its origin remains disputed.",
+].join("\n\n");
+
+export function renderSanctionedInterpretation(
+  source: TransmissionSourceMetadata,
+  profile: AstropathicDegradationProfile,
+) {
+  const readableBody = resolveTransmissionBody(source);
+  const isPartialRecord = source.event?.kinds.includes("partial-transmission");
+  if (!isPartialRecord && source.subject.trim().toLowerCase() === "argent psalm signal echo") {
+    return ARGENT_PSALM_SANCTIONED_INTERPRETATION;
+  }
+
+  const level = severityIndex(profile.severity);
+  const notes = phenomenonNotes(source, readableBody, profile);
+  let sanctioned: string[];
+  if (level === 0) {
+    sanctioned = [readableBody];
+  } else if (level === 1) {
+    sanctioned = [readableBody, ...notes.slice(0, 1)];
+  } else if (level === 2) {
+    sanctioned = [readableBody, "[PROVISIONAL INTERPRETATION] Reconstruction remains actionable, but choir consensus is incomplete.", ...notes.slice(0, 3)];
+  } else if (level === 3) {
+    sanctioned = [`[RECONSTRUCTED] ${readableBody}`, "Subject attribution and sequence remain provisional.", ...notes.slice(0, 5)];
+  } else if (isPartialRecord) {
+    sanctioned = [
+      `[RECONSTRUCTED FRAGMENT] ${readableBody}`,
+      "No interpretation beyond the recovered fragment has been sanctioned.",
+      ...notes.slice(0, 4),
+    ];
+  } else {
+    const anchors = semanticCluster(source, readableBody);
+    sanctioned = [
+      "Only three semantic concepts achieved sufficient concordance for archival sanction:",
+      ...anchors.map((anchor) => `[${anchor}]`),
+      "Subject association unresolved. Temporal relationship unresolved. Originator identity unresolved.",
+      "No further command-readable reconstruction is possible.",
+      ...notes.slice(0, 4),
+    ];
+  }
+
+  if (profile.archivalRedaction !== "NONE" && !/\[REDACTED/i.test(sanctioned.join(" "))) {
+    sanctioned.push(`[REDACTED // ${profile.archivalRedaction.includes("ORDO XENOS") ? "ORDO XENOS" : "IMPERIAL AUTHORITY"}]`);
+  }
+  if (profile.cipherStatus === "CRYPTEX UNRESOLVED" && !/\[CRYPTEX UNRESOLVED\]/i.test(sanctioned.join(" "))) {
+    sanctioned.push("[CRYPTEX UNRESOLVED] Conventional encrypted payload could not be recovered; this failure is separate from the astropathic interpretation.");
+  }
+  return sanctioned.join("\n\n");
+}
+
+function uncertaintyForSanctionedLine(text: string): TransmissionTranscriptLine["uncertainty"] {
+  if (/\[REDACTED/i.test(text)) return "redaction";
+  if (/\[CRYPTEX UNRESOLVED\]/i.test(text)) return "cipher";
+  if (/SECONDARY THOUGHT-PRESENCE|INTRUSIVE THOUGHT-FORM|UNATTRIBUTED VOICE/i.test(text)) return "empyric";
+  if (/\[[^\]]+\]|provisional|unresolved|concordance|could not|indeterminate|reconstruction/i.test(text)) return "semantic";
+  return undefined;
+}
+
 function romanNumeral(value: number) {
   const numerals = [
     [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
@@ -508,9 +734,13 @@ function romanNumeral(value: number) {
 
 export function formatTransmissionTranscript(source: TransmissionSourceMetadata): FormattedTransmissionTranscript {
   const analysis = analyzeTransmission(source);
-  const body = resolveTransmissionBody(source);
-  const bodyLines = body.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((line) => line.trim()).filter(Boolean) ?? [body];
-  const closing = transmissionClosing(source, body);
+  const sanctionedInterpretation = renderSanctionedInterpretation(source, analysis.degradation);
+  const bodyLines = sanctionedInterpretation
+    .split(/\n+/)
+    .flatMap((paragraph) => paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [paragraph])
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const closing = transmissionClosing(source, sanctionedInterpretation);
   const rootReliquariumNumber = source.event?.parentTransmissionId
     ? transmissionReliquariumNumber({
         ...source,
@@ -525,6 +755,8 @@ export function formatTransmissionTranscript(source: TransmissionSourceMetadata)
     { text: "> Intended recipient: CHAPTER MASTER // LUNAR DRAGONS", section: "analysis" },
     { text: `> Originator identification: ${source.agency.toUpperCase()} // ${analysis.identityState}`, section: "analysis" },
     { text: `> Probable origin: ${analysis.probableOriginLabel}`, section: "analysis" },
+    { text: `> Interpretation state: ${analysis.degradation.severity}`, section: "analysis" },
+    { text: `> Interpretation concordance: ${formatConfidencePercentage(analysis.degradation.interpretationConcordance)}`, section: "analysis" },
     ...eventLines.map((text): TransmissionTranscriptLine => ({ text, section: "analysis" })),
     ...(source.received ? [{ text: `> Data-stamp: ${source.received}`, section: "analysis" as const }] : []),
     { text: `> Timestamp integrity: ${analysis.timestampIntegrityState}`, section: "analysis" },
@@ -532,7 +764,11 @@ export function formatTransmissionTranscript(source: TransmissionSourceMetadata)
     { text: "", section: "analysis", gap: true },
     { text: TRANSMISSION_CONTENT_MARKER, section: "analysis", command: true },
     { text: `> Record subject: ${source.subject}`, section: "analysis" },
-    ...bodyLines.map((line): TransmissionTranscriptLine => ({ text: `> ${line}`, section: "content" })),
+    ...bodyLines.map((line): TransmissionTranscriptLine => ({
+      text: `> ${line}`,
+      section: "content",
+      ...(uncertaintyForSanctionedLine(line) ? { uncertainty: uncertaintyForSanctionedLine(line) } : {}),
+    })),
     ...(closing ? [{ text: `> ${closing}`, section: "content" as const, closing: true }] : []),
     { text: "", section: "terminal-footer", gap: true },
     { text: "> Cogitating ... complete", section: "terminal-footer" },
@@ -547,69 +783,7 @@ export function formatTransmissionTranscript(source: TransmissionSourceMetadata)
 
 export function prepareTransmissionLine(
   line: TransmissionTranscriptLine,
-  profile: TransmissionCorruptionProfile,
-  lineIndex: number,
 ) {
-  if (line.corruption) return `> Data corruption query: ${formatCorruptionPercentage(profile.percentage)}`;
   if (line.gap) return "\u00a0";
-  if (line.closing || line.blessing) return line.text;
-  return line.section === "content"
-    ? corruptTransmissionText(line.text, profile, lineIndex)
-    : line.text;
-}
-
-function corruptionTier(percentage: number) {
-  if (percentage <= 3) return "low";
-  if (percentage <= 12) return "medium";
-  return "high";
-}
-
-export function corruptTransmissionText(text: string, profile: TransmissionCorruptionProfile, lineIndex: number) {
-  if (profile.percentage <= 0) return text;
-
-  const threshold = Math.round(profile.percentage * 100);
-  const tier = corruptionTier(profile.percentage);
-  const characters = Array.from(text);
-  const output: string[] = [];
-
-  for (let characterIndex = 0; characterIndex < characters.length; characterIndex += 1) {
-    const character = characters[characterIndex];
-    if (!/[A-Za-z0-9]/.test(character)) {
-      output.push(character);
-      continue;
-    }
-
-    const positionHash = hashTransmissionValue(`${profile.seed}:${lineIndex}:${characterIndex}`);
-    if (positionHash % 10000 >= threshold) {
-      output.push(character);
-      continue;
-    }
-
-    const glyphHash = hashTransmissionValue(`${profile.seed}:${lineIndex}:${characterIndex}:glyph`);
-    if (tier === "low") {
-      const mark = LOW_CORRUPTION_GLYPHS[glyphHash % LOW_CORRUPTION_GLYPHS.length];
-      output.push(mark === "::" ? `${character}::` : mark);
-      continue;
-    }
-
-    if (tier === "high" && glyphHash % 4 === 0) {
-      output.push(SEVERE_CANT_FRAGMENTS[glyphHash % SEVERE_CANT_FRAGMENTS.length]);
-      const obscuredCharacters = 3 + (glyphHash % 6);
-      for (let skipped = 0; skipped < obscuredCharacters && characterIndex + 1 < characters.length; skipped += 1) {
-        if (!/[A-Za-z0-9]/.test(characters[characterIndex + 1])) break;
-        characterIndex += 1;
-      }
-      continue;
-    }
-
-    if (glyphHash % 9 === 0) {
-      output.push(MACHINE_CANT_FRAGMENTS[glyphHash % MACHINE_CANT_FRAGMENTS.length]);
-      continue;
-    }
-
-    const glyph = CORRUPTION_GLYPHS[glyphHash % CORRUPTION_GLYPHS.length];
-    output.push(tier === "high" && glyphHash % 7 === 0 ? `${glyph}${glyph}` : glyph);
-  }
-
-  return output.join("");
+  return line.text;
 }

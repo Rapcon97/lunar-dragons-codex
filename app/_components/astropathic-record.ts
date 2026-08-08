@@ -1,13 +1,13 @@
 import type { TransmissionWarpExposure } from "../archive-data";
 import {
   hashTransmissionValue,
-  resolveTransmissionBody,
+  renderSanctionedInterpretation,
   type TransmissionAnalysis,
   type TransmissionSourceMetadata,
 } from "./relay-transmission.ts";
 
 export type RawImpressionFragment = {
-  kind: "VISION" | "SENSATION" | "EMOTION" | "CONCEPT" | "MNEMONIC KEY";
+  kind: "VISION" | "SENSATION" | "EMOTION" | "CONCEPT" | "THOUGHT-FORM" | "MNEMONIC KEY" | "ANOMALY";
   text: string;
 };
 
@@ -42,8 +42,10 @@ const SUBJECT_IMPRESSIONS: Record<string, readonly RawImpressionFragment[]> = {
   "argent psalm signal echo": [
     { kind: "VISION", text: "A silver vessel singing beyond a curtain of violet fire." },
     { kind: "SENSATION", text: "A remembered voice heard through another person's grief." },
-    { kind: "EMOTION", text: "Recognition without certainty; hope made dangerous." },
-    { kind: "MNEMONIC KEY", text: "THE MOON REMEMBERS // THE PSALM RETURNS IN FRAGMENTS" },
+    { kind: "EMOTION", text: "Recognition without certainty. Hope made dangerous." },
+    { kind: "THOUGHT-FORM", text: "RETURN. REMEMBER. HOME. [concepts overlap]" },
+    { kind: "MNEMONIC KEY", text: "THE MOON REMEMBERS." },
+    { kind: "ANOMALY", text: "A final presence is perceived after the originating thought-form has ended." },
   ],
   "munitions allocation dispute": [
     { kind: "VISION", text: "Two mailed hands closing around the same iron coffer." },
@@ -133,7 +135,7 @@ export function buildAstropathicRecordPresentation(
   source: TransmissionSourceMetadata,
   analysis: TransmissionAnalysis,
 ): AstropathicRecordPresentation {
-  const sanctionedInterpretation = resolveTransmissionBody(source);
+  const sanctionedInterpretation = renderSanctionedInterpretation(source, analysis.degradation);
   const explicit = SUBJECT_IMPRESSIONS[source.subject.trim().toLowerCase()];
   const rawImpression = explicit
     ? explicit.map((fragment) => ({ ...fragment }))

@@ -9,15 +9,17 @@ import {
 
 import {
   analyzeTransmission,
+  astropathicSeverityForConcordance,
   appendTransmissionRetrievalDots,
+  buildAstropathicDegradationProfile,
   classifyTransmissionOrigin,
-  corruptTransmissionText,
   formatTransmissionTranscript,
   IMPERIAL_TRANSMISSION_CLOSING,
   MECHANICUS_TRANSMISSION_CLOSING,
   OPERATIONAL_THEATRE,
   prepareTransmissionLine,
   RECEIVING_LOCUS,
+  renderSanctionedInterpretation,
   splitTransmissionMetadata,
   TERMINAL_MACHINE_BLESSING,
   TRANSMISSION_CONTENT_MARKER,
@@ -41,6 +43,21 @@ const source = (overrides = {}) => ({
   priority: "ACTION",
   received: "0.588.056.M42",
   receivedAt: "2026-08-03T14:25:00.000Z",
+  ...overrides,
+});
+
+const degradationProfile = (overrides = {}) => ({
+  signalBand: "nearby-inter-system",
+  seed: 77,
+  severity: "I — COHERENT",
+  interpretationConcordance: 96,
+  reconstructionConfidence: 94,
+  semanticIntegrity: "STABLE",
+  mnemonicLoss: "NEGLIGIBLE",
+  emotiveContamination: "NEGLIGIBLE",
+  archivalRedaction: "NONE",
+  cipherStatus: "RESOLVED",
+  phenomena: [],
   ...overrides,
 });
 
@@ -139,7 +156,7 @@ test("shared event presentation protects failed-node and delayed analysis fields
   const formatted = formatTransmissionTranscript(fixture);
   for (const line of formatted.lines.filter((candidate) => eventLines.includes(candidate.text))) {
     assert.equal(line.section, "analysis");
-    assert.equal(prepareTransmissionLine(line, formatted.analysis.corruption, formatted.lines.indexOf(line)), line.text);
+    assert.equal(prepareTransmissionLine(line), line.text);
   }
 });
 
@@ -242,8 +259,7 @@ test("echo presentation identifies intentional repeated content without corrupti
   assert.equal(protectedLines.length, 2);
   assert.ok(protectedLines.every((line) => line.section === "analysis"));
   for (const line of protectedLines) {
-    const index = formatted.lines.indexOf(line);
-    assert.equal(prepareTransmissionLine(line, { ...formatted.analysis.corruption, percentage: 35 }, index), line.text);
+    assert.equal(prepareTransmissionLine(line), line.text);
   }
 });
 
@@ -258,16 +274,17 @@ const originFixtures = [
   [source({ id: "origin-anomaly", agency: "Astropathica", subject: "Impossible chronology signal echo" }), "anomalous source", 12, 30],
 ];
 
-test("Phase 1B analysis is deterministic across all approved origin classifications", () => {
-  for (const [fixture, expectedBand, minimum, maximum] of originFixtures) {
+test("Phase 1B analysis and semantic degradation are deterministic across all approved origin classifications", () => {
+  for (const [fixture, expectedBand] of originFixtures) {
     assert.equal(classifyTransmissionOrigin(fixture), expectedBand);
     const first = analyzeTransmission(fixture);
     const second = analyzeTransmission({ ...fixture });
     assert.deepEqual(first, second);
     assert.equal(first.originBand, expectedBand);
     assert.match(first.reliquariumNumber, /^056\/\/[0-9]{6}$/);
-    assert.ok(first.corruptionPercentage >= minimum && first.corruptionPercentage <= maximum);
-    assert.ok(first.corruptionPercentage >= 0 && first.corruptionPercentage <= 35);
+    assert.ok(first.degradation.interpretationConcordance >= 3 && first.degradation.interpretationConcordance <= 100);
+    assert.ok(first.degradation.reconstructionConfidence >= 2 && first.degradation.reconstructionConfidence <= 100);
+    assert.match(first.degradation.severity, /^(I|II|III|IV|V) — /);
   }
 });
 
@@ -303,7 +320,7 @@ test("explicit metadata overrides misleading prose and maps only to approved ana
   assert.equal(analysis.triangulationState, "CONFIRMED");
   assert.equal(analysis.timestampIntegrityState, "PARTIAL");
   assert.equal(analysis.warpExposureState, "MINOR");
-  assert.ok(analysis.corruptionPercentage >= 0.5 && analysis.corruptionPercentage <= 4);
+  assert.equal(analysis.degradation.signalBand, "nearby-inter-system");
 });
 
 test("partial metadata overrides only supplied fields", () => {
@@ -328,7 +345,7 @@ test("partial metadata overrides only supplied fields", () => {
   assert.equal(partial.triangulationState, inferred.triangulationState);
   assert.equal(partial.timestampIntegrityState, inferred.timestampIntegrityState);
   assert.equal(partial.warpExposureState, inferred.warpExposureState);
-  assert.equal(partial.corruptionPercentage, inferred.corruptionPercentage);
+  assert.deepEqual(partial.degradation, inferred.degradation);
 });
 
 test("an authenticated Kharon inquiry is distinct from a true anomalous Kharon echo", () => {
@@ -397,7 +414,21 @@ test("the shared formatter produces identical Command and Relay transcripts", ()
 });
 
 test("every transmission receives one sanctioned interpretation and a deterministic hidden raw impression", () => {
-  const fixture = source({ id: "dual-layer-fixture", subject: "Convoy passage requested" });
+  const fixture = source({
+    id: "dual-layer-fixture",
+    agency: "Lunaris Chapter Command",
+    subject: "Internal archive watch",
+    transmission: {
+      originBand: "internal Lunaris",
+      originRegion: "IMPERIUM NIHILUS",
+      transmissionMethod: "noospheric",
+      routeClass: "direct-noospheric",
+      warpExposure: "NEGLIGIBLE",
+      identityState: "VERIFIED",
+      originState: "CONFIRMED",
+      timestampState: "VERIFIED",
+    },
+  });
   const analysis = analyzeTransmission(fixture);
   const first = buildAstropathicRecordPresentation(fixture, analysis);
   const second = buildAstropathicRecordPresentation({ ...fixture }, analyzeTransmission({ ...fixture }));
@@ -406,7 +437,7 @@ test("every transmission receives one sanctioned interpretation and a determinis
   assert.equal(first.sanctionedInterpretation, fixture.body);
   assert.equal(first.rawImpression.length, 4);
   assert.deepEqual(first.rawImpression.map((fragment) => fragment.kind), ["VISION", "EMOTION", "CONCEPT", "MNEMONIC KEY"]);
-  assert.match(first.thoughtmarkAuthority, /OFFICIO PREFECTUS/);
+  assert.match(first.thoughtmarkAuthority, /LUNARIS CHAPTER COMMAND/);
   assert.match(first.choirSignature, /CHOIR|THOUGHTMARK|NOOSPHERIC|CANT/);
   assert.match(first.archiveDisposition, /COMMAND JUDGEMENT/);
 });
@@ -488,8 +519,7 @@ test("strong authority and encryption can improve integrity without escaping the
 
   assert.equal(routine.originBand, "Imperium Sanctus via Nachmund");
   assert.equal(highAuthority.originBand, routine.originBand);
-  assert.ok(highAuthority.corruptionPercentage <= routine.corruptionPercentage);
-  assert.ok(highAuthority.corruptionPercentage >= 7 && highAuthority.corruptionPercentage <= 18);
+  assert.ok(highAuthority.degradation.interpretationConcordance >= routine.degradation.interpretationConcordance);
 });
 
 test("unknown origins fall back to a broad theatre-level fix without inventing a system", () => {
@@ -543,38 +573,76 @@ test("legacy date-only timestamps remain valid but categorically partial", () =>
   assert.equal(missing.timestampIntegrityState, "UNRECOVERED");
 });
 
-test("corruption is confined to body sections and trusted analysis remains exact", () => {
-  const formatted = formatTransmissionTranscript(source({ body: "Recovered astropathic content remains authoritative. ".repeat(16) }));
-  const severeProfile = { ...formatted.analysis.corruption, percentage: 35 };
-  const prepared = formatted.lines.map((line, index) => prepareTransmissionLine(line, severeProfile, index));
+test("all five degradation states remain readable and replace character damage with semantic uncertainty", () => {
+  const fixture = source({ subject: "Vigil IX relief appeal", body: "The defenders request relief before the next assault." });
+  const cases = [
+    ["I — COHERENT", [], /The defenders request relief/],
+    ["II — DEGRADED", ["INTERPRETIVE AMBIGUITY"], /\[RELIEF \/ HOLD \/ WITHDRAW\]/],
+    ["III — FRACTURED", ["SEMANTIC LOSS", "CHRONOMETRIC DISJUNCTION"], /SEMANTIC LOSS|TEMPORAL ORDER INDETERMINATE/],
+    ["IV — COMPROMISED", ["SEMANTIC LOSS", "INTERPRETIVE AMBIGUITY", "IDENTITY OVERLAP"], /RECONSTRUCTED|ORIGINATOR \/ RELAY CONFLATION/],
+    ["V — INCOHERENT", ["SEMANTIC LOSS", "CHRONOMETRIC DISJUNCTION", "IDENTITY OVERLAP"], /Only three semantic concepts|No further command-readable reconstruction/],
+  ];
 
-  assert.ok(formatted.lines.every((line) => !line.corruption));
-  formatted.lines.forEach((line, index) => {
-    if (line.section !== "content" || line.closing) {
-      assert.equal(prepared[index], line.gap ? "\u00a0" : line.text);
-    }
-  });
-  const bodyIndexes = formatted.lines
-    .map((line, index) => line.section === "content" && !line.closing ? index : -1)
-    .filter((index) => index >= 0);
-  assert.ok(bodyIndexes.some((index) => prepared[index] !== formatted.lines[index].text));
-
-  const futureAnalysisField = { text: "> Estimated transit interval: 07H 42M", section: "analysis" };
-  assert.equal(prepareTransmissionLine(futureAnalysisField, severeProfile, 999), futureAnalysisField.text);
-  const blessingIndex = formatted.lines.findIndex((line) => line.blessing);
-  assert.equal(prepared[blessingIndex], TERMINAL_MACHINE_BLESSING);
+  for (const [severity, phenomena, expected] of cases) {
+    const rendered = renderSanctionedInterpretation(fixture, degradationProfile({ severity, phenomena }));
+    assert.match(rendered, expected, severity);
+    assert.doesNotMatch(rendered, /[█▓▒░╳╱╲║╬]|\[SIG-LOSS\]|\[DATA-NULL\]|\[VOX-ERR\]/u, severity);
+  }
 });
 
-test("corrupted positions remain deterministic and source text is never mutated", () => {
+test("semantic degradation is deterministic and preserves the original stored prose", () => {
   const fixture = originFixtures.at(-1)[0];
-  const profile = analyzeTransmission(fixture).corruption;
-  const body = "The signal persists beyond the northern approaches. ".repeat(18);
-  const original = `${body}`;
-  const first = corruptTransmissionText(body, profile, 21);
-  const second = corruptTransmissionText(body, { ...profile }, 21);
+  const firstAnalysis = analyzeTransmission(fixture);
+  const secondAnalysis = analyzeTransmission({ ...fixture });
+  const original = fixture.body;
+  const first = renderSanctionedInterpretation(fixture, firstAnalysis.degradation);
+  const second = renderSanctionedInterpretation({ ...fixture }, secondAnalysis.degradation);
+
+  assert.deepEqual(firstAnalysis.degradation, secondAnalysis.degradation);
   assert.equal(first, second);
-  assert.notEqual(first, body);
-  assert.equal(body, original);
+  assert.equal(fixture.body, original);
+  assert.doesNotMatch(first, /[█▓▒░╳╱╲║╬]|\[SIG-LOSS\]|\[DATA-NULL\]|\[VOX-ERR\]/u);
+});
+
+test("archival redaction and cipher failure remain distinct from psychic degradation", () => {
+  const redactedSource = source({
+    id: "redaction-fixture",
+    agency: "Ordo Xenos",
+    subject: "Sealed witness record",
+    body: "The witness identity is [REDACTED // ORDO XENOS].",
+  });
+  const cipherSource = source({
+    id: "cipher-fixture",
+    agency: "Navis Imperialis",
+    subject: "Cryptox cipher failure",
+    body: "The astropathic command layer remains readable, but the attached cipher is unrecovered.",
+  });
+  const redacted = analyzeTransmission(redactedSource).degradation;
+  const cipher = analyzeTransmission(cipherSource).degradation;
+
+  assert.equal(redacted.archivalRedaction, "PRESENT // ORDO XENOS");
+  assert.notEqual(redacted.cipherStatus, "CRYPTEX UNRESOLVED");
+  assert.equal(cipher.archivalRedaction, "NONE");
+  assert.equal(cipher.cipherStatus, "CRYPTEX UNRESOLVED");
+  assert.match(renderSanctionedInterpretation(cipherSource, cipher), /Conventional encrypted payload.*separate from the astropathic interpretation/i);
+});
+
+test("Argent Psalm demonstrates readable ambiguity while Raw Impression retains the psychic anomaly", () => {
+  const fixture = source({
+    id: "argent-psalm-fixture",
+    agency: "Astropathica",
+    subject: "Argent Psalm signal echo",
+    body: "Legacy source body that must not receive character damage.",
+  });
+  const analysis = analyzeTransmission(fixture);
+  const record = buildAstropathicRecordPresentation(fixture, analysis);
+
+  assert.match(record.sanctionedInterpretation, /partial Soul-Bound signature provisionally associated with the missing vessel Argent Psalm/i);
+  assert.match(record.sanctionedInterpretation, /\[RETURN \/ REMEMBER \/ HOME\]/);
+  assert.match(record.sanctionedInterpretation, /\[DAMAGED \/ ABANDONED \/ DEAD\]/);
+  assert.match(record.sanctionedInterpretation, /THE MOON REMEMBERS/);
+  assert.doesNotMatch(record.sanctionedInterpretation, /[█▓▒░╳╱╲║╬]|\[SIG-LOSS\]|\[DATA-NULL\]/u);
+  assert.match(record.rawImpression.map((fragment) => `${fragment.kind}: ${fragment.text}`).join("\n"), /THOUGHT-FORM: RETURN\. REMEMBER\. HOME|ANOMALY: A final presence/);
 });
 
 test("typewriter timing, metadata retrieval, and four-dot cadence remain unchanged", () => {
@@ -587,7 +655,6 @@ test("typewriter timing, metadata retrieval, and four-dot cadence remain unchang
     lineBreakMs: 200,
     retrievalDotMs: 500,
     retrievalDotCount: 4,
-    corruptionStepMs: 40,
   });
   assert.equal(transmissionCharacterDelay("A"), 38);
   assert.equal(transmissionCharacterDelay(","), 98);
@@ -598,6 +665,19 @@ test("typewriter timing, metadata retrieval, and four-dot cadence remain unchang
     value: " ARGENT VIGIL RELAY",
   });
   assert.equal(appendTransmissionRetrievalDots(">> RETRIEVING ARCHIVE"), ">> RETRIEVING ARCHIVE....");
+});
+
+test("concordance thresholds expose all five categorical degradation states", () => {
+  assert.equal(astropathicSeverityForConcordance(100), "I — COHERENT");
+  assert.equal(astropathicSeverityForConcordance(89), "II — DEGRADED");
+  assert.equal(astropathicSeverityForConcordance(74), "III — FRACTURED");
+  assert.equal(astropathicSeverityForConcordance(54), "IV — COMPROMISED");
+  assert.equal(astropathicSeverityForConcordance(29), "V — INCOHERENT");
+
+  const built = buildAstropathicDegradationProfile(source(), "nearby-inter-system", 12, "ELEVATED", "astropathic");
+  assert.match(built.severity, /^(I|II|III|IV|V) — /);
+  assert.ok(["STABLE", "DEGRADED", "FRACTURED", "COMPROMISED", "INCOHERENT"].includes(built.semanticIntegrity));
+  assert.ok(Array.isArray(built.phenomena));
 });
 
 test("sender closings and the final machine blessing remain unchanged", () => {
