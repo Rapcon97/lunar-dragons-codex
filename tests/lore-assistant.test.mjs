@@ -168,7 +168,8 @@ test("administrator identity is reduced to a stable privacy-preserving safety id
   const first = await loreAssistantSafetyIdentifier("Guido@example.com");
   const second = await loreAssistantSafetyIdentifier(" guido@EXAMPLE.com ");
   assert.equal(first, second);
-  assert.match(first, /^ld-[a-f0-9]{64}$/u);
+  assert.match(first, /^ld-[a-f0-9]{61}$/u);
+  assert.equal(first.length, 64);
   assert.equal(first.includes("guido"), false);
   assert.equal(first.includes("example"), false);
 });

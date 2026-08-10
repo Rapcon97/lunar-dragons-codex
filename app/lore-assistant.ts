@@ -281,7 +281,11 @@ export function parseLoreAssistantAnswer(
 export async function loreAssistantSafetyIdentifier(email: string) {
   const bytes = new TextEncoder().encode(`lunar-dragons:${email.trim().toLowerCase()}`);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return `ld-${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  const hash = Array.from(
+    new Uint8Array(digest),
+    (byte) => byte.toString(16).padStart(2, "0"),
+  ).join("");
+  return `ld-${hash.slice(0, 61)}`;
 }
 
 const loreAssistantInstructions = `You are the Lunar Dragons Lore Cogitator, an archival development assistant for the Chapter Master.
