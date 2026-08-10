@@ -12,6 +12,20 @@ The production Site is [https://lunardragons.cloud](https://lunardragons.cloud).
 - Production and staging secrets, D1 data, R2 assets, identifiers, and deployment configuration must remain isolated.
 - Never use staging D1/R2 identifiers in the Site build or production deployment artifact.
 
+### Current operational baseline
+
+As of 2026-08-10, the current deployed baseline is:
+
+- Production Site release: `159`
+- Production environment revision: `5`
+- GitHub source commit: `113796967d3db80c93655abbd0ee87f5005ea434`
+- Site provenance commit: `1ee2ca5453a25bb74ec09640ec3ae1564a37f664`
+- Application tests: 81/81 passing
+- Rendered-interface tests: 20/20 passing
+- GPT API tests: 53/53 passing
+
+Live structured-lore totals and status counts are mutable production data. Read them from the authoritative D1-backed archive or the authenticated Chronicle administration view; do not treat a count recorded in documentation as current authority.
+
 ## 2. Established GPT API contract
 
 The current `/api/gpt/v1/*` API is live production functionality, not future work.
@@ -79,7 +93,7 @@ The following must remain excluded from source control:
 - `.env`
 - `.env.*`
 
-Documentation may name `GUEST_SESSION_SECRET` and `GPT_API_KEY`, but must never contain their values.
+Documentation may name `GUEST_SESSION_SECRET`, `GPT_API_KEY`, and `OPENAI_API_KEY`, but must never contain their values.
 
 ## 5. External response compatibility
 
@@ -129,6 +143,7 @@ Apply these rules explicitly:
 6. `draft`, `review`, and `retconned` material must not be exposed as established canon.
 7. Canon promotion must be explicit.
 8. Generated or speculative material must not silently rewrite established lore.
+9. Structured lore may have a title and an optional subtitle. Chronicle indexes remain title-only; the subtitle belongs in the opened record and editing surfaces.
 
 ## 7. Structured entry creation and updates
 
@@ -162,6 +177,17 @@ Search-before-create behavior should be retained and encouraged so GPT clients r
 
 Do not implement entry updates by replacing the complete archive or regenerating IDs.
 
+### Administrative editing and status control
+
+Authenticated ChatGPT administrators who have actively entered Admin Mode may edit structured lore through the Chronicle interface. Preserve these rules:
+
+- Direct editing must address the stable structured entry ID.
+- Manual status changes may move a record among `draft`, `review`, `canon`, and `retconned`, but every transition must be explicit.
+- Status changes and record edits must retain optimistic conflict protection.
+- Moving a record into `canon` may update the compatibility timeline mirror; moving it out of `canon` must remove its established-canon presentation without disturbing unrelated legacy entries.
+- Public and guest views remain canon-only even while administrators can inspect all four status groups.
+- Current per-record lore content is limited to 64,000 characters, with a 512 KiB UTF-8 budget for the complete structured-lore collection.
+
 ### Legacy chronicle append
 
 `POST /api/gpt/v1/chronicle` and `POST /api/gpt/chronicle` remain compatibility routes. They may append one validated Chronicle entry but must not accept complete-archive replacement.
@@ -184,6 +210,17 @@ The GPT API must not expose:
 - unrelated administrative data
 
 Do not add a reset or deletion route for convenience in development.
+
+### On-site Lore Cogitator
+
+The Chronicle editor includes a separate server-side Lore Cogitator for authenticated ChatGPT administrators in active Admin Mode. It uses `OPENAI_API_KEY` with the OpenAI Responses API and must remain advisory:
+
+- Existing `canon` entries are the primary Lunar Dragons authority supplied to the assistant.
+- Draft, review, retconned, operational, simulation, and Sector Intel material must not silently outrank canon.
+- Suggestions must be explicitly loaded into the editor, reviewed, and saved by the administrator.
+- The Cogitator must not directly publish, demote, delete, reset, or replace archive records.
+- Consultations are not production lore and are not persisted by the application.
+- `OPENAI_API_KEY` is server-only and must never be exposed to browser code.
 
 ## 9. Canon compatibility mirror
 
@@ -236,6 +273,23 @@ If it does:
 
 Do not assume that a website-only feature is isolated from the shared archive.
 
+### Transmission and Sector Intel state
+
+The Astropathic transmission work currently includes:
+
+- Phase 1B: deterministic transmission analysis and semantic degradation.
+- Phase 2: explicit transmission metadata for new messages, with Phase 1 inference retained for metadata-free legacy messages.
+- Phase 3: controlled Sector Intel origin actions for exact approved IDs, resolved through current Sector Intel records rather than hard-coded route indexes.
+- Phase 4: deterministic anomalous delivery events, including bounded delays, out-of-order arrivals, relay failures, contradictory/future timestamps, partial transmissions, recovered fragments, and intentional echoes.
+
+Preserve these boundaries:
+
+- Astropathic messages are generated simulation content, not structured canon unless deliberately archived through the lore workflow.
+- Cadence, due-only delivery, IDs, duplicate prevention, corruption, analysis, and Command/Relay parity must remain deterministic.
+- The exact receiving star system of the `Lunaris` is not established and must not be invented.
+- `TRACE RELAY PATH` remains deferred until real route topology and a receiving location are established.
+- Sector Intel prototype/simulacrum data is not canon and must not be promoted merely because it is rendered by the interface.
+
 ## 12. API versioning
 
 Avoid breaking the published v1 API. If an incompatible redesign becomes necessary, introduce a new version such as `/api/gpt/v2/*` and retain v1 compatibility for existing clients.
@@ -285,13 +339,15 @@ UI redesigns, navigation changes, new pages, characters, planets, styling, secto
 
 If an unrelated change genuinely requires a GPT API adjustment, account explicitly for authentication, compatibility, lore status safety, stable IDs, optimistic writes, tests, and production/staging isolation.
 
-## 15. Known-good milestone
+## 15. Current and historical milestones
 
-The verified production integration milestone is:
+The current live baseline is release `159` at source commit `113796967d3db80c93655abbd0ee87f5005ea434`, Site provenance commit `1ee2ca5453a25bb74ec09640ec3ae1564a37f664`, and environment revision `5`.
+
+The original production GPT cutover remains a historical recovery reference:
 
 - Tag: `release-101-gpt-integration`
 - Commit: `d8f7b1c7abfac5cf35807931dcc64321d64ad1c7`
-- Production release: `101`
+- Production release at cutover: `101`
 - Production environment revision: `5`
 
-Use this as a comparison point for regressions. Do not commit, deploy, migrate, rotate secrets, or change production resources unless the user has explicitly authorized that action.
+Use release 159 for current-state comparisons and release 101 when isolating regressions introduced after the GPT cutover. Do not commit, deploy, migrate, rotate secrets, or change production resources unless the user has explicitly authorized that action.

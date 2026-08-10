@@ -4,6 +4,20 @@ The Lunar Dragons Codex is a persistent, in-universe archive for the homebrew Wa
 
 Production: [https://lunardragons.cloud](https://lunardragons.cloud)
 
+## Current production baseline
+
+As of 2026-08-10:
+
+- active Site release: `159`
+- active environment revision: `5`
+- GitHub source commit: `113796967d3db80c93655abbd0ee87f5005ea434`
+- Site provenance commit: `1ee2ca5453a25bb74ec09640ec3ae1564a37f664`
+- application tests: 81/81 passing
+- rendered-interface tests: 20/20 passing
+- GPT API tests: 53/53 passing
+
+Structured-lore totals and status counts are live, mutable archive data. Read them from the D1-backed Chronicle administration view or protected API rather than relying on a count copied into documentation.
+
 ## Project purpose
 
 The application provides one authoritative place to develop and present Lunar Dragons lore while keeping speculative material separate from established canon.
@@ -16,6 +30,9 @@ It supports:
 - persistent D1-backed Chapter data
 - R2-backed images and documents
 - structured lore with `draft`, `review`, `canon`, and `retconned` states
+- direct Admin Mode lore editing with title, optional subtitle, formatting, and explicit status control
+- an advisory on-site Lore Cogitator backed by the OpenAI Responses API
+- deterministic Astropathic messages, transmission analysis, corruption, rare delivery events, and exact-origin Sector Intel actions
 - a Bearer-authenticated API used by the Lunar Dragons Custom GPT
 
 ## Production architecture
@@ -80,7 +97,7 @@ npm run verify:standard  # UI behavior, navigation and ordinary application logi
 npm run verify:protected # API, auth, archive storage, schema, bindings or OpenAPI work
 ```
 
-The UI lane runs one production build and the rendered-interface regressions. The standard lane runs the complete application suite. The protected lane adds the complete GPT API suite. Every lane also removes any build-copied `.dev.vars` file and verifies the Site’s logical bindings, excluded environment files and staging-resource isolation.
+The UI lane runs one production build and the rendered-interface regressions. The standard lane runs the complete application suite. The protected lane adds the complete GPT API suite. Every lane also removes any build-copied `.dev.vars` file and verifies the Site's logical bindings, excluded environment files, and staging-resource isolation.
 
 Prefer batching several related presentation refinements into one validated release. Do not rerun a stronger lane when the exact source tree has already passed it.
 
@@ -108,7 +125,7 @@ Lint the Custom GPT OpenAPI document when its contract changes:
 npx @redocly/cli lint openapi/lunar-dragons-gpt.yaml
 ```
 
-At the known-good production milestone, the GPT regression suite passes 41 of 41 tests.
+At the current release-159 source baseline, the application suite passes 81/81 tests, the rendered-interface suite passes 20/20 tests, and the GPT API suite passes 53/53 tests.
 
 ## Runtime secrets
 
@@ -127,6 +144,34 @@ No secret values belong in source control, documentation, screenshots, client-si
 The Chronicle editor includes an optional Lore Cogitator for authenticated ChatGPT administrators who have actively entered Admin Mode. It uses the authoritative Site-managed D1 archive and treats existing `canon` entries as the primary Lunar Dragons source. The currently open record and administrator instructions are development material, not canon authority.
 
 The Cogitator is advisory: a generated record must be explicitly loaded into the editor, reviewed, and saved by the administrator. It cannot publish, demote, delete, reset, or directly write archive records. Consultations are not persisted by the application.
+
+## Chronicle administration
+
+The public Chronicle remains canon-only. Authenticated ChatGPT administrators who have actively entered Admin Mode can inspect all four lore states, directly edit `draft` and `review` records by stable ID, and explicitly move any record among `draft`, `review`, `canon`, and `retconned`.
+
+Entries support a title and optional subtitle. The Chronicle index deliberately displays only the title; the subtitle appears inside the opened record and editor. Writes preserve stable IDs and immutable creation metadata and use optimistic conflict protection to reject stale changes.
+
+The shared lore limits are:
+
+- title: 240 characters
+- optional subtitle: 360 characters
+- content: 64,000 characters per record
+- structured-lore collection: 512 KiB UTF-8 aggregate budget
+
+Moving a record to `canon` is an explicit publication action. Moving it out of `canon` removes its established-canon presentation without exposing draft, review, or retconned material to public or guest views.
+
+## Astropathic Relay and Sector Intel
+
+The transmission system has completed four development stages:
+
+- Phase 1B: deterministic analysis, corruption, and semantic degradation
+- Phase 2: explicit metadata for new messages with legacy inference fallback
+- Phase 3: safe exact-origin actions resolved against existing Sector Intel records
+- Phase 4: deterministic delayed/out-of-order arrivals, relay failures, timestamp anomalies, partial transmissions, recovered fragments, intentional echoes, and bounded cross-day delays
+
+The Command Vox-Missive and dedicated Relay page share the same transcript model and presentation. Generated messages are in-universe simulation content, not structured canon.
+
+The exact receiving star system of the `Lunaris` remains deliberately unresolved. `TRACE RELAY PATH` is deferred until approved route topology and a receiving location exist. Sector Intel prototype/simulacrum content is a non-canon development aid and must not be treated as established lore.
 
 ## GPT API
 
@@ -185,12 +230,20 @@ Before saving or deploying a Site version:
 
 Do not perform database, secret, DNS, authentication, access-policy, or deployment changes without explicit authorization.
 
-## Known-good production milestone
+## Current and historical production references
 
-- Site release: `101`
+Current live baseline:
+
+- Site release: `159`
 - Environment revision: `5`
+- Source commit: `113796967d3db80c93655abbd0ee87f5005ea434`
+- Site provenance commit: `1ee2ca5453a25bb74ec09640ec3ae1564a37f664`
+
+Historical GPT cutover/recovery reference:
+
+- Site release at cutover: `101`
 - Git tag: `release-101-gpt-integration`
 - Commit: `d8f7b1c7abfac5cf35807931dcc64321d64ad1c7`
-- GPT regression result: 41/41 passing
+- GPT regression result at cutover: 41/41 passing
 
 For the full production state, API rules, and recovery reference, see [`CODEX_TECHNICAL_HANDOFF.md`](CODEX_TECHNICAL_HANDOFF.md).
