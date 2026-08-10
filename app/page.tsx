@@ -8,10 +8,7 @@ import { SidebarNavigation } from "./_components/SidebarNavigation";
 import { TransmissionEventFlags } from "./_components/TransmissionEventFlags";
 import { TransmissionOriginActions } from "./_components/TransmissionOriginActions";
 import { useChapterArchive } from "./_hooks/useChapterArchive";
-import {
-  canonChronicleEntries,
-  type AstropathicMessage,
-} from "./archive-data";
+import { type AstropathicMessage } from "./archive-data";
 
 export default function Home() {
   const { isAdminMode } = useAdminMode();
@@ -19,10 +16,10 @@ export default function Home() {
   const chapterName = "THE LUNAR DRAGONS";
   const [note, setNote] = useState("");
   const [selectedRelayMessage, setSelectedRelayMessage] = useState<AstropathicMessage | null>(null);
-  const { companies, entries, relayMessages } = data;
-  const visibleChronicleEntries = useMemo(
-    () => isAdminMode ? entries : canonChronicleEntries(data),
-    [data, entries, isAdminMode],
+  const { companies, entries, loreEntries, relayMessages } = data;
+  const commandChronicleEntries = useMemo(
+    () => loreEntries.filter((entry) => entry.status === "canon").slice(0, 3),
+    [loreEntries],
   );
   const archiveReady = !isLoading && !error;
   const archivePendingText = error ? "ARCHIVE LINK UNAVAILABLE" : "ACCESSING SHARED ARCHIVE…";
@@ -186,7 +183,10 @@ export default function Home() {
                 <p className="section-kicker">Argent Vigil records</p>
                 <h2>Chapter Chronicle</h2>
               </div>
-              <span>◉ LIVE RECORD</span>
+              <div className="command-chronicle-actions">
+                <span><i /> {loreEntries.filter((entry) => entry.status === "canon").length} CANON RECORDS</span>
+                <Link href="/chronicles">OPEN EXLOAD TERMINAL</Link>
+              </div>
             </div>
             {isAdminMode && archiveReady && (
               <div className="entry-form">
@@ -200,13 +200,22 @@ export default function Home() {
                 <button onClick={addEntry}>ADD ENTRY</button>
               </div>
             )}
-            {!archiveReady ? <p className="archive-sync-placeholder">&gt;&gt; {archivePendingText}</p> : (
-              <div className="timeline">
-                {visibleChronicleEntries.slice(0, 3).map((entry, index) => (
-                  <div key={`${entry}-${index}`}><i /><p>{entry}</p></div>
+            {!archiveReady ? <p className="archive-sync-placeholder">&gt;&gt; {archivePendingText}</p> : commandChronicleEntries.length ? (
+              <div className="command-chronicle-records" aria-label="Established Chronicle records">
+                {commandChronicleEntries.map((entry, index) => (
+                  <article key={entry.id}>
+                    <header>
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <p>{entry.date || "DATE UNRECORDED"}</p>
+                      <small>{entry.category || "ARCHIVE RECORD"}</small>
+                    </header>
+                    <h3>{entry.title}</h3>
+                    {entry.subtitle ? <p>{entry.subtitle}</p> : null}
+                    <footer><span>CANON · SEALED</span><b>{entry.id.startsWith("legacy-") ? "LEGACY INDEX" : "STRUCTURED RECORD"}</b></footer>
+                  </article>
                 ))}
               </div>
-            )}
+            ) : <p className="command-chronicle-empty">NO CANONICAL RECORDS AVAILABLE</p>}
           </section>
         </div>
       </section>

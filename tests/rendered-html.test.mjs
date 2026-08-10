@@ -215,6 +215,24 @@ test("the Command nexus always renders the authenticated Lunar Dragons sigil", a
   assert.doesNotMatch(home, /type="file"/);
 });
 
+test("the Command Chronicle presents compact structured canon summaries", async () => {
+  const [home, styles] = await Promise.all([
+    readFile("app/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(home, /loreEntries\.filter\(\(entry\) => entry\.status === "canon"\)\.slice\(0, 3\)/);
+  assert.match(home, /className="command-chronicle-records"/);
+  assert.match(home, /<h3>\{entry\.title\}<\/h3>/);
+  assert.match(home, /entry\.subtitle \? <p>\{entry\.subtitle\}<\/p>/);
+  assert.match(home, /OPEN EXLOAD TERMINAL/);
+  assert.doesNotMatch(home, /visibleChronicleEntries\.slice\(0, 3\)/);
+  assert.match(styles, /\.command-chronicle-records\s*\{[^}]*grid-template-columns:\s*repeat\(3,/s);
+  assert.match(styles, /\.command-chronicle-records h3\s*\{[^}]*-webkit-line-clamp:\s*2;/s);
+  assert.match(styles, /@media \(max-width: 1050px\)[\s\S]*\.command-chronicle-records\s*\{\s*grid-template-columns:\s*1fr;/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.command-chronicle-actions\s*\{[^}]*flex-wrap:\s*wrap;/s);
+});
+
 test("retired presentation elements stay outside the live Site runtime", async () => {
   const [manifest, styles] = await Promise.all([
     readFile("archive/retired-site-elements/README.md", "utf8"),
