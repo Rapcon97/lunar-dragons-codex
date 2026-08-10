@@ -4,7 +4,7 @@ import {
   MAX_LORE_SUBTITLE_LENGTH,
 } from "./lore-limits.ts";
 
-export const LORE_ASSISTANT_MODEL = "gpt-5.6-terra";
+export const LORE_ASSISTANT_MODEL = "gpt-5.5";
 export const MAX_LORE_ASSISTANT_PROMPT_LENGTH = 4_000;
 export const MAX_LORE_ASSISTANT_HISTORY_TURNS = 8;
 export const MAX_LORE_ASSISTANT_HISTORY_LENGTH = 24_000;

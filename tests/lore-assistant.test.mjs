@@ -104,7 +104,7 @@ test("canon selection and Responses request are deterministic and structured", (
 
   const payload = buildLoreAssistantOpenAIRequest(request.value, entries, "ld-test-hash");
   assert.equal(payload.model, LORE_ASSISTANT_MODEL);
-  assert.equal(payload.model, "gpt-5.6-terra");
+  assert.equal(payload.model, "gpt-5.5");
   assert.equal(payload.store, false);
   assert.equal(payload.safety_identifier, "ld-test-hash");
   assert.equal(payload.text.format.type, "json_schema");
