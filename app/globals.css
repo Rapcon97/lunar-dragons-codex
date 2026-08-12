@@ -2466,6 +2466,51 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .squad-card > strong { color: #75886b; font-family: Georgia,serif; font-size: 22px; font-weight: 400; }
 .squad-card > strong small { color: #455142; font-family: Arial,sans-serif; font-size: var(--ui-text-7); letter-spacing: .1em; text-transform: uppercase; }
 
+/* Companies Phase 1: useful roster tooling inside the archive presentation. */
+.company-loading-state { min-height: 320px; display: grid; align-content: center; justify-items: center; gap: 10px; padding: clamp(34px, 7vw, 84px); text-align: center; background: radial-gradient(circle at 50% 40%, rgba(71,101,63,.12), transparent 42%), #060a06; }
+.company-loading-state h1, .company-loading-state h2 { margin: 0; color: #93a587; font: 400 clamp(27px,4vw,46px)/1.08 Georgia,serif; letter-spacing: .04em; }
+.company-loading-state > p { max-width: 650px; margin: 5px 0 0; color: #62705d; font: var(--type-body-small)/1.65 Georgia,serif; }
+.company-detail-loading { min-height: calc(100dvh - var(--archive-terminal-height) - 96px); display: grid; }
+.roster-summary { padding: 0; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); background: rgba(3,7,3,.9); }
+.roster-summary article { min-width: 0; min-height: 126px; display: grid; align-content: center; gap: 5px; padding: 19px 22px; border-right: 1px solid var(--line); }
+.roster-summary article:last-child { border-right: 0; }
+.roster-summary span { color: #60705a; font: var(--ui-text-7) "Courier New",monospace; text-transform: uppercase; letter-spacing: .15em; }
+.roster-summary strong { color: #9cad91; font: 400 clamp(29px,3vw,42px)/1 Georgia,serif; }
+.roster-summary small { color: #4f5d4b; font: var(--ui-text-8)/1.35 Georgia,serif; }
+.company-roster-columns { display: grid; grid-template-columns: 70px minmax(160px,1fr) 160px minmax(230px,.7fr); gap: 20px; padding: 7px 24px 0; color: #43513f; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .15em; }
+.company-roster-columns span:first-child { grid-column: 2; }
+.company-row { min-height: 94px; grid-template-columns: 70px minmax(160px,1fr) 160px minmax(230px,.7fr); padding-block: 14px; }
+.company-identity-record { min-width: 0; }
+.company-identity-record label { display: grid; gap: 4px; }
+.company-identity-record label + label { margin-top: 9px; }
+.company-identity-record label > span, .roster-strength-readout label > span { color: #4b5a47; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .14em; }
+.company-role-input { width: 100%; max-width: 420px; padding: 4px 0 5px; border: 0; border-bottom: 1px solid #354432; outline: 0; background: transparent; color: #66765f; font: var(--ui-text-9) "Courier New",monospace; letter-spacing: .1em; text-transform: uppercase; }
+.company-role-input:focus { border-color: #71835e; }
+.company-heraldry-preview { grid-template-columns: repeat(2,76px); }
+.company-heraldry-thumb { width: 76px; height: 66px; }
+.company-heraldry-thumb .company-heraldry-placeholder { max-width: 68px; color: #4c5b48; font: var(--ui-text-5)/1.15 "Courier New",monospace; letter-spacing: .06em; text-align: center; overflow-wrap: anywhere; }
+.roster-strength { display: grid; grid-template-columns: minmax(94px,auto) minmax(90px,1fr) auto; align-items: center; gap: 13px; }
+.roster-strength-readout { display: grid; gap: 4px; }
+.roster-strength-numeral { display: flex; align-items: baseline; gap: 5px; }
+.roster-strength-numeral small { color: #53604f; font: var(--ui-text-8) "Courier New",monospace; }
+.roster-strength-readout > em { color: #4e5d4a; font: normal var(--ui-text-6) "Courier New",monospace; letter-spacing: .1em; }
+.roster-strength-readout label { display: grid; gap: 4px; }
+.company-strength-value { width: auto; color: #849679; font-size: var(--ui-text-18); text-align: left; }
+.roster-strength > i { position: relative; height: 5px; background: #1c251b; }
+.roster-strength > i span { display: block; height: 100%; background: linear-gradient(90deg,#53684d,#839777); }
+.roster-strength > i mark { position: absolute; top: 50%; width: 9px; height: 13px; transform: translate(-50%,-50%); border: 1px solid #a8b99e; background: #0c130c; box-shadow: 0 0 8px rgba(139,170,127,.28); }
+.company-detail-page { max-width: none; }
+.company-dossier-matrix { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); margin-top: 14px; padding: 0; }
+.company-dossier-matrix article { min-width: 0; min-height: 112px; display: grid; align-content: center; gap: 5px; padding: 17px 20px; border-right: 1px solid var(--line); }
+.company-dossier-matrix article:last-child { border-right: 0; }
+.company-dossier-matrix span { color: #596954; font: var(--ui-text-7) "Courier New",monospace; letter-spacing: .14em; }
+.company-dossier-matrix strong { color: #93a587; font: 400 31px/1 Georgia,serif; }
+.company-dossier-matrix small { color: #4d5b49; font: var(--ui-text-8)/1.35 Georgia,serif; }
+.company-calculation-notice { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 18px; margin-top: 14px; padding: 15px 19px; border: 1px solid rgba(137,112,73,.32); border-left: 3px solid #796346; background: rgba(23,18,10,.4); }
+.company-calculation-notice b { color: #a58a5f; font: var(--ui-text-7) "Courier New",monospace; letter-spacing: .13em; white-space: nowrap; }
+.company-calculation-notice p { margin: 0; color: #72664f; font: var(--ui-text-10)/1.5 Georgia,serif; }
+.company-roster-empty { grid-column: 1 / -1; margin: 0; padding: 22px; color: #566451; font: var(--ui-text-11)/1.5 Georgia,serif; }
+
 .sector-intel { display: grid; gap: 22px; }
 .intel-theatre-header {
   display: grid; grid-template-columns: 62px minmax(0,1fr) minmax(270px,.42fr); align-items: center; gap: 20px;
@@ -3215,10 +3260,12 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .vox-quote-list { grid-template-columns: 1fr; }
   .vox-registry-heading { align-items: flex-start; flex-direction: column; }
   .company-row { grid-template-columns: 48px 1fr; }
+  .company-roster-columns { display: none; }
+  .roster-summary { grid-template-columns: 1fr 1fr; }
+  .roster-summary article:nth-child(2) { border-right: 0; }
+  .roster-summary article:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
   .company-heraldry-preview { grid-column: 2; justify-self: start; }
   .roster-strength { grid-column: 2; }
-  .roster-summary { flex-wrap: wrap; }
-  .roster-summary i { width: 100%; margin-left: 0; }
   .quick-entry { flex-direction: column; }
   .entry-form { flex-direction: column; }
   .entry-form button { width: 100%; }
@@ -3233,6 +3280,11 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .edit-actions { width: 100%; }
   .edit-actions button { flex: 1; }
   .company-detail-hero { grid-template-columns: 70px 1fr; padding: 24px; }
+  .company-dossier-matrix { grid-template-columns: 1fr 1fr; }
+  .company-dossier-matrix article:nth-child(2) { border-right: 0; }
+  .company-dossier-matrix article:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .company-calculation-notice { grid-template-columns: 1fr; gap: 7px; }
+  .company-calculation-notice b { white-space: normal; }
   .company-sigil-control, .company-sigil { width: 68px; }
   .company-sigil { height: 86px; font-size: 30px; }
   .company-sigil img { padding: 6px 7px 13px; }
@@ -3257,6 +3309,13 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
   .archive-terminal-readout strong { max-width: 80px; }
   .archive-terminal-controls { grid-column: 2; grid-row: 2; }
   .archive-terminal-controls button, .archive-terminal-controls a { min-height: 24px; padding: 4px 6px; font-size: var(--ui-text-5); }
+  .roster-summary, .company-dossier-matrix { grid-template-columns: 1fr; }
+  .roster-summary article, .company-dossier-matrix article { min-height: 92px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .roster-summary article:last-child, .company-dossier-matrix article:last-child { border-bottom: 0; }
+  .company-row { grid-template-columns: 38px minmax(0,1fr); padding-inline: 14px; gap: 12px; }
+  .company-number { font-size: 21px; }
+  .company-heraldry-preview { grid-template-columns: repeat(2, minmax(0,76px)); }
+  .roster-strength { grid-template-columns: minmax(94px,auto) minmax(60px,1fr) auto; }
 }
 
 /* Archive-wide readability pass */

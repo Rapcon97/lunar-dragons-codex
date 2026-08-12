@@ -206,6 +206,33 @@ test("principal archive sections share the Relay and Chronicle frame boundaries"
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.content-grid\.archive-boundary-content\s*\{\s*padding:\s*12px 10px 24px;/s);
 });
 
+test("Company Phase 1 presents authoritative loading, useful roster controls, and labelled calculations", async () => {
+  const [sectionPage, companyPage, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/companies/[company]/page.tsx", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(sectionPage, /<CompaniesSection canEdit=\{isAdminMode\} error=\{error\} isLoading=\{isLoading\}/);
+  assert.match(sectionPage, /if \(isLoading \|\| error\)[\s\S]*RETRIEVING ORDER OF BATTLE/);
+  assert.match(sectionPage, /updateCompany\(index, "role", event\.target\.value\)/);
+  assert.match(sectionPage, /RECORDED STRENGTH[\s\S]*ROSTER FILL[\s\S]*UNFILLED \/ UNRECORDED[\s\S]*COMPANIES REPORTING/);
+  assert.match(sectionPage, /company-heraldry-placeholder[\s\S]*UNRECORDED/);
+  assert.match(sectionPage, /aria-label=\{`\$\{company\.strength\} members recorded against a nominal comparison of 100`\}/);
+
+  assert.match(companyPage, /if \(isLoading \|\| error\)[\s\S]*RETRIEVING COMPANY RECORD/);
+  assert.match(companyPage, /if \(lineMembers === 0\) return \[\]/);
+  assert.match(companyPage, /CALCULATED DISPOSITION/);
+  assert.match(companyPage, /Calculated Company Headquarters/);
+  assert.match(companyPage, /Calculated Squad Groups/);
+  assert.doesNotMatch(companyPage, /Math\.max\(1, Math\.ceil/);
+
+  assert.match(styles, /\.roster-summary\s*\{[^}]*grid-template-columns:\s*repeat\(4,minmax\(0,1fr\)\)/s);
+  assert.match(styles, /\.company-dossier-matrix\s*\{[^}]*grid-template-columns:\s*repeat\(4,minmax\(0,1fr\)\)/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.roster-summary\s*\{\s*grid-template-columns:\s*1fr 1fr;/s);
+  assert.match(styles, /@media \(max-width: 520px\)[\s\S]*\.roster-summary, \.company-dossier-matrix\s*\{\s*grid-template-columns:\s*1fr;/s);
+});
+
 test("the Command nexus always renders the authenticated Lunar Dragons sigil", async () => {
   const home = await readFile("app/page.tsx", "utf8");
 

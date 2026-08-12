@@ -55,8 +55,9 @@ export default function CompanyOverview() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [previewAsset]);
   const squads = useMemo(() => {
-    const squadCount = Math.min(10, Math.max(1, Math.ceil(Math.max(0, company.strength - commandRoles.length) / 10)));
     const lineMembers = Math.max(0, company.strength - commandRoles.length);
+    if (lineMembers === 0) return [];
+    const squadCount = Math.min(10, Math.ceil(lineMembers / 10));
     const base = Math.floor(lineMembers / squadCount);
     const remainder = lineMembers % squadCount;
     return Array.from({ length: squadCount }, (_, index) => ({
@@ -247,6 +248,27 @@ export default function CompanyOverview() {
     setClearanceError("");
   }
 
+  if (isLoading || error) {
+    return (
+      <main className="app-shell">
+        <SidebarNavigation activeHref="/companies" />
+        <section className="workspace archive-boundary-workspace">
+          <header className="topbar">
+            <div><p className="eyebrow">The Lunar Dragons · COMPANY/{String(companyIndex + 1).padStart(2, "0")}</p><div className="chapter-name detail-chapter-name">{chapterName}</div></div>
+            <div className="top-actions"><span className="save-state"><i /> {error ? "ARCHIVE UNAVAILABLE" : "LOADING SHARED ROSTER"}</span><Link href="/companies" className="seal-button">BACK TO COMPANIES</Link></div>
+          </header>
+          <div className="subpage archive-boundary-subpage company-detail-page company-detail-loading">
+            <section className="panel company-loading-state" aria-live="polite">
+              <span className="section-kicker">ORDO BELLUM · SHARED ARCHIVE</span>
+              <h1>{error ? "COMPANY RECORD UNAVAILABLE" : "RETRIEVING COMPANY RECORD"}</h1>
+              <p>{error || "Waiting for the authoritative company ledger before presenting roster data."}</p>
+            </section>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (isEleventhCompany && !eleventhUnlocked) {
     return (
       <main className="app-shell">
@@ -412,19 +434,32 @@ export default function CompanyOverview() {
             </div>
           </section>
 
+          <section className="company-dossier-matrix panel" aria-label={`${company.name} operational summary`}>
+            <article><span>RECORDED STRENGTH</span><strong>{company.strength}</strong><small>battle-brothers on record</small></article>
+            <article><span>NOMINAL COMPARISON</span><strong>100</strong><small>company-strength datum</small></article>
+            <article><span>COMMAND BILLETS</span><strong>{Math.min(company.strength, commandRoles.length)}</strong><small>calculated from current strength</small></article>
+            <article><span>WORKING SQUAD GROUPS</span><strong>{squads.length}</strong><small>calculated, not an archived roster</small></article>
+          </section>
+
+          <aside className="company-calculation-notice" role="note">
+            <b>CALCULATED DISPOSITION</b>
+            <p>The formation below is a planning view derived from recorded strength. Squad boundaries, command assignments, and unnamed billets are not yet authoritative personnel records.</p>
+          </aside>
+
           <section className="member-section">
-            <div className="member-section-heading"><div><p className="section-kicker">Command cadre</p><h2>Company Headquarters</h2></div><span>{Math.min(company.strength, commandRoles.length)} billets</span></div>
+            <div className="member-section-heading"><div><p className="section-kicker">Working disposition</p><h2>Calculated Company Headquarters</h2></div><span>{Math.min(company.strength, commandRoles.length)} billets</span></div>
             <div className="command-grid">
               {commandRoles.slice(0, company.strength).map((role, index) => (
                 <article className="member-card panel" key={`${role}-${index}`}>
                   <span>{String(index + 1).padStart(2, "0")}</span><div className="member-glyph">✦</div><h3>{role}</h3><p>Name unrecorded</p>
                 </article>
               ))}
+              {company.strength === 0 && <p className="company-roster-empty panel">No command billets can be calculated until a company strength is recorded.</p>}
             </div>
           </section>
 
           <section className="member-section">
-            <div className="member-section-heading"><div><p className="section-kicker">Battleline disposition</p><h2>Squad Roster</h2></div><span>{Math.max(0, company.strength - commandRoles.length)} line members</span></div>
+            <div className="member-section-heading"><div><p className="section-kicker">Working disposition</p><h2>Calculated Squad Groups</h2></div><span>{Math.max(0, company.strength - commandRoles.length)} line members</span></div>
             <div className="squad-grid">
               {squads.map((squad) => (
                 <article className="squad-card panel" key={squad.number}>
@@ -433,6 +468,7 @@ export default function CompanyOverview() {
                   <strong>{squad.members}<small> members</small></strong>
                 </article>
               ))}
+              {!squads.length && <p className="company-roster-empty panel">No squad groups are shown because no line strength is currently recorded.</p>}
             </div>
           </section>
         </div>

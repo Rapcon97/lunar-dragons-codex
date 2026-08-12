@@ -126,7 +126,7 @@ export default function SectionPage() {
           )}
           {section === "flagship" && <LunarisSection />}
           {section === "armoury" && <ArmourySection canEdit={isAdminMode} relics={data.relics} onSave={(value) => saveSection("relics", value)} />}
-          {section === "companies" && <CompaniesSection canEdit={isAdminMode} roster={data.companies} onSave={(value) => saveSection("companies", value)} />}
+          {section === "companies" && <CompaniesSection canEdit={isAdminMode} error={error} isLoading={isLoading} roster={data.companies} onSave={(value) => saveSection("companies", value)} />}
           {section === "chronicles" && (
             <ChroniclesSection
               canEdit={canAdmin && isAdminMode}
@@ -612,7 +612,11 @@ function CompanyHeraldryPreview({
         onLoad={() => setState("loaded")}
         src={`${endpoint}?company=${companyNumber}`}
       />
-      {state !== "loaded" && <b aria-hidden="true">{state === "loading" ? "···" : "—"}</b>}
+      {state !== "loaded" && (
+        <b className="company-heraldry-placeholder" aria-hidden="true">
+          {state === "loading" ? "LOADING" : "UNRECORDED"}
+        </b>
+      )}
       <small>{label}</small>
     </div>
   );
@@ -620,10 +624,14 @@ function CompanyHeraldryPreview({
 
 function CompaniesSection({
   canEdit,
+  error,
+  isLoading,
   roster,
   onSave,
 }: {
   canEdit: boolean;
+  error: string;
+  isLoading: boolean;
   roster: ChapterCompany[];
   onSave: (value: ChapterCompany[]) => Promise<boolean>;
 }) {
@@ -657,8 +665,15 @@ function CompaniesSection({
     () => displayedRoster.slice(0, 10).reduce((sum, company) => sum + company.strength, 0),
     [displayedRoster],
   );
+  const reportingCompanies = useMemo(
+    () => publicRoster.filter((company) => company.strength > 0).length,
+    [publicRoster],
+  );
+  const nominalStrength = 1000;
+  const fillPercentage = Math.round((total / nominalStrength) * 100);
+  const unfilledStrength = Math.max(0, nominalStrength - total);
 
-  function updateCompany(index: number, field: "name" | "strength", value: string) {
+  function updateCompany(index: number, field: "name" | "role" | "strength", value: string) {
     const next = draftRoster.map((company, companyIndex) => {
       if (companyIndex !== index) return company;
       if (field === "strength") {
@@ -702,7 +717,15 @@ function CompaniesSection({
     setClearanceError("");
   }
 
+  function strengthState(strength: number) {
+    if (strength <= 0) return "NO STRENGTH RECORDED";
+    if (strength < 100) return "UNDER NOMINAL";
+    if (strength === 100) return "AT NOMINAL";
+    return "ABOVE NOMINAL";
+  }
+
   function renderCompanyRow(company: ChapterCompany, index: number, isSecret = false) {
+    const companyFill = Math.min(100, Math.max(0, company.strength));
     return (
       <article
         className={`${isEditing ? "company-row panel" : "company-row panel clickable-company"}${isSecret ? " secret-company-row" : ""}`}
@@ -719,16 +742,29 @@ function CompaniesSection({
         aria-label={isEditing ? undefined : `Open ${company.name} member overview`}
       >
         <span className="company-number">{company.number}</span>
-        <div>
+        <div className="company-identity-record">
           {isEditing ? (
-            <input
-              className="company-name-input"
-              value={company.name}
-              onChange={(event) => updateCompany(index, "name", event.target.value)}
-              aria-label={`${company.number} company name`}
-            />
-          ) : <h2>{company.name}</h2>}
-          <p>{company.role}</p>
+            <>
+              <label>
+                <span>COMPANY NAME</span>
+                <input
+                  className="company-name-input"
+                  value={company.name}
+                  onChange={(event) => updateCompany(index, "name", event.target.value)}
+                  aria-label={`${company.number} company name`}
+                />
+              </label>
+              <label>
+                <span>BATTLEFIELD ROLE</span>
+                <input
+                  className="company-role-input"
+                  value={company.role}
+                  onChange={(event) => updateCompany(index, "role", event.target.value)}
+                  aria-label={`${company.number} company role`}
+                />
+              </label>
+            </>
+          ) : <><h2>{company.name}</h2><p>{company.role}</p></>}
         </div>
         <div className="company-heraldry-preview">
           <CompanyHeraldryPreview
@@ -743,21 +779,45 @@ function CompaniesSection({
           />
         </div>
         <div className="roster-strength">
-          {isEditing ? (
-            <input
-              className="company-strength-input"
-              type="number"
-              min="0"
-              max="1000"
-              value={company.strength}
-              onChange={(event) => updateCompany(index, "strength", event.target.value)}
-              aria-label={`${company.number} company members`}
-            />
-          ) : <b className="company-strength-value">{company.strength}</b>}
-          <i><span style={{ width: `${Math.min(100, company.strength)}%` }} /></i>
+          <div className="roster-strength-readout">
+            {isEditing ? (
+              <label>
+                <span>RECORDED STRENGTH</span>
+                <input
+                  className="company-strength-input"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  value={company.strength}
+                  onChange={(event) => updateCompany(index, "strength", event.target.value)}
+                  aria-label={`${company.number} company members`}
+                />
+              </label>
+            ) : (
+              <span className="company-strength-numeral">
+                <b className="company-strength-value">{company.strength}</b>
+                <small>/ 100</small>
+              </span>
+            )}
+            {!isEditing && <em>{strengthState(company.strength)}</em>}
+          </div>
+          <i aria-label={`${company.strength} members recorded against a nominal comparison of 100`}>
+            <span style={{ width: `${companyFill}%` }} />
+            <mark style={{ left: `${companyFill}%` }} />
+          </i>
           {!isEditing && <span className="company-open-mark" aria-hidden="true">›</span>}
         </div>
       </article>
+    );
+  }
+
+  if (isLoading || error) {
+    return (
+      <section className="panel company-loading-state" aria-live="polite">
+        <span className="section-kicker">ORDO BELLUM · SHARED ARCHIVE</span>
+        <h2>{error ? "ORDER OF BATTLE UNAVAILABLE" : "RETRIEVING ORDER OF BATTLE"}</h2>
+        <p>{error || "Waiting for the authoritative company ledger before presenting roster totals."}</p>
+      </section>
     );
   }
 
@@ -779,7 +839,15 @@ function CompaniesSection({
           ) : null}
         </div>
       </div>
-      <div className="roster-summary panel"><strong>{total}</strong><span>Recorded battle-brothers</span><i>Nominal strength: 1,000</i></div>
+      <section className="roster-summary panel" aria-label="Chapter company strength summary">
+        <article><span>RECORDED STRENGTH</span><strong>{total}</strong><small>of 1,000 nominal</small></article>
+        <article><span>ROSTER FILL</span><strong>{fillPercentage}%</strong><small>across the ten public companies</small></article>
+        <article><span>UNFILLED / UNRECORDED</span><strong>{unfilledStrength}</strong><small>against nominal Chapter strength</small></article>
+        <article><span>COMPANIES REPORTING</span><strong>{reportingCompanies} / 10</strong><small>with a non-zero recorded strength</small></article>
+      </section>
+      <div className="company-roster-columns" aria-hidden="true">
+        <span>FORMATION</span><span>HERALDRY</span><span>RECORDED STRENGTH</span>
+      </div>
       {publicRoster.map((company, index) => renderCompanyRow(company, index))}
       <div className="eleventh-company-divider" aria-hidden="true">
         <span />
