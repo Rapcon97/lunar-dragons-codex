@@ -252,9 +252,10 @@ test("Company Phase 1 presents authoritative loading, useful roster controls, an
 });
 
 test("Character Phase 2 balances operational tooling with canon provenance", async () => {
-  const [sectionPage, directory, miniViewer, profile, companyPage, archiveRoute, styles] = await Promise.all([
+  const [sectionPage, directory, dossier, miniViewer, profile, companyPage, archiveRoute, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/_components/CharacterDirectory.tsx", "utf8"),
+    readFile("app/_components/CharacterDossier.tsx", "utf8"),
     readFile("app/_components/CharacterMiniViewer.tsx", "utf8"),
     readFile("app/characters/[character]/page.tsx", "utf8"),
     readFile("app/companies/[company]/page.tsx", "utf8"),
@@ -271,9 +272,18 @@ test("Character Phase 2 balances operational tooling with canon provenance", asy
   assert.match(directory, /heroicDeeds/);
   assert.match(directory, /introducedAt/);
   assert.match(directory, /deathAt/);
-  assert.match(directory, /OPEN DOSSIER/);
+  assert.match(directory, /character-workspace/);
+  assert.match(directory, /selectCharacter\(character\)/);
+  assert.match(directory, /url\.searchParams\.set\("record", character\.id\)/);
+  assert.match(directory, /url\.searchParams\.delete\("record"\)/);
   assert.doesNotMatch(directory, /href=\{`\/characters\/\$\{encodeURIComponent\(character\.id\)\}`\}/);
-  assert.match(directory, /<CharacterMiniViewer/);
+  assert.match(directory, /<CharacterDossier/);
+  assert.doesNotMatch(directory, /<CharacterMiniViewer/);
+  assert.match(dossier, /Select Personnel Record/);
+  assert.match(dossier, /character\.biography[\s\S]*LoreFormattedContent/);
+  assert.match(dossier, /character\.heroicDeeds/);
+  assert.match(dossier, /entry\.status === "canon"/);
+  assert.match(dossier, /RETURN TO INDEX/);
   assert.match(miniViewer, /aria-modal="true"/);
   assert.match(miniViewer, /character\.biography[\s\S]*LoreFormattedContent/);
   assert.match(miniViewer, /character\.heroicDeeds/);
@@ -287,8 +297,9 @@ test("Character Phase 2 balances operational tooling with canon provenance", asy
   assert.match(companyPage, /<CharacterMiniViewer/);
   assert.match(companyPage, /OPEN CHARACTER DIRECTORY/);
   assert.match(archiveRoute, /"characters"/);
-  assert.match(styles, /\.character-directory-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/s);
-  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.character-directory-tools\s*\{\s*grid-template-columns:\s*1fr;/s);
+  assert.match(styles, /\.character-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(330px, 34%\) minmax\(0, 66%\)/s);
+  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.character-workspace\.has-selection \.character-workspace-index\s*\{\s*display:\s*none;/s);
+  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.character-workspace\.has-selection \.character-workspace-detail\s*\{\s*display:\s*grid;/s);
 });
 
 test("character extraction is admin-only, canon-guided, and review-before-save", async () => {

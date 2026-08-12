@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   ChapterCharacter,
   ChapterCharacterStatus,
@@ -8,7 +8,7 @@ import type {
   LoreEntry,
 } from "../archive-data";
 import type { CharacterExtractionAnswer } from "../character-extractor";
-import { CharacterMiniViewer } from "./CharacterMiniViewer";
+import { CharacterDossier } from "./CharacterDossier";
 
 type CharacterDirectoryProps = {
   canEdit: boolean;
@@ -60,7 +60,7 @@ export function CharacterDirectory({
   const [statusFilter, setStatusFilter] = useState<"all" | ChapterCharacterStatus>("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [editing, setEditing] = useState<ChapterCharacter | null>(null);
-  const [viewing, setViewing] = useState<ChapterCharacter | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [deedsText, setDeedsText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -91,6 +91,20 @@ export function CharacterDirectory({
       return matchesQuery && matchesStatus && matchesCompany;
     });
   }, [characters, companies, companyFilter, query, statusFilter]);
+  const selectedCharacter = useMemo(
+    () => characters.find((character) => character.id === selectedCharacterId) ?? null,
+    [characters, selectedCharacterId],
+  );
+
+  useEffect(() => {
+    const selectFromLocation = () => {
+      const id = new URLSearchParams(window.location.search).get("record");
+      setSelectedCharacterId(id && characters.some((character) => character.id === id) ? id : null);
+    };
+    selectFromLocation();
+    window.addEventListener("popstate", selectFromLocation);
+    return () => window.removeEventListener("popstate", selectFromLocation);
+  }, [characters]);
 
   if (isLoading || error) {
     return (
@@ -106,6 +120,20 @@ export function CharacterDirectory({
     setEditing({ ...character, heroicDeeds: [...character.heroicDeeds], loreEntryIds: [...character.loreEntryIds] });
     setDeedsText(character.heroicDeeds.join("\n"));
     setSaveMessage("");
+  }
+
+  function selectCharacter(character: ChapterCharacter) {
+    setSelectedCharacterId(character.id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("record", character.id);
+    window.history.pushState({ characterId: character.id }, "", url);
+  }
+
+  function clearSelection() {
+    setSelectedCharacterId(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("record");
+    window.history.pushState({}, "", url);
   }
 
   function openExtractor() {
@@ -219,63 +247,75 @@ export function CharacterDirectory({
         </div>
       </header>
 
-      <div className="character-directory-tools panel" aria-label="Character directory filters">
-        <label>
-          <span>SEARCH RECORDS</span>
-          <input onChange={(event) => setQuery(event.target.value)} placeholder="Name, rank, role, or company" type="search" value={query} />
-        </label>
-        <label>
-          <span>SERVICE STATE</span>
-          <select onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} value={statusFilter}>
-            <option value="all">All states</option>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>COMPANY</span>
-          <select onChange={(event) => setCompanyFilter(event.target.value)} value={companyFilter}>
-            <option value="all">All companies</option>
-            {companies.map((company) => <option key={company.number} value={company.number}>{company.number} · {company.name}</option>)}
-          </select>
-        </label>
-        <div className="character-filter-count"><span>VISIBLE</span><strong>{filtered.length}</strong></div>
-      </div>
+      <div className={`character-workspace panel${selectedCharacter ? " has-selection" : ""}`}>
+        <aside className="character-workspace-index" aria-label="Character record index">
+          <div className="character-directory-tools" aria-label="Character directory filters">
+            <label className="character-search-field">
+              <span>SEARCH PERSONNEL</span>
+              <input onChange={(event) => setQuery(event.target.value)} placeholder="Name, rank, role, or company" type="search" value={query} />
+            </label>
+            <label>
+              <span>SERVICE STATE</span>
+              <select onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} value={statusFilter}>
+                <option value="all">All states</option>
+                {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>COMPANY</span>
+              <select onChange={(event) => setCompanyFilter(event.target.value)} value={companyFilter}>
+                <option value="all">All companies</option>
+                {companies.map((company) => <option key={company.number} value={company.number}>{company.number} · {company.name}</option>)}
+              </select>
+            </label>
+            <div className="character-filter-count"><span>VISIBLE RECORDS</span><strong>{filtered.length}</strong></div>
+          </div>
 
-      {filtered.length ? (
-        <div className="character-directory-grid">
-          {filtered.map((character) => {
+          <div className="character-workspace-list">
+          {filtered.length ? filtered.map((character) => {
             const company = companies.find((candidate) => candidate.number === character.companyNumber);
             const sourceCount = character.loreEntryIds.filter((id) => canonEntries.some((entry) => entry.id === id)).length;
             return (
-              <article className="character-index-card panel" key={character.id}>
+              <button
+                aria-current={selectedCharacterId === character.id ? "true" : undefined}
+                className={`character-index-card${selectedCharacterId === character.id ? " is-selected" : ""}`}
+                key={character.id}
+                onClick={() => selectCharacter(character)}
+                type="button"
+              >
                 <div className="character-index-mark" aria-hidden="true">{character.name.trim().slice(0, 1).toUpperCase() || "?"}</div>
                 <div className="character-index-copy">
                   <div className="character-index-status"><span>{STATUS_LABELS[character.status]}</span><i>{sourceCount} CANON SOURCE{sourceCount === 1 ? "" : "S"}</i></div>
                   <h2>{character.name}</h2>
                   {character.honorific && <p className="character-honorific">{character.honorific}</p>}
-                  <dl>
-                    <div><dt>Rank</dt><dd>{character.rank}</dd></div>
-                    <div><dt>Assignment</dt><dd>{company ? `${company.number} · ${company.name}` : "Unassigned"}</dd></div>
-                    <div><dt>Function</dt><dd>{character.role}</dd></div>
-                    <div><dt>Introduced</dt><dd>{character.introducedAt || "Unrecorded"}</dd></div>
-                  </dl>
+                  <p className="character-index-assignment">{character.rank} · {company ? `${company.number} · ${company.name}` : "Unassigned"}</p>
+                  <p className="character-index-function">{character.role}</p>
                 </div>
-                <div className="character-index-actions">
-                  <button className="seal-button" onClick={() => setViewing(character)} type="button">OPEN DOSSIER</button>
-                  {canEdit && <button className="seal-button" onClick={() => beginEdit(character)} type="button">EDIT RECORD</button>}
-                </div>
-              </article>
+                <span className="character-index-open">OPEN DOSSIER ›</span>
+              </button>
             );
-          })}
+          }) : (
+            <div className="character-directory-empty">
+              <span aria-hidden="true">◇</span>
+              <h2>{characters.length ? "No personnel match this query" : "No character records have been sealed"}</h2>
+              <p>{characters.length ? "Adjust the directory filters to recover another record." : "The reliquary is ready. No names or deeds have been invented to fill it."}</p>
+              {canEdit && !characters.length && <button className="seal-button" onClick={() => beginEdit(emptyCharacter())} type="button">ADD FIRST CHARACTER</button>}
+            </div>
+          )}
+          </div>
+        </aside>
+
+        <div className="character-workspace-detail" role="region" aria-label="Selected character dossier">
+          <CharacterDossier
+            canEdit={canEdit}
+            character={selectedCharacter}
+            companies={companies}
+            loreEntries={loreEntries}
+            onClear={clearSelection}
+            onEdit={beginEdit}
+          />
         </div>
-      ) : (
-        <div className="character-directory-empty panel">
-          <span aria-hidden="true">◇</span>
-          <h2>{characters.length ? "No personnel match this query" : "No character records have been sealed"}</h2>
-          <p>{characters.length ? "Adjust the practical directory filters to recover another record." : "The reliquary is ready. No names or deeds have been invented to fill it."}</p>
-          {canEdit && !characters.length && <button className="seal-button" onClick={() => beginEdit(emptyCharacter())} type="button">ADD FIRST CHARACTER</button>}
-        </div>
-      )}
+      </div>
 
       {editing && (
         <div className="character-editor-backdrop" role="presentation">
@@ -315,19 +355,6 @@ export function CharacterDirectory({
             <footer><p role="status">{saveMessage || "Character records remain operational data unless supported by linked canon."}</p><button className="seal-button" disabled={isSaving} onClick={() => void saveCharacter()} type="button">{isSaving ? "SAVING…" : "SAVE RECORD"}</button></footer>
           </section>
         </div>
-      )}
-
-      {viewing && (
-        <CharacterMiniViewer
-          character={viewing}
-          companies={companies}
-          loreEntries={loreEntries}
-          onClose={() => setViewing(null)}
-          onEdit={canEdit ? (character) => {
-            setViewing(null);
-            beginEdit(character);
-          } : undefined}
-        />
       )}
 
       {isExtractorOpen && (
