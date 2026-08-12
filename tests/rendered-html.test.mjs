@@ -280,6 +280,29 @@ test("Character Phase 2 balances operational tooling with canon provenance", asy
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.character-directory-tools\s*\{\s*grid-template-columns:\s*1fr;/s);
 });
 
+test("character extraction is admin-only, canon-guided, and review-before-save", async () => {
+  const [directory, route, extractor, styles] = await Promise.all([
+    readFile("app/_components/CharacterDirectory.tsx", "utf8"),
+    readFile("app/api/admin/character-extractor/route.ts", "utf8"),
+    readFile("app/character-extractor.ts", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(directory, /canEdit && <div className="character-reliquary-actions"/);
+  assert.match(directory, /EXTRACT FROM LORE/);
+  assert.match(directory, /GENERATE EDITABLE PROPOSAL/);
+  assert.match(directory, /Review every extracted field before saving\. Nothing has been written yet\./);
+  assert.match(directory, /loreEntryIds: \[\.\.\.extractionIds\]/);
+  assert.match(route, /getArchiveAdmin/);
+  assert.match(route, /x-lunar-admin-mode/);
+  assert.match(route, /isSameOriginRequest/);
+  assert.match(route, /OPENAI_API_KEY/);
+  assert.match(extractor, /entry\.status !== "canon"/);
+  assert.match(extractor, /Use only facts explicitly supported/);
+  assert.match(extractor, /return proposal as null/);
+  assert.match(styles, /\.character-extractor-dialog/);
+});
+
 test("the Command nexus always renders the authenticated Lunar Dragons sigil", async () => {
   const home = await readFile("app/page.tsx", "utf8");
 

@@ -2517,6 +2517,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .character-reliquary-header h1 { margin: 8px 0 12px; font: 400 clamp(38px,5vw,72px)/.95 Georgia,serif; color: #9bad8e; }
 .character-reliquary-header > div > p:last-child { max-width: 72ch; color: #788873; line-height: 1.65; }
 .character-reliquary-summary { min-width: 210px; display: grid; justify-items: end; gap: 8px; text-align: right; }
+.character-reliquary-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 .character-reliquary-summary span { color: #53604f; font: var(--ui-text-7) "Courier New",monospace; letter-spacing: .15em; }
 .character-reliquary-summary strong { color: #91a283; font: 400 50px/1 Georgia,serif; }
 .character-directory-tools { display: grid; grid-template-columns: minmax(220px,1.5fr) minmax(170px,.65fr) minmax(190px,.75fr) 90px; gap: 12px; padding: 16px 20px; }
@@ -2559,6 +2560,16 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 .character-canon-links > p { margin: 0 0 5px; color: #5a6755; }
 .character-canon-links label { display: grid; grid-template-columns: 18px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 9px; border-top: 1px solid #1d281c; color: #85927c; }
 .character-canon-links small { color: #52604e; font: var(--ui-text-7) "Courier New",monospace; }
+.character-extractor-dialog { width: min(920px,calc(100vw - 32px)); }
+.character-extractor-intro { margin-bottom: 16px; padding: 18px; border-color: #33452f; }
+.character-extractor-intro strong,.character-extractor-guidance > span,.character-extractor-result strong { color: #829478; font: var(--ui-text-6) "Courier New",monospace; letter-spacing: .12em; }
+.character-extractor-intro p { max-width: 76ch; margin: 8px 0 0; color: #6f7d69; line-height: 1.6; }
+.character-extractor-sources { max-height: min(42vh,430px); overflow-y: auto; }
+.character-extractor-guidance { display: grid; gap: 8px; margin-top: 16px; }
+.character-extractor-guidance textarea { width: 100%; resize: vertical; }
+.character-extractor-result { margin-top: 16px; padding: 16px 18px; border: 1px solid #4d4830; color: #a49a78; background: #0e110a; }
+.character-extractor-result p { margin: 0; line-height: 1.6; }
+.character-extractor-result ul { margin: 8px 0 0; padding-left: 20px; }
 .character-profile-page { display: grid; gap: 14px; }
 .character-profile-loading { min-height: calc(100dvh - var(--archive-terminal-height) - 96px); display: grid; }
 .character-profile-hero { min-height: 240px; display: grid; grid-template-columns: 120px minmax(0,1fr) minmax(330px,.65fr); gap: 28px; align-items: center; padding: clamp(28px,4vw,56px); background: radial-gradient(circle at 12% 50%,rgba(69,95,61,.15),transparent 32%),#050905; }
@@ -2610,6 +2621,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 50px 28px; display: flex;
 @media (max-width: 700px) {
   .character-reliquary-header { grid-template-columns: 1fr; }
   .character-reliquary-summary { min-width: 0; justify-items: start; text-align: left; }
+  .character-reliquary-actions { justify-content: flex-start; }
   .character-directory-tools { grid-template-columns: 1fr; }
   .character-filter-count { justify-items: start; }
   .character-index-card { grid-template-columns: 52px minmax(0,1fr); padding: 16px; }

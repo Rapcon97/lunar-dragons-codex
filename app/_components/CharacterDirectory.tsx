@@ -8,6 +8,7 @@ import type {
   ChapterCompany,
   LoreEntry,
 } from "../archive-data";
+import type { CharacterExtractionAnswer } from "../character-extractor";
 
 type CharacterDirectoryProps = {
   canEdit: boolean;
@@ -62,6 +63,12 @@ export function CharacterDirectory({
   const [deedsText, setDeedsText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [isExtractorOpen, setIsExtractorOpen] = useState(false);
+  const [extractionIds, setExtractionIds] = useState<string[]>([]);
+  const [extractionGuidance, setExtractionGuidance] = useState("");
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionMessage, setExtractionMessage] = useState("");
+  const [extractionUnresolved, setExtractionUnresolved] = useState<string[]>([]);
 
   const canonEntries = useMemo(
     () => loreEntries.filter((entry) => entry.status === "canon"),
@@ -98,6 +105,68 @@ export function CharacterDirectory({
     setEditing({ ...character, heroicDeeds: [...character.heroicDeeds], loreEntryIds: [...character.loreEntryIds] });
     setDeedsText(character.heroicDeeds.join("\n"));
     setSaveMessage("");
+  }
+
+  function openExtractor() {
+    setExtractionIds([]);
+    setExtractionGuidance("");
+    setExtractionMessage("");
+    setExtractionUnresolved([]);
+    setIsExtractorOpen(true);
+  }
+
+  function toggleExtractionSource(id: string, selected: boolean) {
+    setExtractionIds((current) => selected
+      ? [...current, id]
+      : current.filter((candidate) => candidate !== id));
+  }
+
+  async function extractCharacter() {
+    if (!extractionIds.length) {
+      setExtractionMessage("Select at least one established canon record.");
+      return;
+    }
+    setIsExtracting(true);
+    setExtractionMessage("");
+    setExtractionUnresolved([]);
+    try {
+      const response = await fetch("/api/admin/character-extractor", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "content-type": "application/json",
+          "x-lunar-admin-mode": "active",
+        },
+        body: JSON.stringify({
+          loreEntryIds: extractionIds,
+          instructions: extractionGuidance,
+        }),
+      });
+      const answer = (await response.json()) as CharacterExtractionAnswer & { error?: string };
+      if (!response.ok) throw new Error(answer.error || "The character proposal could not be extracted.");
+      setExtractionMessage(answer.summary);
+      setExtractionUnresolved(answer.unresolved);
+      if (!answer.proposal) return;
+
+      const now = Date.now();
+      const proposal: ChapterCharacter = {
+        id: crypto.randomUUID(),
+        ...answer.proposal,
+        rank: answer.proposal.rank || "Rank unrecorded",
+        role: answer.proposal.role || "Role unrecorded",
+        loreEntryIds: [...extractionIds],
+        createdAt: now,
+        updatedAt: now,
+      };
+      setIsExtractorOpen(false);
+      setEditing(proposal);
+      setDeedsText(proposal.heroicDeeds.join("\n"));
+      setSaveMessage("Review every extracted field before saving. Nothing has been written yet.");
+    } catch (error) {
+      setExtractionMessage(error instanceof Error ? error.message : "Character extraction is temporarily unavailable.");
+    } finally {
+      setIsExtracting(false);
+    }
   }
 
   function updateEditing<K extends keyof ChapterCharacter>(key: K, value: ChapterCharacter[K]) {
@@ -145,7 +214,7 @@ export function CharacterDirectory({
         <div className="character-reliquary-summary">
           <span>RECORDED PERSONNEL</span>
           <strong>{characters.length}</strong>
-          {canEdit && <button className="seal-button" onClick={() => beginEdit(emptyCharacter())} type="button">ADD CHARACTER</button>}
+          {canEdit && <div className="character-reliquary-actions"><button className="seal-button" onClick={openExtractor} type="button">EXTRACT FROM LORE</button><button className="seal-button" onClick={() => beginEdit(emptyCharacter())} type="button">ADD MANUALLY</button></div>}
         </div>
       </header>
 
@@ -243,6 +312,56 @@ export function CharacterDirectory({
               </fieldset>
             </div>
             <footer><p role="status">{saveMessage || "Character records remain operational data unless supported by linked canon."}</p><button className="seal-button" disabled={isSaving} onClick={() => void saveCharacter()} type="button">{isSaving ? "SAVING…" : "SAVE RECORD"}</button></footer>
+          </section>
+        </div>
+      )}
+
+      {isExtractorOpen && (
+        <div className="character-editor-backdrop" role="presentation">
+          <section aria-labelledby="character-extractor-title" aria-modal="true" className="character-editor-dialog character-extractor-dialog" role="dialog">
+            <header>
+              <div><p className="section-kicker">Canon-guided personnel extraction</p><h2 id="character-extractor-title">Create Character from Lore</h2></div>
+              <button className="seal-button" onClick={() => setIsExtractorOpen(false)} type="button">CLOSE</button>
+            </header>
+            <div className="character-editor-scroll">
+              <div className="character-extractor-intro panel">
+                <strong>SELECT ESTABLISHED SOURCES</strong>
+                <p>The Lore Cogitator extracts only what these canon records support. It creates an editable proposal and cannot save or publish a character.</p>
+              </div>
+              <fieldset className="character-canon-links character-extractor-sources">
+                <legend>CANON LORE ARCHIVE</legend>
+                {canonEntries.length ? canonEntries.map((entry) => (
+                  <label key={entry.id}>
+                    <input
+                      checked={extractionIds.includes(entry.id)}
+                      onChange={(event) => toggleExtractionSource(entry.id, event.target.checked)}
+                      type="checkbox"
+                    />
+                    <span>{entry.title}</span><small>{entry.date || "Undated"} · {entry.category}</small>
+                  </label>
+                )) : <em>No canon records are currently available for extraction.</em>}
+              </fieldset>
+              <label className="character-extractor-guidance">
+                <span>OPTIONAL EXTRACTION GUIDANCE</span>
+                <textarea
+                  maxLength={1500}
+                  onChange={(event) => setExtractionGuidance(event.target.value)}
+                  placeholder="For records containing several people, identify the intended character or specify what to focus on."
+                  rows={4}
+                  value={extractionGuidance}
+                />
+              </label>
+              {(extractionMessage || extractionUnresolved.length > 0) && (
+                <div className="character-extractor-result" role="status">
+                  {extractionMessage && <p>{extractionMessage}</p>}
+                  {extractionUnresolved.length > 0 && <><strong>UNRESOLVED</strong><ul>{extractionUnresolved.map((item) => <li key={item}>{item}</li>)}</ul></>}
+                </div>
+              )}
+            </div>
+            <footer>
+              <p>{extractionIds.length} canon source{extractionIds.length === 1 ? "" : "s"} selected · proposal remains unsaved</p>
+              <button className="seal-button" disabled={isExtracting || !extractionIds.length} onClick={() => void extractCharacter()} type="button">{isExtracting ? "COGITATING…" : "GENERATE EDITABLE PROPOSAL"}</button>
+            </footer>
           </section>
         </div>
       )}
