@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAdminMode } from "../../_components/AdminMode";
+import { CharacterMiniViewer } from "../../_components/CharacterMiniViewer";
 import { SidebarNavigation } from "../../_components/SidebarNavigation";
 import { useChapterArchive } from "../../_hooks/useChapterArchive";
+import type { ChapterCharacter } from "../../archive-data";
 
 const commandRoles = ["Captain", "Lieutenant", "Lieutenant", "Company Ancient", "Apothecary", "Chaplain"];
 
@@ -33,6 +35,7 @@ export default function CompanyOverview() {
     label: string;
     src: string;
   } | null>(null);
+  const [viewingCharacter, setViewingCharacter] = useState<ChapterCharacter | null>(null);
   const chapterName = "THE LUNAR DRAGONS";
   const company = data.companies[companyIndex];
   const sigilUrl = `/api/company-sigil?company=${companyNumber}&v=${sigilVersion}`;
@@ -453,11 +456,11 @@ export default function CompanyOverview() {
             {recordedCharacters.length ? (
               <div className="company-character-links">
                 {recordedCharacters.map((character) => (
-                  <Link className="panel company-character-link" href={`/characters/${encodeURIComponent(character.id)}`} key={character.id}>
+                  <button className="panel company-character-link" key={character.id} onClick={() => setViewingCharacter(character)} type="button">
                     <i aria-hidden="true">{character.name.slice(0, 1).toUpperCase()}</i>
                     <div><span>{character.rank} · {character.status.toUpperCase()}</span><h3>{character.name}</h3><p>{character.role}</p></div>
                     <b>OPEN PROFILE →</b>
-                  </Link>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -526,6 +529,14 @@ export default function CompanyOverview() {
               <small>Click outside the image or press Escape to close.</small>
             </section>
           </div>
+        )}
+        {viewingCharacter && (
+          <CharacterMiniViewer
+            character={viewingCharacter}
+            companies={data.companies}
+            loreEntries={data.loreEntries}
+            onClose={() => setViewingCharacter(null)}
+          />
         )}
         <footer><span>{company.number.toUpperCase()} COMPANY · MEMBER LEDGER</span><span>Every name is a weapon against oblivion.</span></footer>
       </section>

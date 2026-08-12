@@ -252,9 +252,10 @@ test("Company Phase 1 presents authoritative loading, useful roster controls, an
 });
 
 test("Character Phase 2 balances operational tooling with canon provenance", async () => {
-  const [sectionPage, directory, profile, companyPage, archiveRoute, styles] = await Promise.all([
+  const [sectionPage, directory, miniViewer, profile, companyPage, archiveRoute, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/_components/CharacterDirectory.tsx", "utf8"),
+    readFile("app/_components/CharacterMiniViewer.tsx", "utf8"),
     readFile("app/characters/[character]/page.tsx", "utf8"),
     readFile("app/companies/[company]/page.tsx", "utf8"),
     readFile("app/api/archive/route.ts", "utf8"),
@@ -270,10 +271,20 @@ test("Character Phase 2 balances operational tooling with canon provenance", asy
   assert.match(directory, /heroicDeeds/);
   assert.match(directory, /introducedAt/);
   assert.match(directory, /deathAt/);
+  assert.match(directory, /OPEN DOSSIER/);
+  assert.doesNotMatch(directory, /href=\{`\/characters\/\$\{encodeURIComponent\(character\.id\)\}`\}/);
+  assert.match(directory, /<CharacterMiniViewer/);
+  assert.match(miniViewer, /aria-modal="true"/);
+  assert.match(miniViewer, /character\.biography[\s\S]*LoreFormattedContent/);
+  assert.match(miniViewer, /character\.heroicDeeds/);
+  assert.match(miniViewer, /entry\.status === "canon"/);
+  assert.match(miniViewer, /event\.key === "Escape"/);
   assert.match(profile, /Established Archive References/);
   assert.match(profile, /entry\.status === "canon"/);
   assert.match(profile, /href=\{`\/companies\/\$\{data\.companies\.indexOf\(company\) \+ 1\}`\}/);
   assert.match(companyPage, /recordedCharacters/);
+  assert.match(companyPage, /setViewingCharacter\(character\)/);
+  assert.match(companyPage, /<CharacterMiniViewer/);
   assert.match(companyPage, /OPEN CHARACTER DIRECTORY/);
   assert.match(archiveRoute, /"characters"/);
   assert.match(styles, /\.character-directory-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/s);

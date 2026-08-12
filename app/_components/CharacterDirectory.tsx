@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import type {
   ChapterCharacter,
@@ -9,6 +8,7 @@ import type {
   LoreEntry,
 } from "../archive-data";
 import type { CharacterExtractionAnswer } from "../character-extractor";
+import { CharacterMiniViewer } from "./CharacterMiniViewer";
 
 type CharacterDirectoryProps = {
   canEdit: boolean;
@@ -60,6 +60,7 @@ export function CharacterDirectory({
   const [statusFilter, setStatusFilter] = useState<"all" | ChapterCharacterStatus>("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [editing, setEditing] = useState<ChapterCharacter | null>(null);
+  const [viewing, setViewing] = useState<ChapterCharacter | null>(null);
   const [deedsText, setDeedsText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -260,7 +261,7 @@ export function CharacterDirectory({
                   </dl>
                 </div>
                 <div className="character-index-actions">
-                  <Link className="seal-button" href={`/characters/${encodeURIComponent(character.id)}`}>OPEN PROFILE</Link>
+                  <button className="seal-button" onClick={() => setViewing(character)} type="button">OPEN DOSSIER</button>
                   {canEdit && <button className="seal-button" onClick={() => beginEdit(character)} type="button">EDIT RECORD</button>}
                 </div>
               </article>
@@ -314,6 +315,19 @@ export function CharacterDirectory({
             <footer><p role="status">{saveMessage || "Character records remain operational data unless supported by linked canon."}</p><button className="seal-button" disabled={isSaving} onClick={() => void saveCharacter()} type="button">{isSaving ? "SAVING…" : "SAVE RECORD"}</button></footer>
           </section>
         </div>
+      )}
+
+      {viewing && (
+        <CharacterMiniViewer
+          character={viewing}
+          companies={companies}
+          loreEntries={loreEntries}
+          onClose={() => setViewing(null)}
+          onEdit={canEdit ? (character) => {
+            setViewing(null);
+            beginEdit(character);
+          } : undefined}
+        />
       )}
 
       {isExtractorOpen && (
