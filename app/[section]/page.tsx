@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAdminMode } from "../_components/AdminMode";
 import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
+import { ArchiveTerminalFrame } from "../_components/ArchiveTerminalFrame";
 import { CharacterDirectory } from "../_components/CharacterDirectory";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { LoreEntryEditor } from "../_components/LoreEntryEditor";
@@ -96,12 +97,13 @@ export default function SectionPage() {
   const info = sectionInfo[section] || sectionInfo.chapter;
   const chapterName = "THE LUNAR DRAGONS";
   const usesArchiveBoundary = ["chapter", "flagship", "armoury", "companies", "characters", "intel"].includes(section);
+  const usesArchiveTerminal = ["relay", "chronicles", "characters"].includes(section);
 
   return (
     <main className="app-shell">
       <SidebarNavigation activeHref={`/${section}`} />
 
-      <section className={`workspace ${section === "relay" ? "relay-workspace" : section === "chronicles" ? "chronicles-workspace" : usesArchiveBoundary ? "archive-boundary-workspace" : ""}`.trim()}>
+      <section className={`workspace ${usesArchiveTerminal ? `archive-terminal-workspace ${section}-workspace` : usesArchiveBoundary ? "archive-boundary-workspace" : ""}`.trim()}>
         <header className="topbar">
           <div>
             <p className="eyebrow">The Lunar Dragons · {info.code}</p>
@@ -113,8 +115,8 @@ export default function SectionPage() {
           </div>
         </header>
 
-        <div className={`subpage ${section === "relay" ? "relay-subpage" : section === "chronicles" ? "chronicles-subpage" : usesArchiveBoundary ? "archive-boundary-subpage" : ""}`}>
-          {section !== "relay" && section !== "chronicles" && section !== "intel" && (
+        <div className={`subpage ${usesArchiveTerminal ? `archive-terminal-subpage ${section}-subpage` : usesArchiveBoundary ? "archive-boundary-subpage" : ""}`}>
+          {section !== "relay" && section !== "chronicles" && section !== "characters" && section !== "intel" && (
             <section className="section-hero">
               <div>
                 <p className="section-kicker">{info.kicker}</p>
@@ -367,17 +369,19 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
 
   const selected = messages.find((message) => message.id === selectedId) ?? messages[0];
   return (
-    <section className="relay-inbox" aria-label="Astropathic Relay sanctum">
-      <div className="relay-inbox-grid panel">
-        <header className="relay-terminal-rack">
+    <ArchiveTerminalFrame
+        ariaLabel="Astropathic Relay sanctum"
+        className="relay-inbox relay-inbox-frame panel"
+        bodyClassName="relay-inbox-grid"
+        header={<header className="archive-terminal-frame-header relay-terminal-rack">
           <div className="relay-terminal-ident" aria-hidden="true">&gt;&gt;</div>
           <div className="relay-terminal-rack-title">
             <span>DATA RELIQUARIUM 056//ASTROPATHICA</span>
             <strong>ASTROPATHIC EXLOAD TERMINAL</strong>
           </div>
           <div className="relay-inbox-status"><i /><span>EXLOAD LINK ACTIVE</span><b>{messages.length} MISSIVES COGITATED</b></div>
-        </header>
-        <div className="relay-inbox-list" aria-label="Preserved astropathic missives">
+        </header>}
+        index={<div className="relay-inbox-list" aria-label="Preserved astropathic missives">
           <header><span>ASTROPATHIC MISSIVE INDEX</span><b>{Math.min(2, messages.length)} NEW TRANSMISSIONS</b></header>
           {messages.length ? messages.map((message, index) => (
             <button
@@ -396,8 +400,8 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
               <em className={`relay-priority ${message.priority.toLowerCase()}`}>{message.priority}</em>
             </button>
           )) : <p className="relay-empty">The choir listens into the dark between stars…</p>}
-        </div>
-        <article className="relay-inbox-reader" aria-live="polite">
+        </div>}
+        detail={<article className="relay-inbox-reader" aria-live="polite">
           {selected ? (
             <>
               <header>
@@ -420,9 +424,8 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
               </div>
             </>
           ) : <p className="relay-empty">The choir awaits an empyric impression.</p>}
-        </article>
-      </div>
-    </section>
+        </article>}
+      />
   );
 }
 
@@ -1677,8 +1680,11 @@ function ChroniclesSection({
   }
 
   return (
-    <section className="chronicle-exload-terminal" aria-labelledby="chronicle-exload-title">
-      <header className="chronicle-exload-header">
+    <ArchiveTerminalFrame
+      labelledBy="chronicle-exload-title"
+      className="chronicle-exload-terminal"
+      bodyClassName="chronicle-exload-grid"
+      header={<header className="archive-terminal-frame-header chronicle-exload-header">
         <div className="chronicle-exload-mark" aria-hidden="true"><i /><b>III</b></div>
         <div className="chronicle-exload-heading">
           <span>ADEPTUS ASTARTES · ANNALIS SANCTUM</span>
@@ -1692,9 +1698,8 @@ function ChroniclesSection({
               : `${String(entries.length).padStart(2, "0")} CANON RECORDS`}
           </strong>
         </div>
-      </header>
-
-      {canEdit && (
+      </header>}
+      bands={<>{canEdit && (
         <nav className="chronicle-status-tabs" aria-label="Lore development status categories">
           {([
             ["all", "ALL RECORDS", entries.length],
@@ -1716,15 +1721,12 @@ function ChroniclesSection({
           ))}
         </nav>
       )}
-
       {publicationStatus && (
         <p className="chronicle-publication-status" role="status">
           {publicationStatus}
         </p>
-      )}
-
-      <div className="chronicle-exload-grid">
-        <aside className="chronicle-exload-index" aria-label={canEdit ? "Structured lore development record index" : "Canonical Chronicle record index"}>
+      )}</>}
+      index={<aside className="chronicle-exload-index" aria-label={canEdit ? "Structured lore development record index" : "Canonical Chronicle record index"}>
           <header>
             <span>{canEdit ? "LORE DEVELOPMENT INDEX" : "SEALED RECORD INDEX"}</span>
             <small>{entries.length + 1} RETRIEVABLE OBJECTS</small>
@@ -1769,9 +1771,8 @@ function ChroniclesSection({
               </p>
             )}
           </div>
-        </aside>
-
-        <article className="chronicle-exload-reader" aria-live="polite">
+        </aside>}
+      detail={<article className="chronicle-exload-reader" aria-live="polite">
           <header className={selectedEntry ? "record-active" : undefined}>
             <div className="chronicle-reader-heading">
               <span>ACTIVE EXLOAD</span>
@@ -1834,9 +1835,8 @@ function ChroniclesSection({
               <p className="chronicle-reader-empty">SELECT A SEALED RECORD FOR EXLOAD.</p>
             )}
           </div>
-        </article>
-      </div>
-      {canEdit && editorEntry !== undefined && (
+        </article>}
+      after={canEdit && editorEntry !== undefined ? (
         <LoreEntryEditor
           entry={editorEntry}
           onClose={() => setEditorEntry(undefined)}
@@ -1852,8 +1852,8 @@ function ChroniclesSection({
             setEditorEntry(undefined);
           }}
         />
-      )}
-    </section>
+      ) : undefined}
+    />
   );
 }
 

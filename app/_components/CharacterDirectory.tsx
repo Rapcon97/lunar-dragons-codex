@@ -8,6 +8,7 @@ import type {
   LoreEntry,
 } from "../archive-data";
 import type { CharacterExtractionAnswer } from "../character-extractor";
+import { ArchiveTerminalFrame } from "./ArchiveTerminalFrame";
 import { CharacterDossier } from "./CharacterDossier";
 
 type CharacterDirectoryProps = {
@@ -233,22 +234,22 @@ export function CharacterDirectory({
   }
 
   return (
-    <section className="character-reliquary" aria-labelledby="character-directory-title">
-      <header className="character-reliquary-header panel">
+    <>
+    <ArchiveTerminalFrame
+      labelledBy="character-directory-title"
+      className="character-reliquary"
+      bodyClassName={`character-workspace panel${selectedCharacter ? " has-selection" : ""}`}
+      header={<header className="archive-terminal-frame-header character-reliquary-header">
         <div>
           <p className="section-kicker">Adeptus Astartes · Personnel Reliquary</p>
-          <h1 id="character-directory-title">Chapter Characters</h1>
-          <p>Operational profiles, service histories, heroic deeds, and canon-linked references.</p>
+          <h1 id="character-directory-title">PERSONNEL EXLOAD TERMINAL</h1>
         </div>
         <div className="character-reliquary-summary">
-          <span>RECORDED PERSONNEL</span>
-          <strong>{characters.length}</strong>
+          <span>RELIQUARY LINK ACTIVE · {String(characters.length).padStart(2, "0")} RECORDED PERSONNEL</span>
           {canEdit && <div className="character-reliquary-actions"><button className="seal-button" onClick={openExtractor} type="button">EXTRACT FROM LORE</button><button className="seal-button" onClick={() => beginEdit(emptyCharacter())} type="button">ADD MANUALLY</button></div>}
         </div>
-      </header>
-
-      <div className={`character-workspace panel${selectedCharacter ? " has-selection" : ""}`}>
-        <aside className="character-workspace-index" aria-label="Character record index">
+      </header>}
+      index={<aside className="character-workspace-index" aria-label="Character record index">
           <div className="character-directory-tools" aria-label="Character directory filters">
             <label className="character-search-field">
               <span>SEARCH PERSONNEL</span>
@@ -303,9 +304,8 @@ export function CharacterDirectory({
             </div>
           )}
           </div>
-        </aside>
-
-        <div className="character-workspace-detail" role="region" aria-label="Selected character dossier">
+        </aside>}
+      detail={<div className="character-workspace-detail" role="region" aria-label="Selected character dossier">
           <CharacterDossier
             canEdit={canEdit}
             character={selectedCharacter}
@@ -314,8 +314,8 @@ export function CharacterDirectory({
             onClear={clearSelection}
             onEdit={beginEdit}
           />
-        </div>
-      </div>
+        </div>}
+    />
 
       {editing && (
         <div className="character-editor-backdrop" role="presentation">
@@ -406,6 +406,6 @@ export function CharacterDirectory({
           </section>
         </div>
       )}
-    </section>
+    </>
   );
 }
