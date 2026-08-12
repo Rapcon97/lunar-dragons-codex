@@ -6,6 +6,7 @@ export const chapterArchive = sqliteTable("chapter_archive", {
   milestones: text("milestones").notNull(),
   relics: text("relics").notNull(),
   companies: text("companies").notNull(),
+  characters: text("characters").notNull().default("[]"),
   entries: text("entries").notNull(),
   loreEntries: text("lore_entries").notNull().default("[]"),
   voxQuotes: text("vox_quotes").notNull().default("[]"),

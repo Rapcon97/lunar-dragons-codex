@@ -39,6 +39,7 @@ type ArchiveRow = {
   milestones: string;
   relics: string;
   companies: string;
+  characters: string;
   entries: string;
   lore_entries: string;
   vox_quotes: string;
@@ -80,6 +81,7 @@ export async function ensureChapterArchiveTable() {
         milestones TEXT NOT NULL,
         relics TEXT NOT NULL,
         companies TEXT NOT NULL,
+        characters TEXT NOT NULL DEFAULT '[]',
         entries TEXT NOT NULL,
         lore_entries TEXT NOT NULL DEFAULT '[]',
         vox_quotes TEXT NOT NULL DEFAULT '[]',
@@ -105,6 +107,13 @@ export async function ensureChapterArchiveTable() {
     await db
       .prepare(
         "ALTER TABLE chapter_archive ADD COLUMN lore_entries TEXT NOT NULL DEFAULT '[]'",
+      )
+      .run();
+  }
+  if (!columnNames.has("characters")) {
+    await db
+      .prepare(
+        "ALTER TABLE chapter_archive ADD COLUMN characters TEXT NOT NULL DEFAULT '[]'",
       )
       .run();
   }
@@ -356,6 +365,7 @@ async function readChapterArchiveAttempt(relayWriteAttempt: number): Promise<Cha
         milestones,
         relics,
         companies,
+        characters,
         entries,
         lore_entries,
         vox_quotes,
@@ -380,6 +390,7 @@ async function readChapterArchiveAttempt(relayWriteAttempt: number): Promise<Cha
     milestones: parseJson(row.milestones),
     relics: parseJson(row.relics),
     companies: parseJson(row.companies),
+    characters: parseJson(row.characters),
     entries: parseJson(row.entries),
     loreEntries: parseJson(row.lore_entries),
     voxQuotes: parseJson(row.vox_quotes),
@@ -446,6 +457,7 @@ export async function writeChapterArchive(value: unknown) {
           milestones,
           relics,
           companies,
+          characters,
           entries,
           lore_entries,
           vox_quotes,
@@ -456,12 +468,13 @@ export async function writeChapterArchive(value: unknown) {
           lore_revision,
           updated_at
         )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
         identity = excluded.identity,
         milestones = excluded.milestones,
         relics = excluded.relics,
         companies = excluded.companies,
+        characters = excluded.characters,
         entries = excluded.entries,
         lore_entries = excluded.lore_entries,
         vox_quotes = excluded.vox_quotes,
@@ -478,6 +491,7 @@ export async function writeChapterArchive(value: unknown) {
       JSON.stringify(archive.milestones),
       JSON.stringify(archive.relics),
       JSON.stringify(archive.companies),
+      JSON.stringify(archive.characters),
       JSON.stringify(archive.entries),
       JSON.stringify(archive.loreEntries),
       JSON.stringify(archive.voxQuotes),
@@ -498,6 +512,7 @@ const sectionColumns: Record<ArchiveSection, string> = {
   milestones: "milestones",
   relics: "relics",
   companies: "companies",
+  characters: "characters",
   entries: "entries",
   loreEntries: "lore_entries",
   voxQuotes: "vox_quotes",

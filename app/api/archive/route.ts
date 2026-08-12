@@ -19,6 +19,7 @@ const archiveSections = new Set<ArchiveSection>([
   "milestones",
   "relics",
   "companies",
+  "characters",
   "entries",
   "voxQuotes",
   "badgeMode",

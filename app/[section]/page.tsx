@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAdminMode } from "../_components/AdminMode";
 import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
+import { CharacterDirectory } from "../_components/CharacterDirectory";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { LoreEntryEditor } from "../_components/LoreEntryEditor";
 import { LoreFormattedContent } from "../_components/LoreFormattedContent";
@@ -76,6 +77,12 @@ const sectionInfo = {
     title: "Archive Settings",
     description: "Manage shared chapter records and guest access to the Lunar Dragons archive.",
   },
+  characters: {
+    code: "PERSONAE",
+    kicker: "Personnel & deeds",
+    title: "Chapter Characters",
+    description: "Record the warriors, commanders, honoured dead, and missing whose deeds define the Lunar Dragons.",
+  },
 } as const;
 
 type Section = keyof typeof sectionInfo;
@@ -88,7 +95,7 @@ export default function SectionPage() {
   const section = (pathname.split("/")[1] || "chapter") as Section;
   const info = sectionInfo[section] || sectionInfo.chapter;
   const chapterName = "THE LUNAR DRAGONS";
-  const usesArchiveBoundary = ["chapter", "flagship", "armoury", "companies", "intel"].includes(section);
+  const usesArchiveBoundary = ["chapter", "flagship", "armoury", "companies", "characters", "intel"].includes(section);
 
   return (
     <main className="app-shell">
@@ -127,6 +134,17 @@ export default function SectionPage() {
           {section === "flagship" && <LunarisSection />}
           {section === "armoury" && <ArmourySection canEdit={isAdminMode} relics={data.relics} onSave={(value) => saveSection("relics", value)} />}
           {section === "companies" && <CompaniesSection canEdit={isAdminMode} error={error} isLoading={isLoading} roster={data.companies} onSave={(value) => saveSection("companies", value)} />}
+          {section === "characters" && (
+            <CharacterDirectory
+              canEdit={canAdmin && isAdminMode}
+              error={error}
+              isLoading={isLoading}
+              characters={data.characters}
+              companies={data.companies}
+              loreEntries={data.loreEntries}
+              onSave={(value) => saveSection("characters", value)}
+            />
+          )}
           {section === "chronicles" && (
             <ChroniclesSection
               canEdit={canAdmin && isAdminMode}

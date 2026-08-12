@@ -34,6 +34,29 @@ export type ChapterCompany = {
   strength: number;
 };
 
+export type ChapterCharacterStatus =
+  | "active"
+  | "deceased"
+  | "missing"
+  | "interred";
+
+export type ChapterCharacter = {
+  id: string;
+  name: string;
+  rank: string;
+  honorific: string;
+  role: string;
+  companyNumber: string;
+  status: ChapterCharacterStatus;
+  introducedAt: string;
+  deathAt: string;
+  biography: string;
+  heroicDeeds: string[];
+  loreEntryIds: string[];
+  createdAt: number;
+  updatedAt: number;
+};
+
 export type LoreStatus =
   | "draft"
   | "review"
@@ -243,6 +266,7 @@ export type ChapterArchiveData = {
   milestones: ChapterMilestone[];
   relics: ChapterRelic[];
   companies: ChapterCompany[];
+  characters: ChapterCharacter[];
   entries: string[];
   loreEntries: LoreEntry[];
   voxQuotes: string[];
@@ -311,6 +335,7 @@ const defaultArchive: ChapterArchiveData = {
     { number: "10th", name: "10th Company", role: "Scouts & Neophytes", strength: 45 },
     { number: "11th", name: "The Veiled Claw", role: "Classified Operations", strength: 100 },
   ],
+  characters: [],
   entries: [
     "008.M42 — In the eighth year of the Indomitus Crusade, Roboute Guilliman seals the Decree of Reclamation and Vigilance, recognising the Lunar Dragons’ sacrifice and distinguished service.",
     "008.M42 — The Chapter is commissioned to prosecute the Nachmund Reclamation, operationally designated the Argent Vigil.",
@@ -2096,6 +2121,58 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
       bodies,
     };
   });
+
+  const characters = Array.isArray(source.characters)
+    ? source.characters
+        .slice(0, 500)
+        .map((item, index) => {
+          const candidate = record(item);
+          const status: ChapterCharacterStatus =
+            candidate.status === "deceased" ||
+            candidate.status === "missing" ||
+            candidate.status === "interred"
+              ? candidate.status
+              : "active";
+          const createdAt = Math.max(0, Math.floor(Number(candidate.createdAt) || 0));
+          const updatedAt = Math.max(
+            createdAt,
+            Math.floor(Number(candidate.updatedAt) || createdAt),
+          );
+          const companyNumber = text(candidate.companyNumber, "", 20);
+          return {
+            id: text(candidate.id, `character-imported-${index + 1}`, 160),
+            name: text(candidate.name, `Unidentified warrior ${index + 1}`, 200).trim(),
+            rank: text(candidate.rank, "Rank unrecorded", 160),
+            honorific: text(candidate.honorific, "", 240),
+            role: text(candidate.role, "Role unrecorded", 240),
+            companyNumber: defaults.companies.some((company) => company.number === companyNumber)
+              ? companyNumber
+              : "",
+            status,
+            introducedAt: text(candidate.introducedAt, "Date unrecorded", 80),
+            deathAt: text(candidate.deathAt, "", 80),
+            biography: text(candidate.biography, "", 12000),
+            heroicDeeds: Array.isArray(candidate.heroicDeeds)
+              ? candidate.heroicDeeds
+                  .filter((deed): deed is string => typeof deed === "string")
+                  .map((deed) => deed.trim().slice(0, 1000))
+                  .filter(Boolean)
+                  .slice(0, 50)
+              : [],
+            loreEntryIds: Array.isArray(candidate.loreEntryIds)
+              ? candidate.loreEntryIds
+                  .filter((id): id is string => typeof id === "string")
+                  .map((id) => id.trim().slice(0, 160))
+                  .filter(Boolean)
+                  .slice(0, 100)
+              : [],
+            createdAt,
+            updatedAt,
+          } satisfies ChapterCharacter;
+        })
+        .filter((character, index, allCharacters) =>
+          allCharacters.findIndex((candidate) => candidate.id === character.id) === index)
+    : defaults.characters;
   const retainedWorlds = normalizedWorlds.filter((world) => !legacySectorSystemNames.has(world.name));
   const worldIndexMap = new Map(retainedWorlds.map((world, index) => [world.sourceIndex, index]));
   const worlds: SectorWorld[] = retainedWorlds.map(({ sourceIndex: _sourceIndex, ...world }) => world);
@@ -2178,6 +2255,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
     milestones: milestones.length ? milestones : defaults.milestones,
     relics: normalizedRelics.length ? normalizedRelics : defaults.relics,
     companies,
+    characters,
     entries,
     loreEntries,
     voxQuotes: voxQuotes.length ? voxQuotes : defaults.voxQuotes,

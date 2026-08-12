@@ -66,6 +66,10 @@ export default function CompanyOverview() {
       leader: "Sergeant name unrecorded",
     }));
   }, [company.strength]);
+  const recordedCharacters = useMemo(
+    () => data.characters.filter((character) => character.companyNumber === company.number),
+    [company.number, data.characters],
+  );
 
   function canvasBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
     return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
@@ -439,6 +443,29 @@ export default function CompanyOverview() {
             <article><span>NOMINAL COMPARISON</span><strong>100</strong><small>company-strength datum</small></article>
             <article><span>COMMAND BILLETS</span><strong>{Math.min(company.strength, commandRoles.length)}</strong><small>calculated from current strength</small></article>
             <article><span>WORKING SQUAD GROUPS</span><strong>{squads.length}</strong><small>calculated, not an archived roster</small></article>
+          </section>
+
+          <section className="member-section company-personnel-records">
+            <div className="member-section-heading">
+              <div><p className="section-kicker">Authoritative personnel links</p><h2>Recorded Characters</h2></div>
+              <span>{recordedCharacters.length} named record{recordedCharacters.length === 1 ? "" : "s"}</span>
+            </div>
+            {recordedCharacters.length ? (
+              <div className="company-character-links">
+                {recordedCharacters.map((character) => (
+                  <Link className="panel company-character-link" href={`/characters/${encodeURIComponent(character.id)}`} key={character.id}>
+                    <i aria-hidden="true">{character.name.slice(0, 1).toUpperCase()}</i>
+                    <div><span>{character.rank} · {character.status.toUpperCase()}</span><h3>{character.name}</h3><p>{character.role}</p></div>
+                    <b>OPEN PROFILE →</b>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="panel company-personnel-empty">
+                <p>No named characters are assigned to this company. Calculated billets below are not personnel records.</p>
+                <Link className="seal-button" href="/characters">OPEN CHARACTER DIRECTORY</Link>
+              </div>
+            )}
           </section>
 
           <aside className="company-calculation-notice" role="note">

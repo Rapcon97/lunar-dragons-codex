@@ -7,6 +7,7 @@ type SidebarGlyphName =
   | "lunaris"
   | "armoury"
   | "companies"
+  | "characters"
   | "intel"
   | "relay"
   | "chronicles"
@@ -28,6 +29,7 @@ const SIDEBAR_ITEMS: readonly SidebarItem[] = [
   { href: "/flagship", icon: "lunaris", label: "Lunaris" },
   { href: "/armoury", icon: "armoury", label: "Armoury" },
   { href: "/companies", icon: "companies", label: "Companies" },
+  { href: "/characters", icon: "characters", label: "Characters" },
   { href: "/intel", icon: "intel", label: "Sector Intel" },
   { href: "/relay", icon: "relay", label: "Relay" },
   { href: "/chronicles", icon: "chronicles", label: "Chronicles" },
@@ -64,6 +66,13 @@ const SIDEBAR_GLYPHS: Record<SidebarGlyphName, ReactNode> = {
     <>
       <path d="M3 5h5v5H3zM9.5 5h5v5h-5zM16 5h5v5h-5z" />
       <path d="M5.5 10v8M12 10v8M18.5 10v8M3.5 18h17M7.5 21h9" />
+    </>
+  ),
+  characters: (
+    <>
+      <path d="M12 3.25 17 5v4.5c0 3.3-1.75 5.75-5 7.5-3.25-1.75-5-4.2-5-7.5V5z" />
+      <circle cx="12" cy="8.25" r="1.75" />
+      <path d="M8.75 14.5c.8-1.55 1.9-2.25 3.25-2.25s2.45.7 3.25 2.25M6 20h12M9 17.5V20M15 17.5V20" />
     </>
   ),
   intel: (

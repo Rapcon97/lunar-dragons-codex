@@ -31,6 +31,24 @@ test("build packages the reviewed additive structured-lore migration", async () 
   assert.doesNotMatch(migration, /DROP|DELETE|CREATE TABLE/i);
 });
 
+test("build packages the additive character-registry migration", async () => {
+  const migration = await readFile(
+    "dist/.openai/drizzle/0006_character_registry.sql",
+    "utf8",
+  );
+  const journal = await readFile(
+    "dist/.openai/drizzle/meta/_journal.json",
+    "utf8",
+  );
+
+  assert.equal(
+    migration.trim(),
+    "ALTER TABLE `chapter_archive` ADD `characters` text DEFAULT '[]' NOT NULL;",
+  );
+  assert.match(journal, /0006_character_registry/);
+  assert.doesNotMatch(migration, /DROP|DELETE|CREATE TABLE/i);
+});
+
 test("the archive API withholds non-canon lore from non-admin viewers", async () => {
   const source = await readFile("app/api/archive/route.ts", "utf8");
 
@@ -190,7 +208,7 @@ test("principal archive sections share the Relay and Chronicle frame boundaries"
 
   assert.match(home, /workspace archive-boundary-workspace command-boundary-workspace/);
   assert.match(home, /content-grid command-grid-redesign archive-boundary-content/);
-  assert.match(sectionPage, /\["chapter", "flagship", "armoury", "companies", "intel"\]\.includes\(section\)/);
+  assert.match(sectionPage, /\["chapter", "flagship", "armoury", "companies", "characters", "intel"\]\.includes\(section\)/);
   assert.match(sectionPage, /usesArchiveBoundary \? "archive-boundary-workspace"/);
   assert.match(sectionPage, /usesArchiveBoundary \? "archive-boundary-subpage"/);
   assert.match(companyPage, /workspace archive-boundary-workspace/);
@@ -231,6 +249,35 @@ test("Company Phase 1 presents authoritative loading, useful roster controls, an
   assert.match(styles, /\.company-dossier-matrix\s*\{[^}]*grid-template-columns:\s*repeat\(4,minmax\(0,1fr\)\)/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.roster-summary\s*\{\s*grid-template-columns:\s*1fr 1fr;/s);
   assert.match(styles, /@media \(max-width: 520px\)[\s\S]*\.roster-summary, \.company-dossier-matrix\s*\{\s*grid-template-columns:\s*1fr;/s);
+});
+
+test("Character Phase 2 balances operational tooling with canon provenance", async () => {
+  const [sectionPage, directory, profile, companyPage, archiveRoute, styles] = await Promise.all([
+    readFile("app/[section]/page.tsx", "utf8"),
+    readFile("app/_components/CharacterDirectory.tsx", "utf8"),
+    readFile("app/characters/[character]/page.tsx", "utf8"),
+    readFile("app/companies/[company]/page.tsx", "utf8"),
+    readFile("app/api/archive/route.ts", "utf8"),
+    readFile("app/globals.css", "utf8"),
+  ]);
+
+  assert.match(sectionPage, /<CharacterDirectory[\s\S]*canEdit=\{canAdmin && isAdminMode\}[\s\S]*error=\{error\}[\s\S]*isLoading=\{isLoading\}[\s\S]*characters=\{data\.characters\}/);
+  assert.match(directory, /if \(isLoading \|\| error\)[\s\S]*Retrieving character records/);
+  assert.match(directory, /Adeptus Astartes · Personnel Reliquary/);
+  assert.match(directory, /No names or deeds have been invented to fill it/);
+  assert.match(directory, /Links establish provenance; operational profile fields do not become canon automatically/);
+  assert.match(directory, /loreEntries\.filter\(\(entry\) => entry\.status === "canon"\)/);
+  assert.match(directory, /heroicDeeds/);
+  assert.match(directory, /introducedAt/);
+  assert.match(directory, /deathAt/);
+  assert.match(profile, /Established Archive References/);
+  assert.match(profile, /entry\.status === "canon"/);
+  assert.match(profile, /href=\{`\/companies\/\$\{data\.companies\.indexOf\(company\) \+ 1\}`\}/);
+  assert.match(companyPage, /recordedCharacters/);
+  assert.match(companyPage, /OPEN CHARACTER DIRECTORY/);
+  assert.match(archiveRoute, /"characters"/);
+  assert.match(styles, /\.character-directory-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/s);
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.character-directory-tools\s*\{\s*grid-template-columns:\s*1fr;/s);
 });
 
 test("the Command nexus always renders the authenticated Lunar Dragons sigil", async () => {
@@ -364,6 +411,7 @@ test("the sidebar uses one coordinated accessible SVG command-glyph system", asy
     ["Lunaris", "/flagship", "lunaris"],
     ["Armoury", "/armoury", "armoury"],
     ["Companies", "/companies", "companies"],
+    ["Characters", "/characters", "characters"],
     ["Sector Intel", "/intel", "intel"],
     ["Relay", "/relay", "relay"],
     ["Chronicles", "/chronicles", "chronicles"],
