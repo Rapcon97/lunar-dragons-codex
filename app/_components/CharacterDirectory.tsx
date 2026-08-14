@@ -8,6 +8,7 @@ import type {
   LoreEntry,
 } from "../archive-data";
 import type { CharacterExtractionAnswer } from "../character-extractor";
+import { applyCharacterDraft, createExtractedCharacterDraft, removeCharacterRecord } from "../character-records";
 import { ArchiveTerminalFrame } from "./ArchiveTerminalFrame";
 import { CharacterDossier } from "./CharacterDossier";
 
@@ -61,11 +62,16 @@ export function CharacterDirectory({
   const [statusFilter, setStatusFilter] = useState<"all" | ChapterCharacterStatus>("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [editing, setEditing] = useState<ChapterCharacter | null>(null);
+  const [editingTargetId, setEditingTargetId] = useState<string | null>(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [deedsText, setDeedsText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [deleting, setDeleting] = useState<ChapterCharacter | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
   const [isExtractorOpen, setIsExtractorOpen] = useState(false);
+  const [extractionTargetId, setExtractionTargetId] = useState<string | null>(null);
   const [extractionIds, setExtractionIds] = useState<string[]>([]);
   const [extractionGuidance, setExtractionGuidance] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
@@ -119,8 +125,22 @@ export function CharacterDirectory({
 
   function beginEdit(character: ChapterCharacter) {
     setEditing({ ...character, heroicDeeds: [...character.heroicDeeds], loreEntryIds: [...character.loreEntryIds] });
+    setEditingTargetId(character.id);
     setDeedsText(character.heroicDeeds.join("\n"));
     setSaveMessage("");
+  }
+
+  function beginCreate() {
+    const character = emptyCharacter();
+    setEditing(character);
+    setEditingTargetId(null);
+    setDeedsText("");
+    setSaveMessage("");
+  }
+
+  function beginDelete(character: ChapterCharacter) {
+    setDeleting(character);
+    setDeleteMessage("");
   }
 
   function selectCharacter(character: ChapterCharacter) {
@@ -137,9 +157,10 @@ export function CharacterDirectory({
     window.history.pushState({}, "", url);
   }
 
-  function openExtractor() {
-    setExtractionIds([]);
-    setExtractionGuidance("");
+  function openExtractor(character: ChapterCharacter | null = null) {
+    setExtractionTargetId(character?.id ?? null);
+    setExtractionIds(character?.loreEntryIds.filter((id) => canonEntries.some((entry) => entry.id === id)) ?? []);
+    setExtractionGuidance(character ? `Revise the existing personnel record for ${character.name}. Extract that character only.` : "");
     setExtractionMessage("");
     setExtractionUnresolved([]);
     setIsExtractorOpen(true);
@@ -179,17 +200,22 @@ export function CharacterDirectory({
       if (!answer.proposal) return;
 
       const now = Date.now();
-      const proposal: ChapterCharacter = {
-        id: crypto.randomUUID(),
-        ...answer.proposal,
-        rank: answer.proposal.rank || "Rank unrecorded",
-        role: answer.proposal.role || "Role unrecorded",
-        loreEntryIds: [...extractionIds],
-        createdAt: now,
-        updatedAt: now,
-      };
+      const extractionTarget = extractionTargetId
+        ? characters.find((character) => character.id === extractionTargetId)
+        : null;
+      if (extractionTargetId && !extractionTarget) {
+        throw new Error("The character selected for revision no longer exists. Reload the archive before trying again.");
+      }
+      const proposal = createExtractedCharacterDraft({
+        proposal: answer.proposal,
+        loreEntryIds: extractionIds,
+        existingCharacter: extractionTarget,
+        newId: crypto.randomUUID(),
+        now,
+      });
       setIsExtractorOpen(false);
       setEditing(proposal);
+      setEditingTargetId(extractionTarget?.id ?? null);
       setDeedsText(proposal.heroicDeeds.join("\n"));
       setSaveMessage("Review every extracted field before saving. Nothing has been written yet.");
     } catch (error) {
@@ -218,19 +244,42 @@ export function CharacterDirectory({
       heroicDeeds: deedsText.split(/\r?\n/u).map((deed) => deed.trim()).filter(Boolean),
       updatedAt: now,
     };
-    const exists = characters.some((character) => character.id === nextCharacter.id);
-    const next = exists
-      ? characters.map((character) => character.id === nextCharacter.id ? nextCharacter : character)
-      : [...characters, nextCharacter];
+    const applied = applyCharacterDraft(characters, nextCharacter, editingTargetId);
+    if (!applied.ok) {
+      setSaveMessage(applied.error);
+      return;
+    }
     setIsSaving(true);
-    const saved = await onSave(next);
+    const saved = await onSave(applied.characters);
     setIsSaving(false);
     if (saved) {
       setEditing(null);
+      setEditingTargetId(null);
       setSaveMessage("");
     } else {
       setSaveMessage("The personnel record could not be saved.");
     }
+  }
+
+  async function deleteCharacter() {
+    if (!deleting) return;
+    const removed = removeCharacterRecord(characters, deleting.id);
+    if (!removed.ok) {
+      setDeleteMessage(removed.error);
+      return;
+    }
+
+    setIsDeleting(true);
+    const saved = await onSave(removed.characters);
+    setIsDeleting(false);
+    if (!saved) {
+      setDeleteMessage("The personnel record could not be deleted.");
+      return;
+    }
+
+    if (selectedCharacterId === deleting.id) clearSelection();
+    setDeleting(null);
+    setDeleteMessage("");
   }
 
   return (
@@ -246,7 +295,7 @@ export function CharacterDirectory({
         </div>
         <div className="character-reliquary-summary">
           <span>RELIQUARY LINK ACTIVE · {String(characters.length).padStart(2, "0")} RECORDED PERSONNEL</span>
-          {canEdit && <div className="character-reliquary-actions"><button className="seal-button" onClick={openExtractor} type="button">EXTRACT FROM LORE</button><button className="seal-button" onClick={() => beginEdit(emptyCharacter())} type="button">ADD MANUALLY</button></div>}
+          {canEdit && <div className="character-reliquary-actions"><button className="seal-button" onClick={() => openExtractor()} type="button">EXTRACT NEW FROM LORE</button><button className="seal-button" onClick={beginCreate} type="button">ADD MANUALLY</button></div>}
         </div>
       </header>}
       index={<aside className="character-workspace-index" aria-label="Character record index">
@@ -300,7 +349,7 @@ export function CharacterDirectory({
               <span aria-hidden="true">◇</span>
               <h2>{characters.length ? "No personnel match this query" : "No character records have been sealed"}</h2>
               <p>{characters.length ? "Adjust the directory filters to recover another record." : "The reliquary is ready. No names or deeds have been invented to fill it."}</p>
-              {canEdit && !characters.length && <button className="seal-button" onClick={() => beginEdit(emptyCharacter())} type="button">ADD FIRST CHARACTER</button>}
+              {canEdit && !characters.length && <button className="seal-button" onClick={beginCreate} type="button">ADD FIRST CHARACTER</button>}
             </div>
           )}
           </div>
@@ -312,7 +361,9 @@ export function CharacterDirectory({
             companies={companies}
             loreEntries={loreEntries}
             onClear={clearSelection}
+            onDelete={beginDelete}
             onEdit={beginEdit}
+            onExtract={openExtractor}
           />
         </div>}
     />
@@ -321,8 +372,8 @@ export function CharacterDirectory({
         <div className="character-editor-backdrop" role="presentation">
           <section aria-labelledby="character-editor-title" aria-modal="true" className="character-editor-dialog" role="dialog">
             <header>
-              <div><p className="section-kicker">Administratum personnel editor</p><h2 id="character-editor-title">{characters.some((character) => character.id === editing.id) ? "Revise Character Record" : "Create Character Record"}</h2></div>
-              <button className="seal-button" onClick={() => setEditing(null)} type="button">CLOSE</button>
+              <div><p className="section-kicker">Administratum personnel editor</p><h2 id="character-editor-title">{editingTargetId ? "Revise Character Record" : "Create Character Record"}</h2></div>
+              <button className="seal-button" onClick={() => { setEditing(null); setEditingTargetId(null); }} type="button">CLOSE</button>
             </header>
             <div className="character-editor-scroll">
               <div className="character-editor-grid">
@@ -361,13 +412,13 @@ export function CharacterDirectory({
         <div className="character-editor-backdrop" role="presentation">
           <section aria-labelledby="character-extractor-title" aria-modal="true" className="character-editor-dialog character-extractor-dialog" role="dialog">
             <header>
-              <div><p className="section-kicker">Canon-guided personnel extraction</p><h2 id="character-extractor-title">Create Character from Lore</h2></div>
+              <div><p className="section-kicker">Canon-guided personnel extraction</p><h2 id="character-extractor-title">{extractionTargetId ? "Revise Character from Lore" : "Create Character from Lore"}</h2></div>
               <button className="seal-button" onClick={() => setIsExtractorOpen(false)} type="button">CLOSE</button>
             </header>
             <div className="character-editor-scroll">
               <div className="character-extractor-intro panel">
                 <strong>SELECT ESTABLISHED SOURCES</strong>
-                <p>The Lore Cogitator extracts only what these canon records support. It creates an editable proposal and cannot save or publish a character.</p>
+                <p>The Lore Cogitator extracts only what these canon records support. It creates an editable proposal and cannot save or publish a character. Revisions preserve the selected personnel record's stable identity.</p>
               </div>
               <fieldset className="character-canon-links character-extractor-sources">
                 <legend>CANON LORE ARCHIVE</legend>
@@ -402,6 +453,33 @@ export function CharacterDirectory({
             <footer>
               <p>{extractionIds.length} canon source{extractionIds.length === 1 ? "" : "s"} selected · proposal remains unsaved</p>
               <button className="seal-button" disabled={isExtracting || !extractionIds.length} onClick={() => void extractCharacter()} type="button">{isExtracting ? "COGITATING…" : "GENERATE EDITABLE PROPOSAL"}</button>
+            </footer>
+          </section>
+        </div>
+      )}
+
+      {deleting && (
+        <div className="character-editor-backdrop" role="presentation">
+          <section aria-labelledby="character-delete-title" aria-modal="true" className="character-editor-dialog character-delete-dialog" role="dialog">
+            <header>
+              <div><p className="section-kicker">Administratum personnel deletion</p><h2 id="character-delete-title">Delete Character Record</h2></div>
+              <button className="seal-button" disabled={isDeleting} onClick={() => setDeleting(null)} type="button">CLOSE</button>
+            </header>
+            <div className="character-delete-warning">
+              <strong>THIS ACTION CANNOT BE UNDONE</strong>
+              <p>Only the selected operational character record will be removed. Linked Chronicle lore is not altered.</p>
+              <dl>
+                <div><dt>CHARACTER</dt><dd>{deleting.name}</dd></div>
+                <div><dt>STABLE IDENT</dt><dd>{deleting.id}</dd></div>
+              </dl>
+              {deleteMessage && <p className="character-delete-error" role="alert">{deleteMessage}</p>}
+            </div>
+            <footer>
+              <p>Verify the stable ident before confirming deletion.</p>
+              <div className="character-delete-actions">
+                <button className="seal-button" disabled={isDeleting} onClick={() => setDeleting(null)} type="button">KEEP RECORD</button>
+                <button className="seal-button character-delete-button" disabled={isDeleting} onClick={() => void deleteCharacter()} type="button">{isDeleting ? "DELETING…" : "DELETE CHARACTER"}</button>
+              </div>
             </footer>
           </section>
         </div>

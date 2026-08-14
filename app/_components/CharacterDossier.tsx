@@ -23,6 +23,8 @@ type CharacterDossierProps = {
   canEdit: boolean;
   onClear: () => void;
   onEdit: (character: ChapterCharacter) => void;
+  onExtract: (character: ChapterCharacter) => void;
+  onDelete: (character: ChapterCharacter) => void;
 };
 
 export function CharacterDossier({
@@ -32,6 +34,8 @@ export function CharacterDossier({
   canEdit,
   onClear,
   onEdit,
+  onExtract,
+  onDelete,
 }: CharacterDossierProps) {
   if (!character) {
     return (
@@ -63,7 +67,13 @@ export function CharacterDossier({
           {character.honorific && <p>{character.honorific}</p>}
           <strong>{character.rank} · {character.role}</strong>
         </div>
-        {canEdit && <button className="seal-button" onClick={() => onEdit(character)} type="button">EDIT RECORD</button>}
+        {canEdit && (
+          <div className="character-dossier-admin-actions">
+            <button className="seal-button" onClick={() => onExtract(character)} type="button">REVISE FROM LORE</button>
+            <button className="seal-button" onClick={() => onEdit(character)} type="button">EDIT RECORD</button>
+            <button className="seal-button character-delete-button" onClick={() => onDelete(character)} type="button">DELETE RECORD</button>
+          </div>
+        )}
       </header>
 
       <div className="character-dossier-scroll">

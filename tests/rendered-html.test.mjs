@@ -308,18 +308,28 @@ test("Character Phase 2 balances operational tooling with canon provenance", asy
 });
 
 test("character extraction is admin-only, canon-guided, and review-before-save", async () => {
-  const [directory, route, extractor, styles] = await Promise.all([
+  const [directory, dossier, route, extractor, styles] = await Promise.all([
     readFile("app/_components/CharacterDirectory.tsx", "utf8"),
+    readFile("app/_components/CharacterDossier.tsx", "utf8"),
     readFile("app/api/admin/character-extractor/route.ts", "utf8"),
     readFile("app/character-extractor.ts", "utf8"),
     readFile("app/globals.css", "utf8"),
   ]);
 
   assert.match(directory, /canEdit && <div className="character-reliquary-actions"/);
-  assert.match(directory, /EXTRACT FROM LORE/);
+  assert.match(directory, /EXTRACT NEW FROM LORE/);
+  assert.match(directory, /onExtract=\{openExtractor\}/);
+  assert.match(directory, /Revise Character from Lore/);
+  assert.match(directory, /setEditingTargetId\(extractionTarget\?\.id \?\? null\)/);
+  assert.match(directory, /applyCharacterDraft\(characters, nextCharacter, editingTargetId\)/);
+  assert.match(dossier, /REVISE FROM LORE/);
+  assert.match(dossier, /DELETE RECORD/);
+  assert.match(directory, /removeCharacterRecord\(characters, deleting\.id\)/);
+  assert.match(directory, /THIS ACTION CANNOT BE UNDONE/);
+  assert.match(directory, /STABLE IDENT/);
   assert.match(directory, /GENERATE EDITABLE PROPOSAL/);
   assert.match(directory, /Review every extracted field before saving\. Nothing has been written yet\./);
-  assert.match(directory, /loreEntryIds: \[\.\.\.extractionIds\]/);
+  assert.match(directory, /loreEntryIds: extractionIds/);
   assert.match(route, /getArchiveAdmin/);
   assert.match(route, /x-lunar-admin-mode/);
   assert.match(route, /isSameOriginRequest/);
