@@ -418,7 +418,7 @@ export function CharacterDirectory({
             <div className="character-editor-scroll">
               <div className="character-extractor-intro panel">
                 <strong>SELECT ESTABLISHED SOURCES</strong>
-                <p>The Lore Cogitator extracts only what these canon records support. It creates an editable proposal and cannot save or publish a character. Revisions preserve the selected personnel record's stable identity.</p>
+                <p>The Lore Cogitator extracts only what these canon records support. It creates an editable proposal and cannot save or publish a character. Revisions preserve the selected personnel record&apos;s stable identity.</p>
               </div>
               <fieldset className="character-canon-links character-extractor-sources">
                 <legend>CANON LORE ARCHIVE</legend>

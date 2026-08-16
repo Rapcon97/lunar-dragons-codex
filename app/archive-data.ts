@@ -939,7 +939,9 @@ function planPrimaryAstropathicEvent(message: AstropathicMessage): AstropathicMe
 }
 
 /** Pure Phase 4B planner. It never creates records and never crosses a day. */
-export function planAstropathicTransmissionEvents(messages: readonly AstropathicMessage[]) {
+export function planAstropathicTransmissionEvents(
+  messages: readonly AstropathicMessage[],
+): AstropathicMessage[] {
   const planned = messages.map(planPrimaryAstropathicEvent);
   const nominalTimes = new Map(planned.map((message) => [
     message.id,
@@ -962,7 +964,7 @@ export function planAstropathicTransmissionEvents(messages: readonly Astropathic
       ...message,
       event: {
         ...message.event,
-        kinds: [...message.event.kinds, "out-of-order-arrival"],
+        kinds: [...message.event.kinds, "out-of-order-arrival"] as AstropathicEventKind[],
       },
     };
   });
@@ -1402,7 +1404,7 @@ function nominalAstropathicPlanForDay(day: Date): NominalRelayPlan {
   return { key, quiet, burstCount, roots, candidates };
 }
 
-function markOutOfOrderDeliveries(messages: AstropathicMessage[]) {
+function markOutOfOrderDeliveries(messages: AstropathicMessage[]): AstropathicMessage[] {
   const roots = messages.filter((message) => !message.event?.parentTransmissionId);
   return messages.map((message) => {
     if (!message.event?.kinds.includes("delayed-arrival") || message.event.kinds.includes("out-of-order-arrival")) {
@@ -1419,7 +1421,10 @@ function markOutOfOrderDeliveries(messages: AstropathicMessage[]) {
     if (!overtaken) return message;
     return {
       ...message,
-      event: { ...message.event, kinds: [...message.event.kinds, "out-of-order-arrival"] },
+      event: {
+        ...message.event,
+        kinds: [...message.event.kinds, "out-of-order-arrival"] as AstropathicEventKind[],
+      },
     };
   });
 }

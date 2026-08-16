@@ -364,6 +364,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
 
   useEffect(() => {
     if (!messages.length) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep selection valid when the persisted inbox changes.
     if (!messages.some((message) => message.id === selectedId)) setSelectedId(messages[0].id);
   }, [messages, selectedId]);
 
@@ -665,11 +666,14 @@ function CompaniesSection({
   const [clearanceError, setClearanceError] = useState("");
   useEffect(() => {
     if (!canEdit) {
+      /* eslint-disable react-hooks/set-state-in-effect -- Leaving Admin Mode deliberately discards the unsaved roster draft. */
       setDraftRoster(roster.map((company) => ({ ...company })));
       setIsEditing(false);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [canEdit, roster]);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Session storage is the external source for the clearance state.
     setEleventhUnlocked(
       window.sessionStorage.getItem("lunar-dragons-eleventh-clearance") === "granted",
     );
@@ -1118,10 +1122,12 @@ function SectorIntelSection({
   const [showTestChart, setShowTestChart] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Refresh the editor draft only while no edit is active.
     if (!isEditing) setDraft(intel);
   }, [intel, isEditing]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- The admin-only simulacrum must close when authorization is lost.
     if (!canEdit) setShowTestChart(false);
   }, [canEdit]);
 
@@ -1207,6 +1213,7 @@ function SectorIntelSection({
   const plottedOrigin = !isTestChartActive && originLocationId
     ? resolveTransmissionOrigin(display, { originLocationId, originState: "CONFIRMED" })
     : null;
+  const plottedOriginIndex = plottedOrigin?.kind === "exact" ? plottedOrigin.parentSystemIndex : null;
   const selectedWorld = selectedWorldIndex === null ? null : display.worlds[selectedWorldIndex] ?? null;
   const showPreliminarySurvey = display.worlds.length === 0;
   const surveyAuthority = display.survey.authority === "ratified"
@@ -1216,10 +1223,12 @@ function SectorIntelSection({
       : "DRAFT OPERATIONAL PREMISE";
 
   useEffect(() => {
-    if (plottedOrigin?.kind === "exact") setSelectedWorldIndex(plottedOrigin.parentSystemIndex);
-  }, [plottedOrigin?.kind, plottedOrigin?.kind === "exact" ? plottedOrigin.parentSystemIndex : -1]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- An explicit origin query intentionally selects its resolved system.
+    if (plottedOriginIndex !== null) setSelectedWorldIndex(plottedOriginIndex);
+  }, [plottedOriginIndex]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear a selection invalidated by a changed world register.
     if (selectedWorldIndex !== null && selectedWorldIndex >= display.worlds.length) setSelectedWorldIndex(null);
   }, [display.worlds.length, selectedWorldIndex]);
 
@@ -1438,7 +1447,7 @@ function SectorIntelSection({
                 <div className="intel-simulacrum-bodies" aria-label={`Simulated bodies in ${selectedWorld.name}`}>
                   <span>SIMULATED ORBITAL REGISTER</span>
                   {selectedWorld.bodies.map((body) => (
-                    <p key={body.name}><b>{body.name}</b><small>{body.type} // {body.status}</small></p>
+                    <p key={body.name}><b>{body.name}</b><small>{body.type}{" // "}{body.status}</small></p>
                   ))}
                   <em>NO LIVE ARCHIVE ROUTE</em>
                 </div>
@@ -1649,11 +1658,13 @@ function ChroniclesSection({
 
   useEffect(() => {
     if (!selectedId || (selectedId !== "decree" && !entries.some((entry) => entry.id === selectedId))) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep the opened Chronicle record valid after filtering or refresh.
       setSelectedId(entries[0]?.id ?? "decree");
     }
   }, [entries, selectedId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Non-admin viewers must always return to the canon-safe aggregate filter.
     if (!canEdit && activeStatus !== "all") setActiveStatus("all");
   }, [activeStatus, canEdit]);
 
@@ -1872,6 +1883,7 @@ function VoxSection({
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Refresh the quote draft only when no local changes would be lost.
     if (!isDirty) setDrafts(quotes);
   }, [quotes, isDirty]);
 

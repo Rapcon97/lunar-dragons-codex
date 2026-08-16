@@ -5,7 +5,7 @@ const COMPANY_SIGIL_PREFIX = "company-heraldry";
 const COMPANY_PAULDRON_PREFIX = "company-pauldrons";
 
 export function getChapterAssets() {
-  const bucket = env.CHAPTER_ASSETS as R2Bucket | undefined;
+  const bucket = (env as { CHAPTER_ASSETS?: R2Bucket }).CHAPTER_ASSETS;
   if (!bucket) {
     throw new Error("Chapter asset storage is unavailable.");
   }

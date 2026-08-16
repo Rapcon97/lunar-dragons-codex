@@ -114,6 +114,8 @@ function choirSignature(source: TransmissionSourceMetadata, analysis: Transmissi
     "mechanicus-burst": "BINHARIC-PSYCHIC CANT",
     "navigational-choir": "NAVIGATORIAL CHOIR IMPRESSION",
     "warp-echo": "UNBOUND EMPYRIC ECHO",
+    unknown: "UNRESOLVED TRANSMISSION SIGNATURE",
+    vox: "VOX-RELAY SIGNAL",
   };
   return `${signatures[analysis.transmissionMethod]} // ${source.priority}`;
 }

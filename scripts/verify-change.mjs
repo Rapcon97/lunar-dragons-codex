@@ -14,7 +14,7 @@ if (!LANES.includes(requestedLane)) {
 const protectedPatterns = [
   /^\.openai\//,
   /^app\/api\//,
-  /^app\/(?:admin-config|archive-auth|archive-data|chatgpt-auth|gpt-api-adapter|gpt-api-auth)\.ts$/,
+  /^app\/(?:admin-config|archive-auth|archive-data|character-extractor|character-records|chatgpt-auth|chronicle-visibility|gpt-api-adapter|gpt-api-auth|lore-editor|lore-publication)\.ts$/,
   /^db\//,
   /^drizzle\//,
   /^openapi\//,
@@ -168,8 +168,12 @@ if (effectiveLane === "ui") {
   run("npm", ["run", "build"]);
   run("node", ["--test", "tests/rendered-html.test.mjs"]);
 } else if (effectiveLane === "standard") {
+  run("npm", ["run", "lint"]);
+  run("npm", ["run", "typecheck"]);
   run("npm", ["test"]);
 } else {
+  run("npm", ["run", "lint"]);
+  run("npm", ["run", "typecheck"]);
   run("npm", ["test"]);
   run("npm", ["run", "test:gpt-api"]);
 }

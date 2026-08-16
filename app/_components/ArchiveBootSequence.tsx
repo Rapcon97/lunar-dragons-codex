@@ -157,6 +157,7 @@ export function ArchiveBootSequence({
     let lineTimer: ReturnType<typeof setInterval> | undefined;
 
     if (reducedMotion) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reduced motion intentionally completes the boot sequence immediately.
       setVisibleLines(bootLines.length);
     } else {
       lineTimer = setInterval(() => {

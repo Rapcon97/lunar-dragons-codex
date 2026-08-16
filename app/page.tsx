@@ -113,7 +113,7 @@ export default function Home() {
                 >
                   <div className="relay-message-mark"><b>[{String(index + 1).padStart(2, "0")}]</b></div>
                   <div className="relay-message-copy">
-                    <div><strong>&gt;&gt; {message.agency} // {message.priority}</strong><time>{message.received}</time></div>
+                    <div><strong>&gt;&gt; {message.agency}{" // "}{message.priority}</strong><time>{message.received}</time></div>
                     <h3>&gt; {message.subject}</h3>
                     <TransmissionEventFlags event={message.event} />
                     <p>&gt; {message.preview}</p>

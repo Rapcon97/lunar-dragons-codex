@@ -48,7 +48,7 @@ test("OpenAI request contains only selected canon and remains advisory", () => {
   assert.equal(request.store, false);
 });
 
-test("character proposal preserves supported data and clears unknown company identifiers", () => {
+test("character proposal preserves supported data and fails closed for malformed fields", () => {
   const answer = parseCharacterExtractionAnswer({ output_text: JSON.stringify({
     proposal: {
       name: "Captain Selene",
@@ -68,6 +68,34 @@ test("character proposal preserves supported data and clears unknown company ide
   assert.equal(answer?.proposal?.name, "Captain Selene");
   assert.equal(answer?.proposal?.companyNumber, "");
   assert.deepEqual(answer?.unresolved, ["Company assignment is not recorded."]);
+
+  const validProposal = {
+    name: "Captain Selene",
+    rank: "Captain",
+    honorific: "",
+    role: "",
+    companyNumber: "1st",
+    status: "active",
+    introducedAt: "056.M42",
+    deathAt: "",
+    biography: "Held the western wall.",
+    heroicDeeds: [],
+  };
+  const malformedAnswer = (proposal) => ({
+    output_text: JSON.stringify({
+      proposal,
+      summary: "One character was explicitly established.",
+      unresolved: [],
+    }),
+  });
+
+  assert.equal(parseCharacterExtractionAnswer(malformedAnswer({ ...validProposal, name: undefined }), companies), null);
+  assert.equal(parseCharacterExtractionAnswer(malformedAnswer({ ...validProposal, rank: 7 }), companies), null);
+  assert.equal(parseCharacterExtractionAnswer(malformedAnswer({ ...validProposal, name: "   " }), companies), null);
+  assert.equal(
+    parseCharacterExtractionAnswer(malformedAnswer({ ...validProposal, biography: "x".repeat(12_001) }), companies),
+    null,
+  );
 });
 
 test("ambiguous extraction may return no proposal without inventing a character", () => {

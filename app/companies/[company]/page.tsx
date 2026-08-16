@@ -41,6 +41,7 @@ export default function CompanyOverview() {
   const sigilUrl = `/api/company-sigil?company=${companyNumber}&v=${sigilVersion}`;
   const pauldronUrl = `/api/company-pauldron?company=${companyNumber}&v=${pauldronVersion}`;
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- Route and session storage determine the external clearance state. */
     if (!isEleventhCompany) {
       setEleventhUnlocked(true);
       return;
@@ -48,6 +49,7 @@ export default function CompanyOverview() {
     setEleventhUnlocked(
       window.sessionStorage.getItem("lunar-dragons-eleventh-clearance") === "granted",
     );
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [isEleventhCompany]);
   useEffect(() => {
     if (!previewAsset) return;

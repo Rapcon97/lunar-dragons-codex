@@ -92,6 +92,7 @@ function useChapterArchiveState() {
   }, [canAdmin]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial archive hydration synchronizes this hook with the remote archive.
     void load();
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") void load();

@@ -60,10 +60,12 @@ export function LoreEntryEditor({
   const isCreating = entry === null;
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- A newly selected stable entry deliberately resets the isolated editor session. */
     setDraft(initialDraft);
     setMessage("");
     setMessageTone("error");
     setAssistantOpen(false);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [initialDraft]);
 
   useEffect(() => {

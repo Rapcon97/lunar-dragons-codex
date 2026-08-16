@@ -167,16 +167,16 @@ export function parseCharacterExtractionAnswer(
 
   const status = value.proposal.status;
   if (!isCharacterStatus(status)) return null;
-  const name = within(value.proposal.name, 200)?.trim();
-  const rank = within(value.proposal.rank, 160)?.trim();
-  const honorific = within(value.proposal.honorific, 240)?.trim();
-  const role = within(value.proposal.role, 240)?.trim();
-  const introducedAt = within(value.proposal.introducedAt, 80)?.trim();
-  const deathAt = within(value.proposal.deathAt, 80)?.trim();
-  const biography = within(value.proposal.biography, 12_000)?.trim();
-  const companyNumber = within(value.proposal.companyNumber, 20)?.trim();
+  const name = trimmedWithin(value.proposal.name, 200);
+  const rank = trimmedWithin(value.proposal.rank, 160);
+  const honorific = trimmedWithin(value.proposal.honorific, 240);
+  const role = trimmedWithin(value.proposal.role, 240);
+  const introducedAt = trimmedWithin(value.proposal.introducedAt, 80);
+  const deathAt = trimmedWithin(value.proposal.deathAt, 80);
+  const biography = trimmedWithin(value.proposal.biography, 12_000);
+  const companyNumber = trimmedWithin(value.proposal.companyNumber, 20);
   if (
-    name === null || rank === null || honorific === null || role === null ||
+    !name || rank === null || honorific === null || role === null ||
     introducedAt === null || deathAt === null || biography === null || companyNumber === null ||
     !Array.isArray(value.proposal.heroicDeeds)
   ) return null;
@@ -279,6 +279,11 @@ function isCharacterStatus(value: unknown): value is ChapterCharacterStatus {
 
 function within(value: unknown, maximum: number) {
   return typeof value === "string" && value.length <= maximum ? value : null;
+}
+
+function trimmedWithin(value: unknown, maximum: number) {
+  const candidate = within(value, maximum);
+  return candidate === null ? null : candidate.trim();
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

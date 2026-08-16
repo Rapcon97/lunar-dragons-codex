@@ -33,8 +33,10 @@ export function LoreStatusControl({
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- Server-confirmed entry updates reset the pending status control. */
     setTargetStatus(entry.status);
     setMessage("");
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [entry.id, entry.status, entry.updatedAt]);
 
   async function applyStatus() {

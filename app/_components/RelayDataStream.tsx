@@ -63,9 +63,11 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
     let cancelled = false;
     const pendingWaits = new Map<number, (completed: boolean) => void>();
     const finalCursorIndex = presentedLines.findLastIndex((line) => !line.gap);
+    /* eslint-disable react-hooks/set-state-in-effect -- A changed transmission key intentionally restarts the renderer state machine. */
     setRenderedLines([]);
     setActiveLineIndex(-1);
     setPhase("typing");
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || completedStreamKey === streamKey) {
       setRenderedLines(completedLines);
@@ -174,6 +176,7 @@ export function RelayDataStream({ afterComplete, ariaLabel, className = "", sour
   }, [completedStreamKey, streamKey]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Raw-impression disclosure resets for each transmission.
     setShowRawImpression(false);
   }, [streamKey]);
 

@@ -577,7 +577,10 @@ export function transmissionCharacterDelay(character: string) {
   return delay;
 }
 
-export function appendTransmissionRetrievalDots(text: string, count = TRANSMISSION_TIMING.retrievalDotCount) {
+export function appendTransmissionRetrievalDots(
+  text: string,
+  count: number = TRANSMISSION_TIMING.retrievalDotCount,
+) {
   return `${text}${".".repeat(count)}`;
 }
 
