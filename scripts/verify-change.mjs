@@ -30,6 +30,12 @@ const uiPatterns = [
   /^tests\/rendered-html\.test\.mjs$/,
 ];
 
+// Repository documentation does not enter the Site artifact. Keep local handoff
+// drafts from promoting an otherwise presentation-only check to the standard lane.
+const validationNeutralPatterns = [/^[^/]+\.md$/u];
+
+const textLikeArtifact = /\.(?:js|mjs|cjs|json|jsonc|html|css|txt|sql|yaml|yml|map)$/u;
+
 function gitLines(args) {
   try {
     return execFileSync("git", args, { encoding: "utf8" })
@@ -57,7 +63,11 @@ function requiredLane(files) {
     return "protected";
   }
 
-  if (files.some((file) => !uiPatterns.some((pattern) => pattern.test(file)))) {
+  const validationFiles = files.filter(
+    (file) => !validationNeutralPatterns.some((pattern) => pattern.test(file)),
+  );
+
+  if (validationFiles.some((file) => !uiPatterns.some((pattern) => pattern.test(file)))) {
     return "standard";
   }
 
@@ -131,10 +141,24 @@ function auditBuild() {
     throw new Error("Site hosting metadata does not preserve the expected project and logical bindings");
   }
 
-  const stagingMarker = "wandering-mud-e6c1";
+  const stagingMarkers = new Set(["wandering-mud-e6c1"]);
+  const stagingConfig = resolve("wrangler.jsonc");
+
+  if (existsSync(stagingConfig)) {
+    const configSource = readFileSync(stagingConfig, "utf8");
+    for (const match of configSource.matchAll(/"(?:account_id|database_id)"\s*:\s*"([^"]+)"/gu)) {
+      stagingMarkers.add(match[1]);
+    }
+  }
+
+  const stagingMarkerBuffers = [...stagingMarkers].map((marker) => Buffer.from(marker));
+
   const stagingHits = files.filter((file) => {
+    if (!textLikeArtifact.test(file)) return false;
+
     try {
-      return readFileSync(file).includes(Buffer.from(stagingMarker));
+      const source = readFileSync(file);
+      return stagingMarkerBuffers.some((marker) => source.includes(marker));
     } catch {
       return false;
     }
