@@ -924,6 +924,8 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(editor, /window\.prompt/);
   assert.match(editor, /RECORD TITLE/);
   assert.match(editor, /RECORD SUBTITLE/);
+  assert.match(editor, /lore-editor-identity-grid/);
+  assert.match(editor, /lore-editor-identity-fields/);
   assert.match(editor, /<ImperialDateBuilder/);
   assert.doesNotMatch(editor, /placeholder="e\.g\. 056\.M42"/);
   assert.match(editor, /disabled=\{isSaving \|\| !isDirty \|\| !draft\.chronology\}/);
@@ -971,6 +973,8 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.doesNotMatch(styles, /\.chronicle-record-editor-action/);
   assert.match(styles, /\.lore-editor-dialog\s*\{[^}]*width:\s*min\(/s);
   assert.match(styles, /\.lore-editor-content-field textarea\s*\{[^}]*min-height:/s);
+  assert.match(styles, /\.lore-editor-identity-grid\s*\{[^}]*grid-template-columns:/s);
+  assert.match(styles, /@media \(max-width: 900px\)[\s\S]*\.lore-editor-identity-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
   assert.match(styles, /\.lore-format-toolbar\s*\{[^}]*display:\s*flex/s);
   assert.match(styles, /\.imperial-date-builder\s*\{/);
   assert.match(styles, /\.chronicle-record-content h2,/);

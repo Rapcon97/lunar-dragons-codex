@@ -306,39 +306,43 @@ export function LoreEntryEditor({
 
           <div className="lore-editor-workspace">
             <div className="lore-editor-fields">
-            <label className="lore-editor-title-field">
-              RECORD TITLE
-              <input
-                autoFocus
-                required
-                maxLength={MAX_LORE_TITLE_LENGTH}
-                value={draft.title}
-                onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
-                placeholder="Enter the formal archival title"
-              />
-            </label>
+            <div className="lore-editor-identity-grid">
+              <div className="lore-editor-identity-fields">
+                <label className="lore-editor-title-field">
+                  RECORD TITLE
+                  <input
+                    autoFocus
+                    required
+                    maxLength={MAX_LORE_TITLE_LENGTH}
+                    value={draft.title}
+                    onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
+                    placeholder="Enter the formal archival title"
+                  />
+                </label>
 
-            <label className="lore-editor-subtitle-field">
-              RECORD SUBTITLE <small>OPTIONAL</small>
-              <input
-                maxLength={MAX_LORE_SUBTITLE_LENGTH}
-                value={draft.subtitle}
-                onChange={(event) => setDraft((current) => ({ ...current, subtitle: event.target.value }))}
-                placeholder="Add a secondary archival designation"
-              />
-            </label>
+                <label className="lore-editor-subtitle-field">
+                  RECORD SUBTITLE <small>OPTIONAL</small>
+                  <input
+                    maxLength={MAX_LORE_SUBTITLE_LENGTH}
+                    value={draft.subtitle}
+                    onChange={(event) => setDraft((current) => ({ ...current, subtitle: event.target.value }))}
+                    placeholder="Add a secondary archival designation"
+                  />
+                </label>
+              </div>
 
-            <ImperialDateBuilder
-              value={draft.chronology}
-              legacyValue={draft.chronology ? undefined : draft.date}
-              onChange={(chronology) =>
-                setDraft((current) => ({
-                  ...current,
-                  chronology,
-                  date: chronology ? formatLoreChronology(chronology) : current.date,
-                }))
-              }
-            />
+              <ImperialDateBuilder
+                value={draft.chronology}
+                legacyValue={draft.chronology ? undefined : draft.date}
+                onChange={(chronology) =>
+                  setDraft((current) => ({
+                    ...current,
+                    chronology,
+                    date: chronology ? formatLoreChronology(chronology) : current.date,
+                  }))
+                }
+              />
+            </div>
 
             <label>
               RECORD CATEGORY

@@ -5161,10 +5161,21 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   overflow-y: auto;
   padding: clamp(17px, 2.3vw, 26px);
 }
-.lore-editor-title-field,
-.lore-editor-subtitle-field { grid-column: 1 / -1; }
-.imperial-date-builder {
+.lore-editor-identity-grid {
   grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(480px, .96fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.lore-editor-identity-fields {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.imperial-date-builder {
+  min-width: 0;
   display: grid;
   gap: 10px;
   border: 1px solid #40523c;
@@ -5196,9 +5207,12 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .imperial-date-builder-status { color: #71836a; }
 .imperial-date-builder-grid {
   display: grid;
-  grid-template-columns: minmax(180px, .7fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(160px, .8fr) minmax(240px, 1.2fr);
   gap: 10px;
   align-items: end;
+}
+.imperial-date-builder[data-compound="true"] .imperial-date-builder-grid {
+  grid-template-columns: minmax(150px, .68fr) repeat(2, minmax(200px, 1fr));
 }
 .imperial-date-builder-grid > label,
 .imperial-date-point label {
@@ -5804,9 +5818,11 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .lore-editor-fields {
     grid-template-columns: minmax(0, 1fr) minmax(170px, .65fr);
   }
+  .lore-editor-identity-grid { grid-template-columns: 1fr; }
   .imperial-date-builder-grid { grid-template-columns: 1fr; }
-  .lore-editor-title-field,
-  .lore-editor-subtitle-field { grid-column: 1 / -1; }
+  .imperial-date-builder[data-compound="true"] .imperial-date-builder-grid {
+    grid-template-columns: 1fr;
+  }
   .lore-editor-signifiers { grid-template-columns: 1fr 1fr; }
   .lore-editor-signifiers span:first-child { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid #2e3d2b; }
 }
@@ -5829,8 +5845,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   }
   .lore-editor-signifiers span:last-child { border-bottom: 0; }
   .lore-editor-fields { grid-template-columns: 1fr; gap: 12px; padding: 14px 11px; }
-  .lore-editor-title-field,
-  .lore-editor-subtitle-field,
+  .lore-editor-identity-grid,
   .lore-editor-content-field,
   .imperial-date-builder { grid-column: 1; }
   .imperial-date-builder-heading { align-items: flex-start; flex-direction: column; gap: 4px; }

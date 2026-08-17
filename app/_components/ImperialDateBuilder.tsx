@@ -229,7 +229,11 @@ export function ImperialDateBuilder({
   const isCompound = draft.mode === "range" || draft.mode === "ongoing";
 
   return (
-    <div className="imperial-date-builder" data-valid={chronology ? "true" : "false"}>
+    <div
+      className="imperial-date-builder"
+      data-compound={draft.mode === "range" ? "true" : "false"}
+      data-valid={chronology ? "true" : "false"}
+    >
       <div className="imperial-date-builder-heading">
         <span>IMPERIAL DATE BUILDER</span>
         <strong>{preview}</strong>
