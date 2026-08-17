@@ -1,5 +1,9 @@
 import type { LoreEntry } from "./archive-data";
 import {
+  formatLoreChronology,
+  parseLoreChronology,
+} from "./lore-chronology.ts";
+import {
   loreCollectionFitsCapacity,
 } from "./lore-limits.ts";
 import type { ChapterLoreState } from "../storage/chapter-records";
@@ -9,7 +13,7 @@ import { loreEntryToTimeline } from "./lore-publication.ts";
 export type LoreDraftInput = Pick<
   LoreEntry,
   "date" | "title" | "category" | "content"
-> & { subtitle?: string };
+> & { subtitle?: string; chronology?: LoreEntry["chronology"] };
 
 export type LoreEditorReason =
   | "capacity"
@@ -34,9 +38,14 @@ export function proposeLoreDraftCreation(
   { entry: LoreEntry; count: number },
   Extract<LoreEditorReason, "capacity" | "duplicate">
 > {
+  const chronology =
+    input.chronology ?? parseLoreChronology(input.date.trim());
   const entry: LoreEntry = {
     id,
-    date: input.date.trim(),
+    date: chronology
+      ? formatLoreChronology(chronology)
+      : input.date.trim(),
+    ...(chronology ? { chronology } : {}),
     title: input.title.trim(),
     ...(input.subtitle?.trim() ? { subtitle: input.subtitle.trim() } : {}),
     category: input.category,
@@ -81,9 +90,14 @@ export function proposeLoreEditorUpdate(
     return { ok: false, reason: "stale" };
   }
 
+  const chronology =
+    input.chronology ?? parseLoreChronology(input.date.trim());
   const entry: LoreEntry = {
     ...existing,
-    date: input.date.trim(),
+    date: chronology
+      ? formatLoreChronology(chronology)
+      : input.date.trim(),
+    chronology,
     title: input.title.trim(),
     subtitle:
       input.subtitle !== undefined

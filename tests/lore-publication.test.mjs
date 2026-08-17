@@ -282,6 +282,9 @@ test("the on-site editor creates a structured draft without changing the canon t
   assert.deepEqual(proposal.value.entry, {
     id: "new-draft-uuid",
     date: "056.M42",
+    chronology: {
+      start: { millennium: 42, precision: "exact", year: 56 },
+    },
     title: "The Unknown Anchorage",
     subtitle: "A provisional cartographic designation",
     category: "world",
@@ -321,6 +324,36 @@ test("the on-site editor preserves record identity, status, creation time, and t
   assert.equal(proposal.value.entry.subtitle, "Bearer of the First Stone");
   assert.deepEqual(proposal.state.entries, current.entries);
   assert.equal(current.loreEntries[0].title, "Provenance and Antiquity of the Lunaris");
+});
+
+test("the on-site editor replaces or clears chronology when its compatibility date changes", () => {
+  const current = reviewState();
+  current.loreEntries[0].date = "008.M42–PRESENT";
+  current.loreEntries[0].chronology = {
+    start: { millennium: 42, precision: "exact", year: 8 },
+    ongoing: true,
+  };
+
+  const proposal = proposeLoreEditorUpdate(
+    current,
+    current.loreEntries[0].id,
+    {
+      date: "Before the opening of the Great Rift",
+      title: current.loreEntries[0].title,
+      category: current.loreEntries[0].category,
+      content: current.loreEntries[0].content,
+    },
+    current.loreEntries[0].updatedAt,
+    700,
+  );
+
+  assert.equal(proposal.ok, true);
+  if (!proposal.ok) return;
+  assert.equal(
+    proposal.value.entry.date,
+    "Before the opening of the Great Rift",
+  );
+  assert.equal(proposal.value.entry.chronology, undefined);
 });
 
 test("the on-site editor rejects stale writes and duplicate lore", () => {

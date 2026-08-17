@@ -10,6 +10,11 @@ import {
 } from "../app/api/gpt/v1/entries/validation.ts";
 import { normalizeArchiveData } from "../app/archive-data.ts";
 import {
+  formatLoreChronology,
+  parseLoreChronology,
+  validateLoreChronology,
+} from "../app/lore-chronology.ts";
+import {
   MAX_LORE_COLLECTION_BYTES,
   loreCollectionFitsCapacity,
   loreCollectionSizeBytes,
@@ -164,6 +169,115 @@ test("structured lore accepts an optional bounded subtitle and allows clearing i
     }),
     { ok: false, error: "Lore entry subtitle is too long." },
   );
+});
+
+test("Imperial chronology parses and formats canonical exact, ranged, coarse, and ongoing dates", () => {
+  const examples = [
+    ["012.M42", "012.M42"],
+    ["C.001.M42–012.M42", "C.001.M42–012.M42"],
+    ["LATE M30–PRESENT", "LATE M30–PRESENT"],
+    ["008.M42–PRESENT", "008.M42–PRESENT"],
+    ["???.M42", "???.M42"],
+    ["Late M30–056.M42", "LATE M30–056.M42"],
+    ["012.M42–present", "012.M42–PRESENT"],
+  ];
+
+  for (const [input, canonical] of examples) {
+    const chronology = parseLoreChronology(input);
+    assert.ok(chronology, `Expected ${input} to parse`);
+    assert.equal(formatLoreChronology(chronology), canonical);
+  }
+});
+
+test("structured GPT chronology generates the compatibility date display", () => {
+  const chronology = {
+    start: { millennium: 30, precision: "late" },
+    ongoing: true,
+  };
+  const result = parseLoreCreateBody({
+    chronology,
+    content: "The vessel remains in active Chapter service.",
+  });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.value.date, "LATE M30–PRESENT");
+  assert.deepEqual(result.value.chronology, chronology);
+});
+
+test("parseable legacy date input is canonicalized and receives typed chronology", () => {
+  const result = parseLoreUpdateBody({ date: "8.m42 - present" });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.value.date, "008.M42–PRESENT");
+  assert.deepEqual(result.value.chronology, {
+    start: { millennium: 42, precision: "exact", year: 8 },
+    ongoing: true,
+  });
+});
+
+test("structured chronology rejects invalid values and conflicting date mirrors", () => {
+  assert.deepEqual(
+    validateLoreChronology({
+      start: { millennium: 42, precision: "exact", year: 1000 },
+    }),
+    {
+      ok: false,
+      error:
+        "Lore chronology start year must be an integer from 0 to 999 for exact dates.",
+    },
+  );
+
+  assert.deepEqual(
+    parseLoreCreateBody({
+      date: "008.M42",
+      chronology: {
+        start: { millennium: 42, precision: "exact", year: 12 },
+      },
+      content: "A contradictory chronology record.",
+    }),
+    {
+      ok: false,
+      error: "Lore entry date does not match its structured chronology.",
+    },
+  );
+});
+
+test("unstructured legacy chronology remains accepted without invented precision", () => {
+  const result = parseLoreCreateBody({
+    date: "Before the opening of the Great Rift",
+    content: "A legacy record whose exact chronology remains unresolved.",
+  });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.value.date, "Before the opening of the Great Rift");
+  assert.equal(result.value.chronology, undefined);
+});
+
+test("archive normalization preserves typed chronology and canonicalizes its date mirror", () => {
+  const normalized = normalizeArchiveData({
+    entries: [],
+    loreEntries: [
+      {
+        id: "gift-of-luna-chronology",
+        date: "8.m42 - present",
+        title: "Gift of Luna",
+        category: "relic",
+        status: "canon",
+        content: "The founding trust remains in Chapter keeping.",
+        createdAt: 10,
+        updatedAt: 20,
+      },
+    ],
+  });
+
+  assert.equal(normalized.loreEntries[0]?.date, "008.M42–PRESENT");
+  assert.deepEqual(normalized.loreEntries[0]?.chronology, {
+    start: { millennium: 42, precision: "exact", year: 8 },
+    ongoing: true,
+  });
 });
 
 test("archive normalization preserves lore content beyond the former limit", () => {

@@ -109,11 +109,18 @@ test("search endpoint preserves response contract", async () => {
   }
 });
 
-test("structured lore search exposes stable IDs without unbounded content", async () => {
+test("structured lore search exposes stable IDs and chronology without unbounded content", async () => {
   const adapter = await read(paths.adapter);
   const openapi = await read(paths.openapi);
 
-  for (const field of ["id", "date", "status", "createdAt", "updatedAt"]) {
+  for (const field of [
+    "id",
+    "date",
+    "chronology",
+    "status",
+    "createdAt",
+    "updatedAt",
+  ]) {
     assert.match(
       adapter,
       new RegExp(`\\b${field}\\s*:`),
@@ -128,6 +135,22 @@ test("structured lore search exposes stable IDs without unbounded content", asyn
 
   assert.match(adapter, /boundedGPTContent/);
   assert.match(adapter, /GPT_SEARCH_RESULT_LIMIT/);
+});
+
+test("OpenAPI supports typed chronology on lore reads, creates, and updates", async () => {
+  const openapi = await read(paths.openapi);
+
+  for (const schema of [
+    "LoreChronologyPrecision",
+    "LoreChronologyPoint",
+    "LoreChronology",
+  ]) {
+    assert.match(openapi, new RegExp(`\\n    ${schema}:`));
+  }
+  assert.ok(
+    openapi.match(/chronology:\s*\n\s+\$ref: "#\/components\/schemas\/LoreChronology"/g)?.length >= 4,
+    "Lore reads, creates, updates, and search results must declare chronology",
+  );
 });
 
 test("chronicle endpoint remains authenticated", async () => {

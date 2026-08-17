@@ -2,6 +2,10 @@ import {
   createDefaultArchiveData,
   type LoreEntry,
 } from "./archive-data";
+import {
+  formatLoreChronology,
+  parseLoreChronology,
+} from "./lore-chronology";
 import { loreCollectionFitsCapacity } from "./lore-limits";
 import {
   boundedGPTContent,
@@ -24,6 +28,7 @@ export type GPTSearchResult = {
   id?: string;
   subtitle?: string;
   date?: string;
+  chronology?: LoreEntry["chronology"];
   status?: LoreEntry["status"];
   createdAt?: number;
   updatedAt?: number;
@@ -54,11 +59,13 @@ function chronicleInputToLoreEntry(value: string): LoreEntry {
   const date = match ? match[1].trim() : "";
   const content = match ? match[2].trim() : raw;
   const firstClause = content.split(/[.!?]/, 1)[0]?.trim() || content;
+  const chronology = parseLoreChronology(date);
   const now = Date.now();
 
   return {
     id: crypto.randomUUID(),
-    date,
+    date: chronology ? formatLoreChronology(chronology) : date,
+    ...(chronology ? { chronology } : {}),
     title: firstClause.slice(0, 180),
     category: "event",
     // Legacy GPT chronicle writes are AI-authored too, so they follow the same
@@ -163,6 +170,7 @@ export async function searchGPTLore(query: string) {
         id: entry.id,
         ...(entry.subtitle ? { subtitle: entry.subtitle } : {}),
         date: entry.date,
+        ...(entry.chronology ? { chronology: entry.chronology } : {}),
         status: entry.status,
         createdAt: entry.createdAt,
         updatedAt: entry.updatedAt,
@@ -300,6 +308,7 @@ export async function appendGPTChronicleEntry(entry: string) {
 
 export type GPTLoreEntryInput = {
   date?: string;
+  chronology?: LoreEntry["chronology"];
   title?: string;
   subtitle?: string;
   category?: LoreEntry["category"];
@@ -309,12 +318,17 @@ export type GPTLoreEntryInput = {
 
 export async function appendGPTLoreEntry(input: GPTLoreEntryInput) {
   const content = input.content.trim();
-  const date = input.date?.trim() ?? "";
+  const chronology =
+    input.chronology ?? parseLoreChronology(input.date?.trim() ?? "");
+  const date = chronology
+    ? formatLoreChronology(chronology)
+    : input.date?.trim() ?? "";
   const firstClause = content.split(/[.!?]/, 1)[0]?.trim() || content;
   const now = Date.now();
   const loreEntry: LoreEntry = {
     id: crypto.randomUUID(),
     date,
+    ...(chronology ? { chronology } : {}),
     title: input.title?.trim() || firstClause.slice(0, 180),
     ...(input.subtitle?.trim() ? { subtitle: input.subtitle.trim() } : {}),
     category: input.category ?? "event",
@@ -355,6 +369,7 @@ export async function appendGPTLoreEntry(input: GPTLoreEntryInput) {
 
 export type GPTLoreEntryUpdate = {
   date?: string;
+  chronology?: LoreEntry["chronology"];
   title?: string;
   subtitle?: string;
   category?: LoreEntry["category"];
@@ -373,9 +388,22 @@ export async function updateGPTLoreEntry(
     }
 
     const existing = archive.loreEntries[index];
+    const chronologyWasUpdated =
+      Object.prototype.hasOwnProperty.call(input, "chronology") ||
+      input.date !== undefined;
+    const chronology = input.chronology ??
+      (input.date !== undefined
+        ? parseLoreChronology(input.date.trim())
+        : existing.chronology);
     const updated: LoreEntry = {
       ...existing,
-      date: input.date !== undefined ? input.date.trim() : existing.date,
+      date:
+        chronologyWasUpdated && chronology
+          ? formatLoreChronology(chronology)
+          : input.date !== undefined
+            ? input.date.trim()
+            : existing.date,
+      ...(chronologyWasUpdated ? { chronology } : {}),
       title: input.title !== undefined ? input.title.trim() : existing.title,
       subtitle:
         input.subtitle !== undefined

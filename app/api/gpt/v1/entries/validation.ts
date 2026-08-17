@@ -4,6 +4,12 @@ import {
   MAX_LORE_SUBTITLE_LENGTH,
   MAX_LORE_TITLE_LENGTH,
 } from "../../../../lore-limits.ts";
+import {
+  formatLoreChronology,
+  parseLoreChronology,
+  validateLoreChronology,
+  type LoreChronology,
+} from "../../../../lore-chronology.ts";
 
 export const MAX_LORE_ENTRY_ID_LENGTH = 160;
 export {
@@ -36,6 +42,7 @@ type LoreStatus = (typeof allowedLoreStatuses)[number];
 
 export type ValidatedLoreCreate = {
   date?: string;
+  chronology?: LoreChronology;
   title?: string;
   subtitle?: string;
   category?: LoreCategory;
@@ -45,6 +52,7 @@ export type ValidatedLoreCreate = {
 
 export type ValidatedLoreUpdate = {
   date?: string;
+  chronology?: LoreChronology;
   title?: string;
   subtitle?: string;
   category?: LoreCategory;
@@ -58,6 +66,7 @@ type ValidationResult<Value> =
 
 const writeFields = new Set([
   "date",
+  "chronology",
   "title",
   "subtitle",
   "category",
@@ -108,6 +117,57 @@ function validateStatus(value: unknown) {
   );
 }
 
+function parsedChronologyFields(
+  body: Record<string, unknown>,
+): ValidationResult<{
+  date?: string;
+  chronology?: LoreChronology;
+}> {
+  const hasDate = Object.prototype.hasOwnProperty.call(body, "date");
+  const hasChronology = Object.prototype.hasOwnProperty.call(
+    body,
+    "chronology",
+  );
+  const date = typeof body.date === "string" ? body.date.trim() : undefined;
+
+  if (hasChronology) {
+    const chronology = validateLoreChronology(body.chronology);
+    if (!chronology.ok) return chronology;
+
+    const canonicalDate = formatLoreChronology(chronology.value);
+    if (hasDate && date) {
+      const parsedDate = parseLoreChronology(date);
+      if (
+        !parsedDate ||
+        formatLoreChronology(parsedDate) !== canonicalDate
+      ) {
+        return {
+          ok: false,
+          error: "Lore entry date does not match its structured chronology.",
+        };
+      }
+    }
+
+    return {
+      ok: true,
+      value: { date: canonicalDate, chronology: chronology.value },
+    };
+  }
+
+  if (hasDate) {
+    const parsedDate = date ? parseLoreChronology(date) : undefined;
+    return {
+      ok: true,
+      value: {
+        date: parsedDate ? formatLoreChronology(parsedDate) : date,
+        chronology: parsedDate,
+      },
+    };
+  }
+
+  return { ok: true, value: {} };
+}
+
 export function validateLoreEntryId(id: string) {
   const normalized = id.trim();
   if (!normalized) return "A lore entry ID is required.";
@@ -155,11 +215,14 @@ export function parseLoreCreateBody(
     return { ok: false, error: "Invalid lore entry status." };
   }
 
+  const chronology = parsedChronologyFields(body);
+  if (!chronology.ok) return chronology;
+
   return {
     ok: true,
     value: {
       content: body.content.trim(),
-      date: typeof body.date === "string" ? body.date.trim() : undefined,
+      ...chronology.value,
       title: typeof body.title === "string" ? body.title.trim() : undefined,
       subtitle:
         typeof body.subtitle === "string" ? body.subtitle.trim() : undefined,
@@ -217,10 +280,13 @@ export function parseLoreUpdateBody(
     return { ok: false, error: "Invalid lore entry status." };
   }
 
+  const chronology = parsedChronologyFields(body);
+  if (!chronology.ok) return chronology;
+
   return {
     ok: true,
     value: {
-      date: typeof body.date === "string" ? body.date.trim() : undefined,
+      ...chronology.value,
       title: typeof body.title === "string" ? body.title.trim() : undefined,
       subtitle:
         typeof body.subtitle === "string" ? body.subtitle.trim() : undefined,

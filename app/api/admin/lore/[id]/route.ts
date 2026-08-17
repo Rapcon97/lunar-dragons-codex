@@ -75,6 +75,7 @@ export async function PATCH(
       id,
       {
         date: parsed.value.date,
+        chronology: parsed.value.chronology,
         title: parsed.value.title,
         subtitle: parsed.value.subtitle,
         category: parsed.value.category,

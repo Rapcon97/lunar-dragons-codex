@@ -4,6 +4,12 @@ import {
   MAX_LORE_SUBTITLE_LENGTH,
   MAX_LORE_TITLE_LENGTH,
 } from "./lore-limits.ts";
+import {
+  formatLoreChronology,
+  normalizedChronologyForDate,
+  parseLoreChronology,
+  type LoreChronology,
+} from "./lore-chronology.ts";
 import { transmissionBodyFragments } from "./transmission-fragments.ts";
 
 export type ChapterIdentity = {
@@ -76,6 +82,7 @@ export type LoreCategory =
 export type LoreEntry = {
   id: string;
   date: string;
+  chronology?: LoreChronology;
   title: string;
   subtitle?: string;
   category: LoreCategory;
@@ -1224,11 +1231,16 @@ export function migrateLegacyEntriesToLoreEntries(
   entries: string[],
 ): LoreEntry[] {
   return entries.map((entry, index) => {
-    const { date, content } = legacyLoreEntryParts(entry);
+    const { date: legacyDate, content } = legacyLoreEntryParts(entry);
+    const chronology = parseLoreChronology(legacyDate);
+    const date = chronology
+      ? formatLoreChronology(chronology)
+      : legacyDate;
 
     return {
       id: `legacy-${hashText(entry).toString(16).padStart(8, "0")}-${index + 1}`,
       date,
+      ...(chronology ? { chronology } : {}),
       title: legacyLoreEntryTitle(content, index),
       category: "event",
       status: entry.startsWith("TEST.") ? "draft" : "canon",
@@ -2009,13 +2021,23 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
           MAX_LORE_SUBTITLE_LENGTH,
         ).trim();
 
+        const storedDate = text(candidate.date, "", MAX_LORE_DATE_LENGTH);
+        const chronology = normalizedChronologyForDate(
+          storedDate,
+          candidate.chronology,
+        );
+        const date = chronology
+          ? formatLoreChronology(chronology)
+          : storedDate;
+
         return {
           id: text(
             candidate.id,
             `lore-imported-${index + 1}`,
             160,
           ),
-          date: text(candidate.date, "", MAX_LORE_DATE_LENGTH),
+          date,
+          ...(chronology ? { chronology } : {}),
           title: text(
             candidate.title,
             `Lore Entry ${index + 1}`,

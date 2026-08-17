@@ -262,6 +262,58 @@ components:
         - decree
         - other
 
+    LoreChronologyPrecision:
+      type: string
+      enum:
+        - exact
+        - circa
+        - early
+        - mid
+        - late
+        - unknown
+      description: >
+        Precision of one Imperial chronology point. Exact and circa points
+        require a year; coarse and unknown points omit it.
+
+    LoreChronologyPoint:
+      type: object
+      additionalProperties: false
+      required:
+        - millennium
+        - precision
+      properties:
+        millennium:
+          type: integer
+          minimum: 1
+          maximum: 99
+          description: Imperial millennium number, for example 42 for M42.
+        precision:
+          $ref: "#/components/schemas/LoreChronologyPrecision"
+        year:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: >
+            Three-digit year within the millennium. Required only when
+            precision is exact or circa.
+
+    LoreChronology:
+      type: object
+      additionalProperties: false
+      required:
+        - start
+      properties:
+        start:
+          $ref: "#/components/schemas/LoreChronologyPoint"
+        end:
+          $ref: "#/components/schemas/LoreChronologyPoint"
+        ongoing:
+          type: boolean
+          enum: [true]
+          description: >
+            Supply true for an open-ended record. End and ongoing are
+            mutually exclusive.
+
     LoreEntry:
       type: object
       additionalProperties: false
@@ -282,7 +334,11 @@ components:
         date:
           type: string
           maxLength: 80
-          description: In-universe date such as 008.M42.
+          description: >
+            Canonical compatibility display generated from chronology when
+            structured chronology is present.
+        chronology:
+          $ref: "#/components/schemas/LoreChronology"
         title:
           type: string
           maxLength: 240
@@ -324,7 +380,11 @@ components:
         date:
           type: string
           maxLength: 80
-          description: In-universe date or chronology marker.
+          description: >
+            Compatibility display for an in-universe date. When chronology
+            is also supplied, both values must describe the same interval.
+        chronology:
+          $ref: "#/components/schemas/LoreChronology"
         title:
           type: string
           minLength: 1
@@ -355,7 +415,11 @@ components:
         date:
           type: string
           maxLength: 80
-          description: Replacement in-universe date.
+          description: >
+            Replacement compatibility display. When chronology is also
+            supplied, both values must describe the same interval.
+        chronology:
+          $ref: "#/components/schemas/LoreChronology"
         title:
           type: string
           minLength: 1
@@ -478,6 +542,8 @@ components:
           type: string
         date:
           type: string
+        chronology:
+          $ref: "#/components/schemas/LoreChronology"
         status:
           $ref: "#/components/schemas/LoreStatus"
         createdAt:
