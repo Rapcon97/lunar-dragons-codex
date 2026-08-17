@@ -934,6 +934,9 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(dateBuilder, /STRUCTURED CHRONOLOGY VALID/);
   assert.match(dateBuilder, /LEGACY DATE REQUIRES CONVERSION/);
   assert.match(dateBuilder, /formatLoreChronology/);
+  assert.match(dateBuilder, /lastEmittedSignature/);
+  assert.match(dateBuilder, /lastEmittedSignature\.current === externalSignature/);
+  assert.match(dateBuilder, /lastEmittedSignature\.current = nextChronology/);
   assert.match(formattedContent, /function renderInlineFormatting/);
   assert.match(formattedContent, /<blockquote/);
   assert.match(formattedContent, /<ul/);

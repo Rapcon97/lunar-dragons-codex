@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatLoreChronology,
   validateLoreChronology,
@@ -210,10 +210,14 @@ export function ImperialDateBuilder({
   onChange: (value: LoreChronology | null) => void;
 }) {
   const [draft, setDraft] = useState<BuilderDraft>(() => draftFromChronology(value));
+  const lastEmittedSignature = useRef<string | null>(null);
   const externalSignature = value ? formatLoreChronology(value) : "";
 
   useEffect(() => {
-    if (!value) return;
+    if (lastEmittedSignature.current === externalSignature) {
+      lastEmittedSignature.current = null;
+      return;
+    }
     /* eslint-disable-next-line react-hooks/set-state-in-effect -- External editor or Cogitator replacements deliberately reset this isolated builder draft. */
     setDraft(draftFromChronology(value));
   }, [externalSignature, value]);
@@ -222,8 +226,12 @@ export function ImperialDateBuilder({
   const preview = chronology ? formatLoreChronology(chronology) : "INCOMPLETE DATE";
 
   function update(next: BuilderDraft) {
+    const nextChronology = buildChronology(next);
+    lastEmittedSignature.current = nextChronology
+      ? formatLoreChronology(nextChronology)
+      : "";
     setDraft(next);
-    onChange(buildChronology(next));
+    onChange(nextChronology);
   }
 
   const isCompound = draft.mode === "range" || draft.mode === "ongoing";
