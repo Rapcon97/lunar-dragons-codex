@@ -144,12 +144,16 @@ function PointControls({
   onChange: (value: PointDraft) => void;
 }) {
   const requiresYear = value.precision === "exact" || value.precision === "circa";
+  const precisionLabel = pointPrecisionOptions.find(
+    (option) => option.value === value.precision,
+  )?.label ?? value.precision;
+
   return (
     <fieldset className="imperial-date-point">
       <legend>{label}</legend>
-      {showPrecision && (
-        <label>
-          PRECISION
+      <label className="imperial-date-precision-control">
+        PRECISION
+        {showPrecision ? (
           <select
             value={value.precision}
             onChange={(event) =>
@@ -163,11 +167,13 @@ function PointControls({
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
-        </label>
-      )}
-      {requiresYear && (
-        <label>
-          YEAR · 000–999
+        ) : (
+          <span className="imperial-date-fixed-value">{precisionLabel}</span>
+        )}
+      </label>
+      <label className="imperial-date-year-control" data-applicable={requiresYear ? "true" : "false"}>
+        YEAR · 000–999
+        {requiresYear ? (
           <input
             type="text"
             inputMode="numeric"
@@ -177,8 +183,10 @@ function PointControls({
             placeholder="056"
             aria-label={`${label} year`}
           />
-        </label>
-      )}
+        ) : (
+          <span className="imperial-date-fixed-value" aria-hidden="true">NOT REQUIRED</span>
+        )}
+      </label>
       <label>
         MILLENNIUM · M01–M99
         <span className="imperial-date-millennium">
@@ -291,6 +299,9 @@ export function ImperialDateBuilder({
             showPrecision
             onChange={(end) => update({ ...draft, end })}
           />
+        )}
+        {draft.mode !== "range" && (
+          <div className="imperial-date-point imperial-date-point-placeholder" aria-hidden="true" />
         )}
       </div>
       <p className="imperial-date-builder-status">

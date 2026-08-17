@@ -5187,6 +5187,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
+  min-block-size: 2.65em;
   color: #72846b;
   font: var(--type-meta) "Courier New", monospace;
   letter-spacing: .12em;
@@ -5210,19 +5211,12 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .imperial-date-builder-status { color: #71836a; }
 .imperial-date-builder-grid {
   display: grid;
-  grid-template-columns: minmax(160px, .8fr) minmax(240px, 1.2fr);
-  gap: 10px;
-  align-items: end;
-}
-.imperial-date-builder[data-compound="true"] .imperial-date-builder-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
 }
-.imperial-date-builder[data-compound="true"] .imperial-date-mode {
+.imperial-date-mode {
   grid-column: 1 / -1;
-}
-.imperial-date-builder[data-compound="true"] .imperial-date-point {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, 1fr);
 }
 .imperial-date-builder-grid > label,
 .imperial-date-point label {
@@ -5231,11 +5225,18 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 }
 .imperial-date-point {
   min-width: 0;
-  display: flex;
+  min-block-size: 126px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   align-items: end;
   border: 1px solid #293b29;
   padding: 9px;
+}
+.imperial-date-precision-control { grid-column: 1 / -1; }
+.imperial-date-point-placeholder {
+  visibility: hidden;
+  pointer-events: none;
 }
 .imperial-date-point legend {
   padding: 0 5px;
@@ -5244,6 +5245,21 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   letter-spacing: .09em;
 }
 .imperial-date-point label { flex: 1 1 120px; min-width: 0; }
+.imperial-date-fixed-value {
+  min-width: 0;
+  min-block-size: calc(1.55em + 22px);
+  display: flex;
+  align-items: center;
+  border: 1px solid #40523c;
+  padding: 11px 12px;
+  background: #010402;
+  color: #b1c0a8;
+  font: 400 var(--type-body-small)/1.55 "Courier New", monospace;
+  overflow-wrap: anywhere;
+}
+.imperial-date-year-control[data-applicable="false"] .imperial-date-fixed-value {
+  color: #60705b;
+}
 .imperial-date-millennium {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -5830,9 +5846,8 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   }
   .lore-editor-identity-grid { grid-template-columns: 1fr; }
   .imperial-date-builder-grid { grid-template-columns: 1fr; }
-  .imperial-date-builder[data-compound="true"] .imperial-date-builder-grid {
-    grid-template-columns: 1fr;
-  }
+  .imperial-date-mode { grid-column: 1; }
+  .imperial-date-point-placeholder { display: none; }
   .lore-editor-signifiers { grid-template-columns: 1fr 1fr; }
   .lore-editor-signifiers span:first-child { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid #2e3d2b; }
 }
