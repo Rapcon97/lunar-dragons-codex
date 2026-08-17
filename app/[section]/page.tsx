@@ -1786,23 +1786,18 @@ function ChroniclesSection({
           </div>
         </aside>}
       detail={<article className="chronicle-exload-reader" aria-live="polite">
-          <header className={selectedEntry ? "record-active" : undefined}>
-            <div className="chronicle-reader-heading">
+          <header className="chronicle-reader-terminal-header">
+            <p className="chronicle-reader-terminal-line">
               <span>ACTIVE EXLOAD</span>
-              <strong>{selectedId === "decree" ? "INSTRUMENTUM IMPERIALIS" : canEdit ? "STRUCTURED LORE RECORD" : "CANONICAL CHRONICLE RECORD"}</strong>
-            </div>
-            {selectedEntry && (
-              <div className="chronicle-reader-record-meta">
-                <p className="chronicle-record-path">ANNALIS / {selectedEntry.category.toUpperCase()} / {selectedEntry.date || "DATE-NULL"}</p>
-                <div className="chronicle-record-signifiers">
-                  <span>DATE <strong>{selectedEntry.date || "UNRECORDED"}</strong></span>
-                  <span>CLASS <strong>{selectedEntry.category.toUpperCase()}</strong></span>
-                  <span>STATUS <strong className={`status-${selectedEntry.status}`}>{statusReadout(selectedEntry)}</strong></span>
-                </div>
-              </div>
-            )}
+              <b>//</b>
+              <span>CLASS: <strong>{selectedEntry?.category.toUpperCase() || "IMPERIAL DECREE"}</strong></span>
+              <b>//</b>
+              <span>STATUS: <strong className={selectedEntry ? `status-${selectedEntry.status}` : "status-canon"}>{selectedEntry ? statusReadout(selectedEntry) : "CANON · SEALED"}</strong></span>
+              <b>//</b>
+              <span>DATE: <strong>{selectedEntry?.date || "008.M42"}</strong></span>
+              {canEdit && <><b>//</b><span>ADMIN DEVELOPMENT VIEW</span></>}
+            </p>
             <div className="chronicle-reader-actions">
-              <small>{canEdit ? "ADMIN AUTHORITY · DEVELOPMENT VIEW" : "READ AUTHORITY · ARCHIVE VIEW"}</small>
               {canEdit && selectedEntry && (
                 selectedEntry.status === "draft"
                 || selectedEntry.status === "review"

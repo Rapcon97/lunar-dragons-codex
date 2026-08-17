@@ -183,8 +183,8 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   );
   assert.match(sectionPage, /entry\.id\.startsWith\("legacy-"\)/);
   assert.match(sectionPage, /statusReadout\(selectedEntry\)/);
-  assert.match(sectionPage, /<header className=\{selectedEntry \? "record-active" : undefined\}>[\s\S]*className="chronicle-reader-record-meta"[\s\S]*READ AUTHORITY · ARCHIVE VIEW[\s\S]*<\/header>/);
-  assert.match(sectionPage, /chronicle-reader-record-meta[\s\S]*chronicle-record-path[\s\S]*chronicle-record-signifiers/);
+  assert.match(sectionPage, /<header className="chronicle-reader-terminal-header">[\s\S]*ACTIVE EXLOAD[\s\S]*CLASS:[\s\S]*STATUS:[\s\S]*DATE:[\s\S]*<\/header>/);
+  assert.doesNotMatch(sectionPage, /chronicle-reader-record-meta|chronicle-reader-heading|READ AUTHORITY · ARCHIVE VIEW/);
 
   assert.match(styles, /\.archive-mode:has\(\.archive-terminal-workspace\)\s*\{[^}]*height:\s*100dvh;[^}]*overflow:\s*hidden;/s);
   assert.match(styles, /\.workspace\.archive-terminal-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)/s);
@@ -202,8 +202,8 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-scroll\s*\{\s*overflow:\s*visible;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-status\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-status span,[\s\S]*\.chronicle-exload-status strong\s*\{[^}]*white-space:\s*normal;/s);
-  assert.match(styles, /\.chronicle-exload-reader > header\.record-active\s*\{[^}]*grid-template-columns:\s*minmax\(175px, \.65fr\) minmax\(0, 1\.35fr\) auto;/s);
-  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-record-meta \.chronicle-record-signifiers\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s);
+  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-exload-reader > header\.chronicle-reader-terminal-header\s*\{[^}]*min-height:\s*36px;[^}]*padding:\s*5px 10px;/s);
+  assert.match(styles, /\.chronicle-reader-terminal-line\s*\{[^}]*display:\s*flex;[^}]*flex-wrap:\s*wrap;/s);
 });
 
 test("principal archive sections share the Relay and Chronicle frame boundaries", async () => {
@@ -900,7 +900,7 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(sectionPage, /<LoreEntryEditor/);
   assert.match(sectionPage, /EDIT RECORD/);
   assert.match(sectionPage, /useState\(\(\) => entries\[0\]\?\.id \?\? ""\)/);
-  assert.match(sectionPage, /className="chronicle-reader-actions"[\s\S]*className="chronicle-reader-edit-button"/);
+  assert.match(sectionPage, /className="chronicle-reader-terminal-header"[\s\S]*className="chronicle-reader-actions"[\s\S]*className="chronicle-reader-edit-button"/);
   assert.match(sectionPage, /className="chronicle-reader-scroll" key=\{selectedId\}/);
   assert.match(sectionPage, /selectedEntry\.status === "draft"[\s\S]*selectedEntry\.status === "review"[\s\S]*selectedEntry\.status === "canon"/);
   assert.doesNotMatch(sectionPage, /selectedEntry\.status === "retconned"/);
