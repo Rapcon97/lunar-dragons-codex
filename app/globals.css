@@ -5944,9 +5944,9 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   width: min(100%, 920px);
   padding-inline: 0;
 }
-.archive-terminal-frame--chronicle .chronicle-record-sheet h2 {
-  max-width: 18ch;
-  font-size: clamp(2rem, 1.5rem + 1.35vw, 3.25rem);
+.archive-terminal-frame--chronicle .chronicle-record-sheet > h2 {
+  max-width: min(100%, 32ch);
+  font-size: clamp(2rem, 1.5rem + 1.15vw, 3rem);
   line-height: 1.1;
 }
 .archive-terminal-frame--chronicle .chronicle-record-subtitle {
@@ -5962,6 +5962,12 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   color: #a0ae99;
   font: 400 clamp(1.03rem, .98rem + .14vw, 1.12rem) Georgia, serif;
   line-height: 1.78;
+}
+.archive-terminal-frame--chronicle .chronicle-record-content h2 {
+  max-width: none;
+  font-size: clamp(1.45rem, 1.23rem + .55vw, 2rem);
+  line-height: 1.18;
+  text-wrap: pretty;
 }
 .archive-terminal-frame--chronicle .chronicle-record-contents { max-width: 78ch; }
 .archive-terminal-frame--chronicle .chronicle-record-content p {
