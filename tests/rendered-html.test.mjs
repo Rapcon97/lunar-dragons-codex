@@ -174,7 +174,7 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(sectionPage, /surface="chronicle"/);
   assert.match(sectionPage, /SEALED RECORD INDEX/);
   assert.match(sectionPage, /<DecreeRecord \/>/);
-  assert.match(sectionPage, /selectedEntry\.content/);
+  assert.match(sectionPage, /<LoreFormattedContent content=\{selectedEntry\.content\} showTableOfContents \/>/);
   assert.match(sectionPage, /selectedEntry\.subtitle &&[\s\S]*chronicle-record-subtitle/);
   assert.doesNotMatch(
     sectionPage,
@@ -191,6 +191,9 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(styles, /\.archive-terminal-workspace \.archive-terminal-subpage\s*\{[^}]*padding:\s*var\(--archive-frame-gutter-block\) var\(--archive-frame-gutter-inline\) 0;/s);
   assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-exload-grid\s*\{[^}]*grid-template-columns:\s*minmax\(280px, 26%\) minmax\(0, 1fr\)/s);
   assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-record-content\s*\{[^}]*max-width:\s*78ch;[^}]*line-height:\s*1\.78/s);
+  assert.match(styles, /\.chronicle-record-contents ol\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
+  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.chronicle-record-contents ol\s*\{[^}]*grid-template-columns:\s*1fr/s);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.archive-terminal-frame--chronicle \.chronicle-reader-scroll\s*\{[^}]*scroll-behavior:\s*auto/s);
   assert.match(styles, /\.chronicle-record-subtitle\s*\{[^}]*font:[^;]*var\(--type-body\)\/1\.55/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-grid\s*\{\s*display:\s*block;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-scroll\s*\{\s*overflow:\s*visible;/s);
@@ -891,7 +894,7 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(sectionPage, /selectedEntry\.status === "draft" \|\| selectedEntry\.status === "review"/);
   assert.doesNotMatch(sectionPage, /chronicle-record-editor-action/);
   assert.doesNotMatch(sectionPage, /CANON LOCK ACTIVE/);
-  assert.match(sectionPage, /<LoreFormattedContent content=\{selectedEntry\.content\} \/>/);
+  assert.match(sectionPage, /<LoreFormattedContent content=\{selectedEntry\.content\} showTableOfContents \/>/);
   assert.doesNotMatch(sectionPage, /saveSection\("entries"/);
 
   assert.match(editor, /method: isCreating \? "POST" : "PATCH"/);
@@ -909,6 +912,9 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(formattedContent, /<blockquote/);
   assert.match(formattedContent, /<ul/);
   assert.match(formattedContent, /<ol/);
+  assert.match(formattedContent, /romanSectionPattern/);
+  assert.match(formattedContent, /aria-label="Table of contents"/);
+  assert.match(formattedContent, /href=\{`#\$\{section\.id\}`\}/);
   assert.doesNotMatch(formattedContent, /dangerouslySetInnerHTML/);
 
   for (const route of [createRoute, updateRoute]) {

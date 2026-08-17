@@ -1824,7 +1824,7 @@ function ChroniclesSection({
                   <p className="chronicle-record-subtitle">{selectedEntry.subtitle}</p>
                 )}
                 <div className="chronicle-record-rule"><i /><b>+</b><i /></div>
-                <LoreFormattedContent content={selectedEntry.content} />
+                <LoreFormattedContent content={selectedEntry.content} showTableOfContents />
                 {canEdit && (
                   <LoreStatusControl
                     entry={selectedEntry}

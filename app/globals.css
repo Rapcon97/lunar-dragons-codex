@@ -4817,6 +4817,68 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .chronicle-record-rule i { height: 1px; background: linear-gradient(90deg, transparent, #3c4e39); }
 .chronicle-record-rule i:last-child { background: linear-gradient(90deg, #3c4e39, transparent); }
 .chronicle-record-rule b { color: #7f9875; font: 400 var(--ui-text-13) Georgia, serif; }
+.chronicle-record-contents {
+  max-width: 86ch;
+  margin: 0 0 clamp(30px, 4vh, 48px);
+  border-block: 1px solid #344431;
+  background: linear-gradient(90deg, rgba(31, 48, 27, .34), rgba(5, 9, 6, .1));
+}
+.chronicle-record-contents > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #283526;
+  padding: 11px 14px 9px;
+  color: #7f9278;
+  font: var(--type-meta) "Courier New", monospace;
+  letter-spacing: .13em;
+}
+.chronicle-record-contents > header small {
+  color: #556650;
+  font: inherit;
+  white-space: nowrap;
+}
+.chronicle-record-contents ol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chronicle-record-contents li {
+  min-width: 0;
+  border-bottom: 1px solid rgba(48, 63, 45, .58);
+}
+.chronicle-record-contents li:nth-child(odd) { border-right: 1px solid rgba(48, 63, 45, .58); }
+.chronicle-record-contents li:last-child,
+.chronicle-record-contents li:nth-last-child(2):nth-child(odd) { border-bottom: 0; }
+.chronicle-record-contents li:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: 0; }
+.chronicle-record-contents a {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  min-height: 48px;
+  padding: 11px 14px;
+  color: #93a48c;
+  text-decoration: none;
+}
+.chronicle-record-contents a:hover,
+.chronicle-record-contents a:focus-visible {
+  outline: none;
+  background: rgba(53, 77, 47, .38);
+  color: #c6d2c0;
+}
+.chronicle-record-contents a > span {
+  color: #789071;
+  font: var(--type-control) "Courier New", monospace;
+  letter-spacing: .08em;
+}
+.chronicle-record-contents a > strong {
+  overflow-wrap: anywhere;
+  font: 400 var(--type-body-small)/1.42 Georgia, serif;
+}
 .chronicle-record-content {
   max-width: 86ch;
   margin: 0;
@@ -4836,6 +4898,8 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   line-height: 1.25;
   text-wrap: balance;
 }
+.chronicle-record-content [id^="chronicle-section-"] { scroll-margin-top: 24px; }
+.chronicle-section-numeral { color: #7f9875; }
 .chronicle-record-content h2 { font-size: clamp(1.35rem, 1.12rem + .65vw, 1.85rem); }
 .chronicle-record-content h3 { font-size: clamp(1.18rem, 1.04rem + .42vw, 1.5rem); }
 .chronicle-record-content h4 {
@@ -5847,6 +5911,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 }
 .archive-terminal-frame--chronicle .chronicle-reader-scroll {
   padding: clamp(30px, 4vw, 68px) clamp(28px, 5vw, 88px);
+  scroll-behavior: smooth;
 }
 .archive-terminal-frame--chronicle .chronicle-record-sheet {
   width: min(100%, 920px);
@@ -5871,6 +5936,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   font: 400 clamp(1.03rem, .98rem + .14vw, 1.12rem) Georgia, serif;
   line-height: 1.78;
 }
+.archive-terminal-frame--chronicle .chronicle-record-contents { max-width: 78ch; }
 .archive-terminal-frame--chronicle .chronicle-record-content p {
   margin-bottom: 1.35em;
 }
@@ -6031,4 +6097,21 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     font-size: 1rem;
     line-height: 1.7;
   }
+  .chronicle-record-contents > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .chronicle-record-contents ol { grid-template-columns: 1fr; }
+  .chronicle-record-contents li,
+  .chronicle-record-contents li:nth-child(odd) {
+    grid-column: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(48, 63, 45, .58);
+  }
+  .chronicle-record-contents li:last-child { border-bottom: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .archive-terminal-frame--chronicle .chronicle-reader-scroll { scroll-behavior: auto; }
 }
