@@ -7,6 +7,7 @@ import {
   MAX_LORE_SUBTITLE_LENGTH,
   MAX_LORE_TITLE_LENGTH,
 } from "../lore-limits";
+import { deriveNextLoreSubsection } from "../lore-subsections";
 import { LoreCogitatorPanel } from "./LoreCogitatorPanel";
 
 const categoryOptions: Array<{ value: LoreCategory; label: string }> = [
@@ -158,6 +159,49 @@ export function LoreEntryEditor({
     replaceContentSelection(replacement, replacement.length, replacement.length);
   }
 
+  function insertSubsection() {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+
+    const insertionPoint = textarea.selectionEnd;
+    const nextSubsection = deriveNextLoreSubsection(textarea.value, insertionPoint);
+    if (!nextSubsection.ok) {
+      setMessageTone("error");
+      setMessage(
+        nextSubsection.reason === "no-parent"
+          ? "Place the cursor beneath a Roman-numbered parent section before adding a subsection."
+          : "This parent section already reaches subsection Z.",
+      );
+      return;
+    }
+
+    const title = window.prompt(
+      `TITLE FOR ${nextSubsection.parentNumeral}-${nextSubsection.suffix}`,
+      "",
+    );
+    if (title === null) return;
+    const normalizedTitle = title.trim().replace(/\s+/g, " ");
+    if (!normalizedTitle) {
+      setMessageTone("error");
+      setMessage("A subsection title is required.");
+      return;
+    }
+
+    textarea.setSelectionRange(insertionPoint, insertionPoint);
+    const before = textarea.value.slice(0, insertionPoint);
+    const after = textarea.value.slice(insertionPoint);
+    const prefix = before && !before.endsWith("\n\n")
+      ? before.endsWith("\n") ? "\n" : "\n\n"
+      : "";
+    const suffix = after && !after.startsWith("\n\n")
+      ? after.startsWith("\n") ? "\n" : "\n\n"
+      : "\n\n";
+    const replacement = `${prefix}${nextSubsection.headingPrefix} ${normalizedTitle}${suffix}`;
+    replaceContentSelection(replacement, replacement.length, replacement.length);
+    setMessageTone("info");
+    setMessage(`${nextSubsection.headingPrefix} SUBSECTION INSERTED // REVIEW BEFORE SAVING`);
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
@@ -306,6 +350,13 @@ export function LoreEntryEditor({
                 <button type="button" onClick={() => applyLineFormat("numbered")} title="Numbered list">1. LIST</button>
                 <button type="button" onClick={() => applyLineFormat("quote")} title="Quotation">QUOTE</button>
                 <button type="button" onClick={insertDivider} title="Section divider">RULE</button>
+                <button
+                  type="button"
+                  onClick={insertSubsection}
+                  title="Add the next subsection beneath the nearest Roman-numbered section"
+                >
+                  ADD SUBSECTION
+                </button>
               </div>
               <textarea
                 id="lore-editor-content"

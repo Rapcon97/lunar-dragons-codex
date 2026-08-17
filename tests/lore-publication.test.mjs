@@ -11,6 +11,37 @@ import {
   proposeLoreEditorUpdate,
 } from "../app/lore-editor.ts";
 import { chronicleEntriesForViewer } from "../app/chronicle-visibility.ts";
+import { deriveNextLoreSubsection } from "../app/lore-subsections.ts";
+
+test("the lore editor derives the next subsection from its nearest Roman parent", () => {
+  const content = [
+    "X. PREVIOUS SECTION",
+    "Text containing the letter T does not control subsection numbering.",
+    "XI. ASSAULT INFRASTRUCTURE",
+    "XI-A. BOARDING SYSTEMS",
+    "XI-B. DROP ASSAULT",
+    "BIG ASS TITTIES",
+  ].join("\n");
+
+  assert.deepEqual(deriveNextLoreSubsection(content, content.length), {
+    ok: true,
+    parentNumeral: "XI",
+    suffix: "C",
+    headingPrefix: "XI-C.",
+  });
+});
+
+test("subsection derivation fails closed without a parent or after subsection Z", () => {
+  assert.deepEqual(deriveNextLoreSubsection("Unnumbered preamble", 19), {
+    ok: false,
+    reason: "no-parent",
+  });
+  const exhausted = "XI. ASSAULT INFRASTRUCTURE\nXI-Z. FINAL SUBSECTION";
+  assert.deepEqual(deriveNextLoreSubsection(exhausted, exhausted.length), {
+    ok: false,
+    reason: "suffixes-exhausted",
+  });
+});
 
 function reviewState() {
   return {

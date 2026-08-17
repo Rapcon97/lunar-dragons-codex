@@ -4871,6 +4871,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .chronicle-record-contents li:last-child,
 .chronicle-record-contents li:nth-last-child(2):nth-child(odd) { border-bottom: 0; }
 .chronicle-record-contents li:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: 0; }
+.chronicle-record-contents li.is-subsection a { padding-left: 42px; }
 .chronicle-record-contents a {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);

@@ -1,22 +1,29 @@
 import { Fragment, type ReactNode } from "react";
+import {
+  romanSectionHeadingPattern,
+  romanSubsectionHeadingPattern,
+} from "../lore-subsections";
 
 type LoreContentSection = {
   id: string;
   lineIndex: number;
   numeral: string;
   title: string;
+  level: 2 | 3;
 };
-
-const romanSectionPattern = /^(?:#{1,3}\s+)?([IVXLCDM]+)(?:\.|:|\)|\s*[—–-])\s+(.+?)\s*$/i;
 
 function extractLoreContentSections(lines: string[]) {
   const occurrenceByNumeral = new Map<string, number>();
 
   return lines.flatMap<LoreContentSection>((line, lineIndex) => {
-    const match = line.trim().match(romanSectionPattern);
+    const subsectionMatch = line.trim().match(romanSubsectionHeadingPattern);
+    const sectionMatch = subsectionMatch ? null : line.trim().match(romanSectionHeadingPattern);
+    const match = subsectionMatch ?? sectionMatch;
     if (!match) return [];
 
-    const numeral = match[1].toUpperCase();
+    const numeral = subsectionMatch
+      ? `${match[1].toUpperCase()}-${match[2].toUpperCase()}`
+      : match[1].toUpperCase();
     const occurrence = (occurrenceByNumeral.get(numeral) ?? 0) + 1;
     occurrenceByNumeral.set(numeral, occurrence);
 
@@ -24,7 +31,8 @@ function extractLoreContentSections(lines: string[]) {
       id: `chronicle-section-${numeral.toLowerCase()}${occurrence > 1 ? `-${occurrence}` : ""}`,
       lineIndex,
       numeral,
-      title: match[2].trim(),
+      title: match[subsectionMatch ? 3 : 2].trim(),
+      level: subsectionMatch ? 3 : 2,
     }];
   });
 }
@@ -62,7 +70,10 @@ function renderTextWithBreaks(value: string, keyPrefix: string): ReactNode[] {
 function isBlockStart(line: string, recognizeRomanSections: boolean) {
   return (
     /^#{1,3}\s+/.test(line) ||
-    (recognizeRomanSections && romanSectionPattern.test(line.trim())) ||
+    (recognizeRomanSections && (
+      romanSubsectionHeadingPattern.test(line.trim()) ||
+      romanSectionHeadingPattern.test(line.trim())
+    )) ||
     /^[-*]\s+/.test(line) ||
     /^\d+\.\s+/.test(line) ||
     /^>\s?/.test(line) ||
@@ -97,12 +108,13 @@ export function LoreFormattedContent({
 
     const romanSection = sectionByLine.get(index);
     if (romanSection) {
-      blocks.push(
-        <h2 id={romanSection.id} key={`roman-section-${index}`}>
+      const children = <>
           <span className="chronicle-section-numeral">{romanSection.numeral}.</span>{" "}
           {renderInlineFormatting(romanSection.title, `roman-section-${index}`)}
-        </h2>,
-      );
+        </>;
+      blocks.push(romanSection.level === 2
+        ? <h2 id={romanSection.id} key={`roman-section-${index}`}>{children}</h2>
+        : <h3 id={romanSection.id} key={`roman-section-${index}`}>{children}</h3>);
       index += 1;
       continue;
     }
@@ -187,7 +199,7 @@ export function LoreFormattedContent({
             </summary>
             <ol>
               {sections.map((section) => (
-                <li key={section.id}>
+                <li key={section.id} className={section.level === 3 ? "is-subsection" : undefined}>
                   <a href={`#${section.id}`}>
                     <span>{section.numeral}</span>
                     <strong>{section.title}</strong>
