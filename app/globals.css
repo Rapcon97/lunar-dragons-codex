@@ -5047,8 +5047,8 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   backdrop-filter: blur(7px);
 }
 .lore-editor-dialog {
-  width: min(1120px, 100%);
-  height: min(880px, calc(100dvh - 40px));
+  width: min(1440px, 100%);
+  height: min(960px, calc(100dvh - 24px));
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -5060,7 +5060,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
     #030704;
   box-shadow: 0 34px 100px rgba(0, 0, 0, .84), inset 0 0 60px rgba(35, 66, 31, .09);
 }
-.lore-editor-dialog.assistant-open { width: min(1480px, 100%); }
+.lore-editor-dialog.assistant-open { width: min(1760px, 100%); }
 .lore-editor-dialog > header {
   flex: 0 0 auto;
   display: flex;
@@ -5192,9 +5192,12 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   letter-spacing: .12em;
 }
 .imperial-date-builder-heading strong {
+  min-width: 0;
   color: #b2c8a6;
   font-weight: 400;
   letter-spacing: .08em;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 .imperial-date-builder[data-valid="false"] .imperial-date-builder-heading strong,
 .imperial-date-legacy { color: #c49174; }
@@ -5212,7 +5215,14 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   align-items: end;
 }
 .imperial-date-builder[data-compound="true"] .imperial-date-builder-grid {
-  grid-template-columns: minmax(150px, .68fr) repeat(2, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.imperial-date-builder[data-compound="true"] .imperial-date-mode {
+  grid-column: 1 / -1;
+}
+.imperial-date-builder[data-compound="true"] .imperial-date-point {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, 1fr);
 }
 .imperial-date-builder-grid > label,
 .imperial-date-point label {
@@ -5849,7 +5859,13 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .lore-editor-content-field,
   .imperial-date-builder { grid-column: 1; }
   .imperial-date-builder-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
-  .imperial-date-point { align-items: stretch; flex-direction: column; }
+  .imperial-date-builder-heading strong { text-align: left; }
+  .imperial-date-point,
+  .imperial-date-builder[data-compound="true"] .imperial-date-point {
+    align-items: stretch;
+    display: flex;
+    flex-direction: column;
+  }
   .lore-editor-content-field textarea { min-height: 46dvh; }
   .lore-editor-workspace > #lore-cogitator-panel { height: 72dvh; min-height: 520px; }
   .lore-cogitator-quick { grid-template-columns: 1fr; }
