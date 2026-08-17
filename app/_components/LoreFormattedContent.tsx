@@ -180,7 +180,7 @@ export function LoreFormattedContent({
     <>
       {sections.length > 1 && (
         <nav className="chronicle-record-contents" aria-label="Table of contents">
-          <details open>
+          <details>
             <summary>
               <span>TABLE OF CONTENTS</span>
               <small>{String(sections.length).padStart(2, "0")} RECORD DIVISIONS</small>
