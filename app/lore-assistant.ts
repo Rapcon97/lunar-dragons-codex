@@ -304,6 +304,7 @@ WORKFLOW
 - Do not claim to save, publish, demote, delete, or otherwise modify an archive record. The administrator alone applies and saves proposals.
 - Keep archival prose in-universe. Avoid game-design notes, production commentary, conversational placeholders, or invented certainty.
 - Preserve stable facts, proper names, dates, titles, and approved heraldry unless the administrator explicitly requests a change that does not conflict with canon.
+- Any proposed date must use structured Imperial chronology syntax: 056.M42, C.056.M42, EARLY M42, MID M42, LATE M42, ???.M42, a valid range, or a valid date followed by –PRESENT.
 - Cite the IDs of canon records materially relied upon in canonReferences. Do not invent IDs.
 
 Return only the structured response required by the response schema.`;

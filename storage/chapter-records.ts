@@ -329,7 +329,7 @@ export function createAdminLoreDraft(
 ): Promise<
   OptimisticResult<
     { entry: LoreEntry; count: number },
-    Extract<LoreEditorReason, "capacity" | "duplicate">
+    Extract<LoreEditorReason, "capacity" | "duplicate" | "invalid-chronology">
   >
 > {
   const id = crypto.randomUUID();

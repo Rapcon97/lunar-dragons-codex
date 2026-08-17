@@ -5163,6 +5163,79 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 }
 .lore-editor-title-field,
 .lore-editor-subtitle-field { grid-column: 1 / -1; }
+.imperial-date-builder {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  border: 1px solid #40523c;
+  padding: 12px;
+  background: rgba(5, 12, 6, .72);
+}
+.imperial-date-builder-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: #72846b;
+  font: var(--type-meta) "Courier New", monospace;
+  letter-spacing: .12em;
+}
+.imperial-date-builder-heading strong {
+  color: #b2c8a6;
+  font-weight: 400;
+  letter-spacing: .08em;
+}
+.imperial-date-builder[data-valid="false"] .imperial-date-builder-heading strong,
+.imperial-date-legacy { color: #c49174; }
+.imperial-date-legacy,
+.imperial-date-builder-status {
+  margin: 0;
+  font: var(--type-meta) "Courier New", monospace;
+  letter-spacing: .08em;
+}
+.imperial-date-builder-status { color: #71836a; }
+.imperial-date-builder-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, .7fr) repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.imperial-date-builder-grid > label,
+.imperial-date-point label {
+  display: grid;
+  gap: 6px;
+}
+.imperial-date-point {
+  min-width: 0;
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  border: 1px solid #293b29;
+  padding: 9px;
+}
+.imperial-date-point legend {
+  padding: 0 5px;
+  color: #71836a;
+  font: var(--type-meta) "Courier New", monospace;
+  letter-spacing: .09em;
+}
+.imperial-date-point label { flex: 1 1 120px; min-width: 0; }
+.imperial-date-millennium {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+}
+.imperial-date-millennium b {
+  display: grid;
+  place-items: center;
+  border: 1px solid #40523c;
+  border-right: 0;
+  padding: 0 10px;
+  color: #829779;
+  background: #071008;
+  font: 400 var(--type-body-small) "Courier New", monospace;
+}
+.imperial-date-millennium input { border-left: 0; }
 .lore-editor-fields label { display: grid; align-content: start; gap: 8px; }
 .lore-editor-fields input,
 .lore-editor-fields select,
@@ -5731,6 +5804,7 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .lore-editor-fields {
     grid-template-columns: minmax(0, 1fr) minmax(170px, .65fr);
   }
+  .imperial-date-builder-grid { grid-template-columns: 1fr; }
   .lore-editor-title-field,
   .lore-editor-subtitle-field { grid-column: 1 / -1; }
   .lore-editor-signifiers { grid-template-columns: 1fr 1fr; }
@@ -5757,7 +5831,10 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .lore-editor-fields { grid-template-columns: 1fr; gap: 12px; padding: 14px 11px; }
   .lore-editor-title-field,
   .lore-editor-subtitle-field,
-  .lore-editor-content-field { grid-column: 1; }
+  .lore-editor-content-field,
+  .imperial-date-builder { grid-column: 1; }
+  .imperial-date-builder-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .imperial-date-point { align-items: stretch; flex-direction: column; }
   .lore-editor-content-field textarea { min-height: 46dvh; }
   .lore-editor-workspace > #lore-cogitator-panel { height: 72dvh; min-height: 520px; }
   .lore-cogitator-quick { grid-template-columns: 1fr; }

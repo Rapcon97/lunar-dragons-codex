@@ -884,9 +884,10 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
 });
 
 test("the on-site lore editor is an Admin Mode-only structured-lore workflow", async () => {
-  const [sectionPage, editor, formattedContent, createRoute, updateRoute, domain, storage, styles] = await Promise.all([
+  const [sectionPage, editor, dateBuilder, formattedContent, createRoute, updateRoute, domain, storage, styles] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/_components/LoreEntryEditor.tsx", "utf8"),
+    readFile("app/_components/ImperialDateBuilder.tsx", "utf8"),
     readFile("app/_components/LoreFormattedContent.tsx", "utf8"),
     readFile("app/api/admin/lore/route.ts", "utf8"),
     readFile("app/api/admin/lore/[id]/route.ts", "utf8"),
@@ -923,6 +924,14 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(editor, /window\.prompt/);
   assert.match(editor, /RECORD TITLE/);
   assert.match(editor, /RECORD SUBTITLE/);
+  assert.match(editor, /<ImperialDateBuilder/);
+  assert.doesNotMatch(editor, /placeholder="e\.g\. 056\.M42"/);
+  assert.match(editor, /disabled=\{isSaving \|\| !isDirty \|\| !draft\.chronology\}/);
+  assert.match(dateBuilder, /IMPERIAL DATE BUILDER/);
+  assert.match(dateBuilder, /DATE TYPE/);
+  assert.match(dateBuilder, /STRUCTURED CHRONOLOGY VALID/);
+  assert.match(dateBuilder, /LEGACY DATE REQUIRES CONVERSION/);
+  assert.match(dateBuilder, /formatLoreChronology/);
   assert.match(formattedContent, /function renderInlineFormatting/);
   assert.match(formattedContent, /<blockquote/);
   assert.match(formattedContent, /<ul/);
@@ -963,6 +972,7 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(styles, /\.lore-editor-dialog\s*\{[^}]*width:\s*min\(/s);
   assert.match(styles, /\.lore-editor-content-field textarea\s*\{[^}]*min-height:/s);
   assert.match(styles, /\.lore-format-toolbar\s*\{[^}]*display:\s*flex/s);
+  assert.match(styles, /\.imperial-date-builder\s*\{/);
   assert.match(styles, /\.chronicle-record-content h2,/);
   assert.match(styles, /\.chronicle-record-content ul\s*\{[^}]*list-style:\s*none;/s);
   assert.match(styles, /\.chronicle-record-content ul > li::before\s*\{[^}]*content:\s*"-";/s);

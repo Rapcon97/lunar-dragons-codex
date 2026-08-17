@@ -304,7 +304,7 @@ test("the on-site editor preserves record identity, status, creation time, and t
     current,
     current.loreEntries[0].id,
     {
-      date: "Pre-008.M42",
+      date: "LATE M30",
       title: "Revised provenance dossier",
       subtitle: "Bearer of the First Stone",
       category: "relic",
@@ -326,7 +326,7 @@ test("the on-site editor preserves record identity, status, creation time, and t
   assert.equal(current.loreEntries[0].title, "Provenance and Antiquity of the Lunaris");
 });
 
-test("the on-site editor replaces or clears chronology when its compatibility date changes", () => {
+test("the on-site editor rejects arbitrary prose chronology instead of clearing typed chronology", () => {
   const current = reviewState();
   current.loreEntries[0].date = "008.M42–PRESENT";
   current.loreEntries[0].chronology = {
@@ -347,13 +347,7 @@ test("the on-site editor replaces or clears chronology when its compatibility da
     700,
   );
 
-  assert.equal(proposal.ok, true);
-  if (!proposal.ok) return;
-  assert.equal(
-    proposal.value.entry.date,
-    "Before the opening of the Great Rift",
-  );
-  assert.equal(proposal.value.entry.chronology, undefined);
+  assert.deepEqual(proposal, { ok: false, reason: "invalid-chronology" });
 });
 
 test("the on-site editor rejects stale writes and duplicate lore", () => {
@@ -370,8 +364,18 @@ test("the on-site editor rejects stale writes and duplicate lore", () => {
     { ok: false, reason: "stale" },
   );
 
+  const duplicateState = reviewState();
+  duplicateState.loreEntries[0].date = "008.M42";
+  duplicateState.loreEntries[0].chronology = {
+    start: { millennium: 42, precision: "exact", year: 8 },
+  };
   assert.deepEqual(
-    proposeLoreDraftCreation(current, input, "duplicate", 700),
+    proposeLoreDraftCreation(
+      duplicateState,
+      { ...input, date: "008.M42" },
+      "duplicate",
+      700,
+    ),
     { ok: false, reason: "duplicate" },
   );
 });

@@ -381,8 +381,10 @@ components:
           type: string
           maxLength: 80
           description: >
-            Compatibility display for an in-universe date. When chronology
-            is also supplied, both values must describe the same interval.
+            Parseable Imperial chronology compatibility display, such as
+            056.M42, C.056.M42, EARLY M42, ???.M42, a valid range, or a date
+            followed by PRESENT. Arbitrary prose dates are rejected. When
+            chronology is also supplied, both values must describe the same interval.
         chronology:
           $ref: "#/components/schemas/LoreChronology"
         title:
@@ -416,8 +418,9 @@ components:
           type: string
           maxLength: 80
           description: >
-            Replacement compatibility display. When chronology is also
-            supplied, both values must describe the same interval.
+            Parseable replacement Imperial chronology display. Arbitrary
+            prose dates are rejected. When chronology is also supplied, both
+            values must describe the same interval.
         chronology:
           $ref: "#/components/schemas/LoreChronology"
         title:

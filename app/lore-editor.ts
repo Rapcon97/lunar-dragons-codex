@@ -2,6 +2,7 @@ import type { LoreEntry } from "./archive-data";
 import {
   formatLoreChronology,
   parseLoreChronology,
+  validateLoreChronology,
 } from "./lore-chronology.ts";
 import {
   loreCollectionFitsCapacity,
@@ -18,6 +19,7 @@ export type LoreDraftInput = Pick<
 export type LoreEditorReason =
   | "capacity"
   | "duplicate"
+  | "invalid-chronology"
   | "not-found"
   | "stale";
 
@@ -36,16 +38,20 @@ export function proposeLoreDraftCreation(
 ): OptimisticProposal<
   ChapterLoreState,
   { entry: LoreEntry; count: number },
-  Extract<LoreEditorReason, "capacity" | "duplicate">
+  Extract<LoreEditorReason, "capacity" | "duplicate" | "invalid-chronology">
 > {
-  const chronology =
+  const chronologyCandidate =
     input.chronology ?? parseLoreChronology(input.date.trim());
+  if (!chronologyCandidate) return { ok: false, reason: "invalid-chronology" };
+  const validatedChronology = validateLoreChronology(chronologyCandidate);
+  if (!validatedChronology.ok) {
+    return { ok: false, reason: "invalid-chronology" };
+  }
+  const chronology = validatedChronology.value;
   const entry: LoreEntry = {
     id,
-    date: chronology
-      ? formatLoreChronology(chronology)
-      : input.date.trim(),
-    ...(chronology ? { chronology } : {}),
+    date: formatLoreChronology(chronology),
+    chronology,
     title: input.title.trim(),
     ...(input.subtitle?.trim() ? { subtitle: input.subtitle.trim() } : {}),
     category: input.category,
@@ -90,13 +96,17 @@ export function proposeLoreEditorUpdate(
     return { ok: false, reason: "stale" };
   }
 
-  const chronology =
+  const chronologyCandidate =
     input.chronology ?? parseLoreChronology(input.date.trim());
+  if (!chronologyCandidate) return { ok: false, reason: "invalid-chronology" };
+  const validatedChronology = validateLoreChronology(chronologyCandidate);
+  if (!validatedChronology.ok) {
+    return { ok: false, reason: "invalid-chronology" };
+  }
+  const chronology = validatedChronology.value;
   const entry: LoreEntry = {
     ...existing,
-    date: chronology
-      ? formatLoreChronology(chronology)
-      : input.date.trim(),
+    date: formatLoreChronology(chronology),
     chronology,
     title: input.title.trim(),
     subtitle:

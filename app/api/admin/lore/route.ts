@@ -44,6 +44,12 @@ export async function POST(request: Request) {
       content: parsed.value.content,
     });
     if (!result.success) {
+      if (result.reason === "invalid-chronology") {
+        return Response.json(
+          { error: "Select a valid structured Imperial date." },
+          { status: 400 },
+        );
+      }
       if (result.reason === "capacity") {
         return Response.json({ error: LORE_COLLECTION_CAPACITY_ERROR }, { status: 413 });
       }

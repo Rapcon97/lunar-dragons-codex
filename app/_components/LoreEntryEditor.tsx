@@ -8,6 +8,13 @@ import {
   MAX_LORE_TITLE_LENGTH,
 } from "../lore-limits";
 import { deriveNextLoreSubsection } from "../lore-subsections";
+import {
+  formatLoreChronology,
+  normalizedChronologyForDate,
+  parseLoreChronology,
+  type LoreChronology,
+} from "../lore-chronology";
+import { ImperialDateBuilder } from "./ImperialDateBuilder";
 import { LoreCogitatorPanel } from "./LoreCogitatorPanel";
 
 const categoryOptions: Array<{ value: LoreCategory; label: string }> = [
@@ -23,6 +30,7 @@ const categoryOptions: Array<{ value: LoreCategory; label: string }> = [
 
 type EditorDraft = {
   date: string;
+  chronology: LoreChronology | null;
   title: string;
   subtitle: string;
   category: LoreCategory;
@@ -30,15 +38,26 @@ type EditorDraft = {
 };
 
 function draftForEntry(entry: LoreEntry | null): EditorDraft {
+  const chronology = entry
+    ? normalizedChronologyForDate(entry.date, entry.chronology) ?? null
+    : null;
   return entry
     ? {
-        date: entry.date,
+        date: chronology ? formatLoreChronology(chronology) : entry.date,
+        chronology,
         title: entry.title,
         subtitle: entry.subtitle ?? "",
         category: entry.category,
         content: entry.content,
       }
-    : { date: "", title: "", subtitle: "", category: "event", content: "" };
+    : {
+        date: "",
+        chronology: null,
+        title: "",
+        subtitle: "",
+        category: "event",
+        content: "",
+      };
 }
 
 export function LoreEntryEditor({
@@ -220,8 +239,8 @@ export function LoreEntryEditor({
           },
           body: JSON.stringify(
             isCreating
-              ? { ...draft, status: "draft" }
-              : { ...draft, expectedUpdatedAt: entry.updatedAt },
+              ? { ...draft, chronology: draft.chronology, status: "draft" }
+              : { ...draft, chronology: draft.chronology, expectedUpdatedAt: entry.updatedAt },
           ),
         },
       );
@@ -309,15 +328,17 @@ export function LoreEntryEditor({
               />
             </label>
 
-            <label>
-              IMPERIAL DATE
-              <input
-                maxLength={80}
-                value={draft.date}
-                onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))}
-                placeholder="e.g. 056.M42"
-              />
-            </label>
+            <ImperialDateBuilder
+              value={draft.chronology}
+              legacyValue={draft.chronology ? undefined : draft.date}
+              onChange={(chronology) =>
+                setDraft((current) => ({
+                  ...current,
+                  chronology,
+                  date: chronology ? formatLoreChronology(chronology) : current.date,
+                }))
+              }
+            />
 
             <label>
               RECORD CATEGORY
@@ -379,12 +400,27 @@ export function LoreEntryEditor({
                   draft={{
                     recordId: entry?.id ?? null,
                     status: entry?.status ?? "draft",
-                    ...draft,
+                    date: draft.date,
+                    title: draft.title,
+                    subtitle: draft.subtitle,
+                    category: draft.category,
+                    content: draft.content,
                   }}
                   onApplySuggestion={(suggestion) => {
-                    setDraft(suggestion);
-                    setMessageTone("info");
-                    setMessage("COGITATOR PROPOSAL LOADED // REVIEW BEFORE SAVING");
+                    const chronology = parseLoreChronology(suggestion.date);
+                    setDraft((current) => ({
+                      ...suggestion,
+                      chronology: chronology ?? current.chronology,
+                      date: chronology
+                        ? formatLoreChronology(chronology)
+                        : current.date,
+                    }));
+                    setMessageTone(chronology ? "info" : "error");
+                    setMessage(
+                      chronology
+                        ? "COGITATOR PROPOSAL LOADED // REVIEW BEFORE SAVING"
+                        : "COGITATOR DATE REJECTED // EXISTING STRUCTURED CHRONOLOGY PRESERVED",
+                    );
                   }}
                 />
               </div>
@@ -411,7 +447,11 @@ export function LoreEntryEditor({
             </p>
             <div>
               <button type="button" onClick={requestClose}>DISCARD / CLOSE</button>
-              <button type="submit" disabled={isSaving || !isDirty}>
+              <button
+                type="submit"
+                disabled={isSaving || !isDirty || !draft.chronology}
+                title={draft.chronology ? undefined : "Complete the Imperial Date Builder before saving"}
+              >
                 {isSaving ? "INSCRIBING..." : isCreating ? "SAVE NEW DRAFT" : "SAVE REVISION"}
               </button>
             </div>

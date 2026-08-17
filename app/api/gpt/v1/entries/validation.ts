@@ -156,10 +156,16 @@ function parsedChronologyFields(
 
   if (hasDate) {
     const parsedDate = date ? parseLoreChronology(date) : undefined;
+    if (!parsedDate) {
+      return {
+        ok: false,
+        error: "Lore entry date must use a supported Imperial chronology format.",
+      };
+    }
     return {
       ok: true,
       value: {
-        date: parsedDate ? formatLoreChronology(parsedDate) : date,
+        date: formatLoreChronology(parsedDate),
         chronology: parsedDate,
       },
     };

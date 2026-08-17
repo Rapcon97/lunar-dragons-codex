@@ -244,16 +244,29 @@ test("structured chronology rejects invalid values and conflicting date mirrors"
   );
 });
 
-test("unstructured legacy chronology remains accepted without invented precision", () => {
+test("unstructured chronology is rejected by GPT writes instead of becoming an untyped date", () => {
   const result = parseLoreCreateBody({
     date: "Before the opening of the Great Rift",
     content: "A legacy record whose exact chronology remains unresolved.",
   });
 
-  assert.equal(result.ok, true);
-  if (!result.ok) return;
-  assert.equal(result.value.date, "Before the opening of the Great Rift");
-  assert.equal(result.value.chronology, undefined);
+  assert.deepEqual(result, {
+    ok: false,
+    error: "Lore entry date must use a supported Imperial chronology format.",
+  });
+});
+
+test("empty explicit chronology dates are rejected while omitted dates remain compatible", () => {
+  assert.deepEqual(parseLoreUpdateBody({ date: "" }), {
+    ok: false,
+    error: "Lore entry date must use a supported Imperial chronology format.",
+  });
+  const omitted = parseLoreCreateBody({ content: "A deliberately undated draft." });
+  assert.equal(omitted.ok, true);
+  if (omitted.ok) {
+    assert.equal(omitted.value.date, undefined);
+    assert.equal(omitted.value.chronology, undefined);
+  }
 });
 
 test("archive normalization preserves typed chronology and canonicalizes its date mirror", () => {
