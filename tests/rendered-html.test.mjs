@@ -914,6 +914,8 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(formattedContent, /<ol/);
   assert.match(formattedContent, /romanSectionPattern/);
   assert.match(formattedContent, /aria-label="Table of contents"/);
+  assert.match(formattedContent, /<details open>/);
+  assert.match(formattedContent, /<summary>/);
   assert.match(formattedContent, /href=\{`#\$\{section\.id\}`\}/);
   assert.doesNotMatch(formattedContent, /dangerouslySetInnerHTML/);
 
