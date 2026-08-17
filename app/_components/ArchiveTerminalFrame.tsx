@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 type ArchiveTerminalFrameProps = {
+  surface: "chronicle" | "relay" | "character";
   ariaLabel?: string;
   labelledBy?: string;
   className?: string;
@@ -13,11 +14,11 @@ type ArchiveTerminalFrameProps = {
 };
 
 /**
- * Shared master-detail frame for full-workspace archive terminals.
- * Chronicle, Relay, and Personnel keep their own content while inheriting
- * identical viewport boundaries, header geometry, pane ratios, and overflow.
+ * Shared viewport and overflow frame for full-workspace archive surfaces.
+ * Each surface owns its layout ratio, typography, density, and visual voice.
  */
 export function ArchiveTerminalFrame({
+  surface,
   ariaLabel,
   labelledBy,
   className = "",
@@ -32,7 +33,7 @@ export function ArchiveTerminalFrame({
     <section
       aria-label={ariaLabel}
       aria-labelledby={labelledBy}
-      className={`archive-terminal-frame ${className}`.trim()}
+      className={`archive-terminal-frame archive-terminal-frame--${surface} ${className}`.trim()}
     >
       {header}
       {bands}

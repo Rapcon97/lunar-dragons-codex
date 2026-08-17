@@ -285,13 +285,14 @@ export function CharacterDirectory({
   return (
     <>
     <ArchiveTerminalFrame
+      surface="character"
       labelledBy="character-directory-title"
       className="character-reliquary"
       bodyClassName={`character-workspace panel${selectedCharacter ? " has-selection" : ""}`}
       header={<header className="archive-terminal-frame-header character-reliquary-header">
         <div>
-          <p className="section-kicker">Adeptus Astartes · Personnel Reliquary</p>
-          <h1 id="character-directory-title">PERSONNEL EXLOAD TERMINAL</h1>
+          <p className="section-kicker">Adeptus Astartes · Chapter Roster</p>
+          <h1 id="character-directory-title">CHAPTER PERSONNEL REGISTRY</h1>
         </div>
         <div className="character-reliquary-summary">
           <span>RELIQUARY LINK ACTIVE · {String(characters.length).padStart(2, "0")} RECORDED PERSONNEL</span>

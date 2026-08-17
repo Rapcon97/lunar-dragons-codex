@@ -170,7 +170,8 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(sectionPage, /REVIEW · AWAITING JUDGMENT/);
   assert.match(sectionPage, /RETCONNED · SUPERSEDED/);
   assert.doesNotMatch(sectionPage, /isAdminMode \? data\.entries : canonChronicleEntries/);
-  assert.match(sectionPage, /CHRONICLE EXLOAD TERMINAL/);
+  assert.match(sectionPage, /CHAPTER CHRONICLE/);
+  assert.match(sectionPage, /surface="chronicle"/);
   assert.match(sectionPage, /SEALED RECORD INDEX/);
   assert.match(sectionPage, /<DecreeRecord \/>/);
   assert.match(sectionPage, /selectedEntry\.content/);
@@ -188,9 +189,8 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(styles, /\.archive-mode:has\(\.archive-terminal-workspace\)\s*\{[^}]*height:\s*100dvh;[^}]*overflow:\s*hidden;/s);
   assert.match(styles, /\.workspace\.archive-terminal-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)/s);
   assert.match(styles, /\.archive-terminal-workspace \.archive-terminal-subpage\s*\{[^}]*padding:\s*var\(--archive-frame-gutter-block\) var\(--archive-frame-gutter-inline\) 0;/s);
-  assert.match(styles, /\.archive-terminal-split\s*\{[^}]*grid-template-columns:\s*minmax\(290px, 29%\) minmax\(0, 1fr\)/s);
-  assert.match(styles, /\.chronicle-exload-grid\s*\{[^}]*grid-template-columns:\s*minmax\(290px, 29%\) minmax\(0, 1fr\)/s);
-  assert.match(styles, /\.chronicle-record-content\s*\{[^}]*max-width:\s*86ch;[^}]*font:[^;]*\/1\.85/s);
+  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-exload-grid\s*\{[^}]*grid-template-columns:\s*minmax\(280px, 26%\) minmax\(0, 1fr\)/s);
+  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-record-content\s*\{[^}]*max-width:\s*78ch;[^}]*line-height:\s*1\.78/s);
   assert.match(styles, /\.chronicle-record-subtitle\s*\{[^}]*font:[^;]*var\(--type-body\)\/1\.55/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-exload-grid\s*\{\s*display:\s*block;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.chronicle-reader-scroll\s*\{\s*overflow:\s*visible;/s);
@@ -268,7 +268,7 @@ test("Character Phase 2 balances operational tooling with canon provenance", asy
 
   assert.match(sectionPage, /<CharacterDirectory[\s\S]*canEdit=\{canAdmin && isAdminMode\}[\s\S]*error=\{error\}[\s\S]*isLoading=\{isLoading\}[\s\S]*characters=\{data\.characters\}/);
   assert.match(directory, /if \(isLoading \|\| error\)[\s\S]*Retrieving character records/);
-  assert.match(directory, /Adeptus Astartes · Personnel Reliquary/);
+  assert.match(directory, /Adeptus Astartes · Chapter Roster/);
   assert.match(directory, /No names or deeds have been invented to fill it/);
   assert.match(directory, /Links establish provenance; operational profile fields do not become canon automatically/);
   assert.match(directory, /loreEntries\.filter\(\(entry\) => entry\.status === "canon"\)/);
@@ -301,8 +301,9 @@ test("Character Phase 2 balances operational tooling with canon provenance", asy
   assert.match(companyPage, /OPEN CHARACTER DIRECTORY/);
   assert.match(archiveRoute, /"characters"/);
   assert.match(directory, /<ArchiveTerminalFrame/);
-  assert.match(directory, /PERSONNEL EXLOAD TERMINAL/);
-  assert.match(styles, /\.character-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(290px, 29%\) minmax\(0, 1fr\)/s);
+  assert.match(directory, /CHAPTER PERSONNEL REGISTRY/);
+  assert.match(directory, /surface="character"/);
+  assert.match(styles, /\.archive-terminal-frame--character \.character-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(340px, 34%\) minmax\(0, 1fr\)/s);
   assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.character-workspace\.has-selection \.character-workspace-index\s*\{\s*display:\s*none;/s);
   assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.character-workspace\.has-selection \.character-workspace-detail\s*\{\s*display:\s*grid;/s);
 });
@@ -446,7 +447,8 @@ test("shared interface typography uses one semantic readability scale", async ()
   assert.match(styles, /body\s*\{[^}]*font-size:\s*var\(--ui-text-15\)/s);
   assert.match(styles, /\.workspace\s*\{[^}]*font-size:\s*var\(--type-body\)/s);
   assert.match(styles, /\.workspace :is\(input, textarea, select\)\s*\{[^}]*font-size:\s*var\(--type-body-small\)/s);
-  assert.match(styles, /\.relay-data-stream,[\s\S]*\.chronicle-record-content\s*\{[^}]*font-size:\s*var\(--type-body-small\)/s);
+  assert.match(styles, /\.relay-data-stream,[\s\S]*\.relay-terminal-content\s*\{[^}]*font-size:\s*var\(--type-body-small\)/s);
+  assert.doesNotMatch(styles, /\.relay-terminal-content,\s*\.chronicle-record-content/);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.workspace :is\(input, textarea, select\)\s*\{\s*font-size:\s*1rem;/s);
 
   assert.match(styles, /\.nav-icon\s*\{[^}]*width:\s*26px;[^}]*height:\s*26px/s);
@@ -619,6 +621,7 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(relaySection, /ASTROPATHIC EXLOAD TERMINAL/);
   assert.doesNotMatch(relaySection, /VOX-MISSIVE RECOVERY/);
   assert.match(relaySection, /<ArchiveTerminalFrame/);
+  assert.match(relaySection, /surface="relay"/);
   assert.match(relaySection, /className="relay-inbox relay-inbox-frame panel"/);
   assert.match(relaySection, /bodyClassName="relay-inbox-grid"/);
   assert.match(relaySection, /className="archive-terminal-frame-header relay-terminal-rack"/);
@@ -628,7 +631,8 @@ test("homepage and Relay share the deterministic accessible transmission rendere
   assert.match(styles, /@media \(min-width: 701px\)[\s\S]*?\.archive-mode:has\(\.archive-terminal-workspace\)\s*\{[^}]*height:\s*100dvh[^}]*overflow:\s*hidden[^}]*padding-bottom:\s*0/s);
   assert.match(styles, /\.workspace\.archive-terminal-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)[^}]*grid-template-rows:\s*auto minmax\(0, 1fr\)[^}]*overflow:\s*hidden/s);
   assert.match(styles, /\.archive-terminal-workspace \.archive-terminal-subpage\s*\{[^}]*width:\s*100%[^}]*max-width:\s*none[^}]*height:\s*100%[^}]*min-height:\s*0[^}]*display:\s*flex[^}]*margin:\s*0[^}]*padding:\s*var\(--archive-frame-gutter-block\) var\(--archive-frame-gutter-inline\) 0/s);
-  assert.match(styles, /\.archive-terminal-split\s*\{[^}]*min-height:\s*0[^}]*display:\s*grid[^}]*grid-template-columns:\s*minmax\(290px, 29%\) minmax\(0, 1fr\)[^}]*overflow:\s*hidden/s);
+  assert.match(styles, /\.archive-terminal-split\s*\{[^}]*min-height:\s*0[^}]*display:\s*grid[^}]*overflow:\s*hidden/s);
+  assert.match(styles, /\.archive-terminal-frame--relay \.relay-inbox-grid\s*\{[^}]*grid-template-columns:\s*minmax\(340px, 36%\) minmax\(0, 1fr\)/s);
   assert.match(styles, /\.character-workspace-list\s*\{[^}]*min-height:\s*0[^}]*overscroll-behavior:\s*contain[^}]*scrollbar-gutter:\s*stable[^}]*overflow-y:\s*auto/s);
   assert.match(styles, /\.character-workspace-list::\-webkit-scrollbar\s*\{[^}]*width:\s*12px/s);
   assert.match(styles, /\.relay-inbox-grid\s*\{[^}]*border-bottom-color:\s*#42563e[^}]*box-shadow:\s*inset 0 -3px/s);

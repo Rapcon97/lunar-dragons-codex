@@ -371,6 +371,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
   const selected = messages.find((message) => message.id === selectedId) ?? messages[0];
   return (
     <ArchiveTerminalFrame
+        surface="relay"
         ariaLabel="Astropathic Relay sanctum"
         className="relay-inbox relay-inbox-frame panel"
         bodyClassName="relay-inbox-grid"
@@ -1692,14 +1693,15 @@ function ChroniclesSection({
 
   return (
     <ArchiveTerminalFrame
+      surface="chronicle"
       labelledBy="chronicle-exload-title"
       className="chronicle-exload-terminal"
       bodyClassName="chronicle-exload-grid"
       header={<header className="archive-terminal-frame-header chronicle-exload-header">
         <div className="chronicle-exload-mark" aria-hidden="true"><i /><b>III</b></div>
         <div className="chronicle-exload-heading">
-          <span>ADEPTUS ASTARTES · ANNALIS SANCTUM</span>
-          <h1 id="chronicle-exload-title">CHRONICLE EXLOAD TERMINAL</h1>
+          <span>ADEPTUS ASTARTES · SEALED ANNALS</span>
+          <h1 id="chronicle-exload-title">CHAPTER CHRONICLE</h1>
         </div>
         <div className="chronicle-exload-status" aria-label={canEdit ? `${entries.length} development records across all lore statuses, archive link active` : `${entries.length} canon records, archive link active`}>
           <span><i /> ARCHIVE LINK ACTIVE</span>
