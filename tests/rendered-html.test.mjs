@@ -190,7 +190,10 @@ test("the Chronicle uses a full-workspace canon-only Exload Terminal with an adm
   assert.match(styles, /\.workspace\.archive-terminal-workspace\s*\{[^}]*height:\s*calc\(100dvh - var\(--archive-terminal-height\)\)/s);
   assert.match(styles, /\.archive-terminal-workspace \.archive-terminal-subpage\s*\{[^}]*padding:\s*var\(--archive-frame-gutter-block\) var\(--archive-frame-gutter-inline\) 0;/s);
   assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-exload-grid\s*\{[^}]*grid-template-columns:\s*minmax\(280px, 26%\) minmax\(0, 1fr\)/s);
-  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-record-content\s*\{[^}]*max-width:\s*78ch;[^}]*line-height:\s*1\.78/s);
+  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-reader-scroll\s*\{[^}]*padding:\s*clamp\(30px, 4vw, 68px\) clamp\(24px, 2\.5vw, 48px\)/s);
+  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-record-sheet\s*\{[^}]*width:\s*min\(100%, 1360px\)/s);
+  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-record-content\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*line-height:\s*1\.78/s);
+  assert.match(styles, /\.archive-terminal-frame--chronicle \.chronicle-record-contents\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none/s);
   assert.match(styles, /\.chronicle-record-contents ol\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s);
   assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.chronicle-record-contents ol\s*\{[^}]*grid-template-columns:\s*1fr/s);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.archive-terminal-frame--chronicle \.chronicle-reader-scroll\s*\{[^}]*scroll-behavior:\s*auto/s);
