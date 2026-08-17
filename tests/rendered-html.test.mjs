@@ -951,5 +951,8 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(styles, /\.lore-editor-content-field textarea\s*\{[^}]*min-height:/s);
   assert.match(styles, /\.lore-format-toolbar\s*\{[^}]*display:\s*flex/s);
   assert.match(styles, /\.chronicle-record-content h2,/);
+  assert.match(styles, /\.chronicle-record-content ul\s*\{[^}]*list-style:\s*none;/s);
+  assert.match(styles, /\.chronicle-record-content ul > li::before\s*\{[^}]*content:\s*"-";/s);
+  assert.match(styles, /\.chronicle-record-content ol\s*\{[^}]*list-style:\s*decimal;/s);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.lore-editor-dialog\s*\{[^}]*width:\s*100%/s);
 });

@@ -4928,6 +4928,15 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .chronicle-record-content ul,
 .chronicle-record-content ol { margin: 0 0 1.25em; padding-left: 1.7em; }
 .chronicle-record-content li { margin: .32em 0; padding-left: .25em; }
+.chronicle-record-content ul { list-style: none; }
+.chronicle-record-content ul > li { position: relative; }
+.chronicle-record-content ul > li::before {
+  content: "-";
+  position: absolute;
+  left: -1.2em;
+  color: #6f8768;
+}
+.chronicle-record-content ol { list-style: decimal; }
 .chronicle-record-content li::marker { color: #6f8768; }
 .chronicle-record-content blockquote {
   margin: 1.4em 0;
