@@ -382,7 +382,7 @@ test("retired presentation elements stay outside the live Site runtime", async (
   assert.doesNotMatch(styles, /\.vox-screen|\.hero-panel|\.crest-wrap|\.upload-button|\.doctrine-panel/);
 });
 
-test("the terminal footer unifies viewer controls and the live chronometer", async () => {
+test("the terminal footer unifies viewer controls, session-safe Admin Mode, and the live chronometer", async () => {
   const [footer, adminMode, chronometer, layout, styles] = await Promise.all([
     readFile("app/_components/ArchiveTerminalFooter.tsx", "utf8"),
     readFile("app/_components/AdminMode.tsx", "utf8"),
@@ -393,6 +393,14 @@ test("the terminal footer unifies viewer controls and the live chronometer", asy
 
   assert.match(adminMode, /<ArchiveTerminalFooter/);
   assert.doesNotMatch(adminMode, /admin-mode-dock/);
+  assert.match(adminMode, /ADMIN_MODE_SESSION_KEY/);
+  assert.match(adminMode, /window\.sessionStorage\.getItem\(ADMIN_MODE_SESSION_KEY\) === "active"/);
+  assert.match(adminMode, /useSyncExternalStore/);
+  assert.match(adminMode, /const isAdminMode = canAdmin && persistedAdminMode/);
+  assert.match(adminMode, /if \(!canAdmin\)[\s\S]*persistAdminMode\(false\)/);
+  assert.match(adminMode, /persistAdminMode\(!isAdminMode\)/);
+  assert.match(adminMode, /window\.sessionStorage\.setItem\(ADMIN_MODE_SESSION_KEY, "active"\)/);
+  assert.match(adminMode, /window\.sessionStorage\.removeItem\(ADMIN_MODE_SESSION_KEY\)/);
   assert.match(footer, /<ImperialChronometer \/>/);
   assert.match(footer, /USER/);
   assert.match(footer, /ACCESS/);
