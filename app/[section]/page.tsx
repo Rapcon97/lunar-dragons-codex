@@ -1803,7 +1803,11 @@ function ChroniclesSection({
             )}
             <div className="chronicle-reader-actions">
               <small>{canEdit ? "ADMIN AUTHORITY · DEVELOPMENT VIEW" : "READ AUTHORITY · ARCHIVE VIEW"}</small>
-              {canEdit && selectedEntry && (selectedEntry.status === "draft" || selectedEntry.status === "review") && (
+              {canEdit && selectedEntry && (
+                selectedEntry.status === "draft"
+                || selectedEntry.status === "review"
+                || selectedEntry.status === "canon"
+              ) && (
                 <button
                   type="button"
                   className="chronicle-reader-edit-button"

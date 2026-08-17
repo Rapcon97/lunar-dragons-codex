@@ -323,7 +323,7 @@ test("the on-site editor preserves record identity, status, creation time, and t
   assert.equal(current.loreEntries[0].title, "Provenance and Antiquity of the Lunaris");
 });
 
-test("the on-site editor rejects stale writes, duplicate lore, and direct canon editing", () => {
+test("the on-site editor rejects stale writes and duplicate lore", () => {
   const current = reviewState();
   const input = {
     date: current.loreEntries[0].date,
@@ -337,17 +337,40 @@ test("the on-site editor rejects stale writes, duplicate lore, and direct canon 
     { ok: false, reason: "stale" },
   );
 
-  const canon = {
-    ...current,
-    loreEntries: [{ ...current.loreEntries[0], status: "canon" }],
-  };
-  assert.deepEqual(
-    proposeLoreEditorUpdate(canon, canon.loreEntries[0].id, input, 200, 700),
-    { ok: false, reason: "canon-locked" },
-  );
-
   assert.deepEqual(
     proposeLoreDraftCreation(current, input, "duplicate", 700),
     { ok: false, reason: "duplicate" },
   );
+});
+
+test("the on-site editor revises canon while preserving identity and replacing its compatibility mirror", () => {
+  const current = reviewState();
+  const original = { ...current.loreEntries[0], status: "canon" };
+  const originalTimeline = `${original.date} — ${original.content}`;
+  current.loreEntries = [original];
+  current.entries = [originalTimeline];
+
+  const proposal = proposeLoreEditorUpdate(
+    current,
+    original.id,
+    {
+      date: "008.M42",
+      title: "Provenance of the Lunaris",
+      subtitle: "Bearer of the First Stone",
+      category: "relic",
+      content: "The sealed provenance record is revised under Chapter authority.",
+    },
+    original.updatedAt,
+    700,
+  );
+
+  assert.equal(proposal.ok, true);
+  if (!proposal.ok) return;
+  assert.equal(proposal.value.entry.id, original.id);
+  assert.equal(proposal.value.entry.status, "canon");
+  assert.equal(proposal.value.entry.createdAt, original.createdAt);
+  assert.equal(proposal.state.entries.includes(originalTimeline), false);
+  assert.deepEqual(proposal.state.entries, [
+    "008.M42 — The sealed provenance record is revised under Chapter authority.",
+  ]);
 });

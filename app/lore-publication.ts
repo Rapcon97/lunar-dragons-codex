@@ -6,7 +6,7 @@ export type LorePublicationReason = "not-found" | "not-review" | "stale";
 export type LoreDraftReturnReason = "not-found" | "not-canon" | "stale";
 export type LoreStatusTransitionReason = "not-found" | "unchanged" | "stale";
 
-function loreEntryToTimeline(entry: LoreEntry) {
+export function loreEntryToTimeline(entry: LoreEntry) {
   const date = entry.date.trim();
   const content = entry.content.trim();
   return date ? `${date} — ${content}` : content;

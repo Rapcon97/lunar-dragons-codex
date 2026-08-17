@@ -899,7 +899,8 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(sectionPage, /useState\(\(\) => entries\[0\]\?\.id \?\? ""\)/);
   assert.match(sectionPage, /className="chronicle-reader-actions"[\s\S]*className="chronicle-reader-edit-button"/);
   assert.match(sectionPage, /className="chronicle-reader-scroll" key=\{selectedId\}/);
-  assert.match(sectionPage, /selectedEntry\.status === "draft" \|\| selectedEntry\.status === "review"/);
+  assert.match(sectionPage, /selectedEntry\.status === "draft"[\s\S]*selectedEntry\.status === "review"[\s\S]*selectedEntry\.status === "canon"/);
+  assert.doesNotMatch(sectionPage, /selectedEntry\.status === "retconned"/);
   assert.doesNotMatch(sectionPage, /chronicle-record-editor-action/);
   assert.doesNotMatch(sectionPage, /CANON LOCK ACTIVE/);
   assert.match(sectionPage, /<LoreFormattedContent content=\{selectedEntry\.content\} showTableOfContents \/>/);
@@ -943,10 +944,11 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   }
   assert.match(createRoute, /parsed\.value\.status !== "draft"/);
   assert.match(updateRoute, /expectedUpdatedAt/);
-  assert.match(updateRoute, /canon-locked/);
+  assert.doesNotMatch(updateRoute, /canon-locked/);
 
   assert.match(domain, /status: "draft"/);
   assert.match(domain, /existing\.status === "canon"/);
+  assert.match(domain, /loreEntryToTimeline\(existing\)/);
   assert.match(domain, /existing\.updatedAt !== expectedUpdatedAt/);
   assert.match(domain, /id,/);
   assert.match(storage, /createAdminLoreDraft/);

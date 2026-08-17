@@ -89,12 +89,6 @@ export async function PATCH(
       if (result.reason === "not-found") {
         return Response.json({ error: "Lore record not found." }, { status: 404 });
       }
-      if (result.reason === "canon-locked") {
-        return Response.json(
-          { error: "Return canon lore to Draft before editing its contents." },
-          { status: 409 },
-        );
-      }
       return Response.json(
         {
           error:

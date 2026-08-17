@@ -4,6 +4,7 @@ import {
 } from "./lore-limits.ts";
 import type { ChapterLoreState } from "../storage/chapter-records";
 import type { OptimisticProposal } from "../storage/optimistic-write";
+import { loreEntryToTimeline } from "./lore-publication.ts";
 
 export type LoreDraftInput = Pick<
   LoreEntry,
@@ -12,7 +13,6 @@ export type LoreDraftInput = Pick<
 
 export type LoreEditorReason =
   | "capacity"
-  | "canon-locked"
   | "duplicate"
   | "not-found"
   | "stale";
@@ -77,9 +77,6 @@ export function proposeLoreEditorUpdate(
   if (index === -1) return { ok: false, reason: "not-found" };
 
   const existing = current.loreEntries[index];
-  if (existing.status === "canon") {
-    return { ok: false, reason: "canon-locked" };
-  }
   if (existing.updatedAt !== expectedUpdatedAt) {
     return { ok: false, reason: "stale" };
   }
@@ -112,9 +109,33 @@ export function proposeLoreEditorUpdate(
     return { ok: false, reason: "capacity" };
   }
 
+  let entries = [...current.entries];
+  if (existing.status === "canon") {
+    const previousTimelineEntry = loreEntryToTimeline(existing);
+    const revisedTimelineEntry = loreEntryToTimeline(entry);
+    const previousTimelineRemainsCanon = current.loreEntries.some(
+      (candidate, candidateIndex) =>
+        candidateIndex !== index &&
+        candidate.status === "canon" &&
+        loreEntryToTimeline(candidate) === previousTimelineEntry,
+    );
+
+    if (
+      previousTimelineEntry !== revisedTimelineEntry &&
+      !previousTimelineRemainsCanon
+    ) {
+      entries = entries.filter(
+        (candidate) => candidate !== previousTimelineEntry,
+      );
+    }
+    if (!entries.includes(revisedTimelineEntry)) {
+      entries.push(revisedTimelineEntry);
+    }
+  }
+
   return {
     ok: true,
-    state: { ...current, loreEntries },
+    state: { ...current, loreEntries, entries },
     value: { entry },
   };
 }
