@@ -1789,13 +1789,13 @@ function ChroniclesSection({
           <header className="chronicle-reader-terminal-header">
             <p className="chronicle-reader-terminal-line">
               <span>ACTIVE EXLOAD</span>
-              <b>//</b>
+              <b>{"//"}</b>
               <span>CLASS: <strong>{selectedEntry?.category.toUpperCase() || "IMPERIAL DECREE"}</strong></span>
-              <b>//</b>
+              <b>{"//"}</b>
               <span>STATUS: <strong className={selectedEntry ? `status-${selectedEntry.status}` : "status-canon"}>{selectedEntry ? statusReadout(selectedEntry) : "CANON · SEALED"}</strong></span>
-              <b>//</b>
+              <b>{"//"}</b>
               <span>DATE: <strong>{selectedEntry?.date || "008.M42"}</strong></span>
-              {canEdit && <><b>//</b><span>ADMIN DEVELOPMENT VIEW</span></>}
+              {canEdit && <><b>{"//"}</b><span>ADMIN DEVELOPMENT VIEW</span></>}
             </p>
             <div className="chronicle-reader-actions">
               {canEdit && selectedEntry && (
@@ -2031,10 +2031,22 @@ function SettingsSection({
   onArchiveRefresh: () => Promise<void>;
 }) {
   const canEdit = isAdminMode;
+
+  function replayAwakeningRite() {
+    document.cookie = "__Host-lunar_boot=; Path=/; Secure; SameSite=Lax; Max-Age=0";
+    window.location.assign("/settings?awakening=replay");
+  }
+
   return (
     <div className="settings-page">
       <div className="settings-grid">
         <section className="panel settings-card"><p className="section-kicker">Storage</p><h2>Shared chapter records</h2><p>Names, lore, milestones, companies, relics, chronicles, and sector intelligence are stored with the hosted archive and remain consistent across signed-in devices.</p></section>
+        <section className="panel settings-card settings-awakening-card">
+          <p className="section-kicker">Archive entrance</p>
+          <h2>Rite of Awakening</h2>
+          <p>Replay the consecration and identity-verification sequence without changing your archive session.</p>
+          <button type="button" onClick={replayAwakeningRite}>REPLAY AWAKENING RITE</button>
+        </section>
       </div>
       <LoreDevelopmentDashboard
         canAdmin={canAdmin}
