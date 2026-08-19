@@ -2031,22 +2031,10 @@ function SettingsSection({
   onArchiveRefresh: () => Promise<void>;
 }) {
   const canEdit = isAdminMode;
-
-  function replayAwakeningRite() {
-    document.cookie = "__Host-lunar_boot=; Path=/; Secure; SameSite=Lax; Max-Age=0";
-    window.location.assign("/settings?awakening=replay");
-  }
-
   return (
     <div className="settings-page">
       <div className="settings-grid">
         <section className="panel settings-card"><p className="section-kicker">Storage</p><h2>Shared chapter records</h2><p>Names, lore, milestones, companies, relics, chronicles, and sector intelligence are stored with the hosted archive and remain consistent across signed-in devices.</p></section>
-        <section className="panel settings-card settings-awakening-card">
-          <p className="section-kicker">Archive entrance</p>
-          <h2>Rite of Awakening</h2>
-          <p>Replay the consecration and identity-verification sequence without changing your archive session.</p>
-          <button type="button" onClick={replayAwakeningRite}>REPLAY AWAKENING RITE</button>
-        </section>
       </div>
       <LoreDevelopmentDashboard
         canAdmin={canAdmin}

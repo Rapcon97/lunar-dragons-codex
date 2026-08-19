@@ -1,19 +1,68 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const awakeningLines = [
-  ">> RITE OF AWAKENING // INVOCATION ACCEPTED",
-  ">> LUNARIS ARCHIVE CORE // MACHINE-SPIRIT ANSWERS",
-  ">> CHAPTER IDENT // DRAGON OF THE MOON VERIFIED",
-  ">> ADEPTUS TERRA WARRANT // 008.M42/DR-017 SEALED",
-  ">> ARGENT VIGIL RECORDS // ANNALIS COILS READY",
-  ">> IDENTITY GATE // AWAITING COMMAND HANDSHAKE",
-  "++ ARCHIVE APERTURE OPEN ++",
+const bootLines = [
+  ">> LUNAR DRAGONS CHAPTER-ARCHIVE // COGITATOR WAKE",
+  ">> NOOSPHERIC HANDSHAKE 0x4C-44-IX // ACCEPTED",
+  ">> MACHINE-SPIRIT RESPONSE ............ NOMINAL",
+  ">> GENE-SEED LEDGER // SEAL INTACT",
+  ">> HERALDRY RELIQUARY // ASSET LINK ESTABLISHED",
+  ">> COMPANY MANIFEST // X DATA-VAULTS ANSWER",
+  ">> ARMOURY INDEX // RELIC CIPHERS VERIFIED",
+  "!! UNAUTHORIZED CANT DETECTED // PURGING",
+  ">> PURITY PROTOCOL 11100101 00110111 // COMPLETE",
+  ">> CHRONICLE VAULT // MEMORY COILS WARMING",
+  ">> ADEPTUS TERRA WARRANT // 008.M42/DR-017 VERIFIED",
+  ">> ARGENT VIGIL // NACHMUND VECTOR LOCKED",
+  ">> GIFT OF LUNA RELIQUARY // SEAL INTACT",
+  ">> SERVO-SKULL SCRIBE 03 // DISPATCHED",
+  ">> ASTROPATHIC RELAY // SIGNAL LOCKED",
+  ">> VOX MORALIS // EXHORTATION CHANNEL OPEN",
+  ">> OATH-CHAIN 0xC7D1 01100110 // BOUND",
+  ">> COMPANY STRENGTH RETURNS // RECEIVED",
+  ">> BATTLE-BROTHER RECORDS // UNSEALING",
+  "!! HERETICAL PATTERN 0x9A // EXCISED",
+  ">> RIGHT OF PERMANENT BASTION // GRANTED · UNCLAIMED",
+  ">> RITE OF INVOCATION // INCENSE ACCEPTED",
+  ">> ARCHIVE AUTHORITY // IDENTITY CONFIRMED",
+  ">> LUNAR PHASE CALIBRATION // ASCENDANT",
+  ">> DRAGON SIGIL // RECOGNITION 100%",
+  ">> KNOWLEDGE IS ARMOUR // MEMORY IS DUTY",
+  ">> COMMAND NEXUS // AWAITING HANDSHAKE",
+  "++ ACCESS RITE COMPLETE // THE VAULT OPENS ++",
 ] as const;
 
-type BootPhase = "awakening" | "gate" | "verified" | "chapter-master" | "exiting";
+const archiveTelemetry = [
+  "// ARCHIVE LINK: LUNAR DRAGONS",
+  "// THEATRE: NACHMUND GAUNTLET",
+  "// CRUSADE: THE ARGENT VIGIL",
+  "// AUTHORITY: IMPERIAL REGENT",
+  "// DATA-SHARD: 008.M42/DR-017",
+  "// VERITY: PURGED + SEALED",
+] as const;
+
+const machineTelemetry = [
+  "MACHINE-SPIRIT: AWAKE",
+  "CHAPTER ICON: VERIFIED",
+  "ULTIMA FOUNDING: CONFIRMED",
+  "ARGENT VIGIL: ACTIVE",
+  "GENE-SEED LEDGER: SEALED",
+  "VOX MORALIS: LINKED",
+  "DATA INTEGRITY: 100.000%",
+  "COMMAND NEXUS: READY",
+] as const;
+
+const riteFeed = [
+  ">> RITE OF AWAKENING // ARGENT VIGIL LINK ESTABLISHED",
+  ">> CHAPTER ICON VERIFIED: DRAGON OF THE MOON",
+  ">> ADEPTUS TERRA WARRANT: AUTHENTICATED",
+  ">> RECLAIM WHAT HAS BEEN LOST",
+  ">> GUARD THE PASSAGE",
+] as const;
+
+type BootPhase = "booting" | "awaiting" | "exiting";
 
 let bootCompletedForDocument = false;
 
@@ -30,10 +79,8 @@ export function ArchiveBootSequence({
   signInHref: string;
   skipIntro: boolean;
 }) {
-  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const forceReplay = searchParams.get("awakening") === "replay";
   const isChapterMasterLogin =
     isAuthenticated &&
     isChapterMaster &&
@@ -41,32 +88,33 @@ export function ArchiveBootSequence({
   const skipCompletedBoot =
     isAuthenticated &&
     (bootCompletedForDocument || skipIntro) &&
-    !forceReplay &&
     !isChapterMasterLogin;
-
-  const [phase, setPhase] = useState<BootPhase>(() => {
-    if (skipCompletedBoot) return "exiting";
-    if (forceReplay) return "awakening";
-    if (isChapterMasterLogin) return "chapter-master";
-    if (isAuthenticated) return "verified";
-    return "awakening";
-  });
-  const [isVisible, setIsVisible] = useState(!skipCompletedBoot);
   const [visibleLines, setVisibleLines] = useState(1);
+  const [phase, setPhase] = useState<BootPhase>(
+    skipCompletedBoot ? "exiting" : isChapterMasterLogin ? "awaiting" : "booting",
+  );
+  const [isVisible, setIsVisible] = useState(!skipCompletedBoot);
   const [username, setUsername] = useState("");
   const [passphrase, setPassphrase] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const authenticationSuccessful =
+    isAuthenticated && (isSigningIn || isChapterMasterLogin);
   const usernameInput = useRef<HTMLInputElement>(null);
 
-  const finishAwakening = useCallback(() => {
-    setVisibleLines(awakeningLines.length);
-    setPhase(isAuthenticated ? "verified" : "gate");
-  }, [isAuthenticated]);
-
-  const finishVerification = useCallback(() => {
-    setPhase("exiting");
-  }, []);
+  const advanceRite = useCallback(() => {
+    if (phase === "booting") {
+      setPhase("awaiting");
+      return;
+    }
+    if (phase !== "awaiting") return;
+    if (authenticationSuccessful) return;
+    if (isAuthenticated) {
+      setPhase("exiting");
+      return;
+    }
+    usernameInput.current?.focus();
+  }, [authenticationSuccessful, isAuthenticated, phase]);
 
   async function signInGuest(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,7 +122,6 @@ export function ArchiveBootSequence({
       setAuthMessage("Enter the guest username and passphrase.");
       return;
     }
-
     setIsSigningIn(true);
     setAuthMessage("Verifying identity seal…");
     try {
@@ -86,7 +133,6 @@ export function ArchiveBootSequence({
       const result = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(result.error || "Guest authentication failed.");
       setAuthMessage("Identity verified. Opening archive…");
-      setPhase("verified");
       router.refresh();
     } catch (error) {
       setAuthMessage(error instanceof Error ? error.message : "Guest authentication failed.");
@@ -95,129 +141,168 @@ export function ArchiveBootSequence({
   }
 
   useEffect(() => {
-    if (phase !== "awakening") return;
+    if (!authenticationSuccessful || phase !== "awaiting") return;
+    const successTimer = setTimeout(() => {
+      setPhase("exiting");
+      if (isChapterMasterLogin) {
+        window.history.replaceState(window.history.state, "", "/");
+      }
+    }, isChapterMasterLogin ? 4200 : 3500);
+    return () => clearTimeout(successTimer);
+  }, [authenticationSuccessful, isChapterMasterLogin, phase]);
+
+  useEffect(() => {
+    if (phase !== "booting") return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let lineTimer: ReturnType<typeof setInterval> | undefined;
+
     if (reducedMotion) {
-      const immediateTimer = window.setTimeout(finishAwakening, 0);
-      return () => window.clearTimeout(immediateTimer);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reduced motion intentionally completes the boot sequence immediately.
+      setVisibleLines(bootLines.length);
+    } else {
+      lineTimer = setInterval(() => {
+        setVisibleLines((count) => Math.min(count + 1, bootLines.length));
+      }, 145);
     }
 
-    const lineTimer = window.setInterval(() => {
-      setVisibleLines((count) => Math.min(count + 1, awakeningLines.length));
-    }, 320);
-    const completionTimer = window.setTimeout(finishAwakening, 2900);
+    const sealTimer = setTimeout(() => setPhase("awaiting"), reducedMotion ? 500 : 4520);
 
     return () => {
-      window.clearInterval(lineTimer);
-      window.clearTimeout(completionTimer);
+      if (lineTimer) clearInterval(lineTimer);
+      clearTimeout(sealTimer);
     };
-  }, [finishAwakening, phase]);
+  }, [phase]);
 
   useEffect(() => {
-    if (phase !== "verified" && phase !== "chapter-master") return;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const duration = reducedMotion
-      ? 80
-      : phase === "chapter-master"
-        ? 2100
-        : isSigningIn
-          ? 1500
-          : 700;
-    const verificationTimer = window.setTimeout(finishVerification, duration);
-    return () => window.clearTimeout(verificationTimer);
-  }, [finishVerification, isSigningIn, phase]);
-
-  useEffect(() => {
-    const handleKey = (event: KeyboardEvent) => {
+    const dismissOnKey = (event: KeyboardEvent) => {
       if (event.repeat || (event.key !== "Enter" && event.key !== " ")) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, button, a, form")) return;
-      if (phase === "awakening") finishAwakening();
-      if (phase === "verified" || phase === "chapter-master") finishVerification();
-      if (phase === "gate") usernameInput.current?.focus();
+      advanceRite();
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [finishAwakening, finishVerification, phase]);
+    window.addEventListener("keydown", dismissOnKey);
+    return () => window.removeEventListener("keydown", dismissOnKey);
+  }, [advanceRite]);
 
   useEffect(() => {
     if (phase !== "exiting") return;
     bootCompletedForDocument = true;
     document.cookie = "__Host-lunar_boot=1; Path=/; Secure; SameSite=Lax";
-
-    if (forceReplay || isChapterMasterLogin) {
-      window.history.replaceState(window.history.state, "", pathname || "/");
-    }
-
-    const removeTimer = window.setTimeout(() => setIsVisible(false), 480);
-    return () => window.clearTimeout(removeTimer);
-  }, [forceReplay, isChapterMasterLogin, pathname, phase]);
+    const removeTimer = setTimeout(() => setIsVisible(false), 680);
+    return () => clearTimeout(removeTimer);
+  }, [phase]);
 
   if (!isVisible) return null;
 
-  const identityTitle = phase === "chapter-master"
-    ? "CHAPTER MASTER"
-    : "IDENTITY VERIFIED";
-  const identityStatus = phase === "chapter-master"
-    ? "COMMAND AUTHORITY ACCEPTED"
-    : "ARCHIVE CLEARANCE ACCEPTED";
-
   return (
     <section
-      className={`archive-boot-sequence awakening-v2 phase-${phase}`}
+      className={`archive-boot-sequence ${phase === "awaiting" ? `seal-awaiting ${isAuthenticated ? "auth-verified" : "auth-required"} ${authenticationSuccessful ? "auth-success" : ""}` : phase === "exiting" ? "exiting" : ""}`}
       aria-label={
-        phase === "awakening"
-          ? "Lunar Dragons archive awakening rite"
-          : phase === "gate"
-            ? "Authentication required to enter the Lunar Dragons archive"
-            : `${identityTitle}. Opening the Lunar Dragons archive.`
+        phase === "booting"
+          ? "Lunar Dragons archive initialization"
+          : isChapterMasterLogin
+            ? "Chapter Master authentication successful. Opening the command archive."
+          : authenticationSuccessful
+            ? "Authentication successful. The archive will open shortly."
+          : isAuthenticated
+            ? "Identity verified. Click or press Enter to open the archive."
+            : "Authentication required. Click or press Enter to log in to the archive."
       }
       aria-live="polite"
+      onClick={phase === "awaiting" && isAuthenticated && !authenticationSuccessful ? advanceRite : undefined}
+      role={phase === "awaiting" && isAuthenticated && !authenticationSuccessful ? "button" : undefined}
+      tabIndex={phase === "awaiting" && isAuthenticated && !authenticationSuccessful ? 0 : undefined}
     >
-      <div className="awakening-vignette" aria-hidden="true" />
-      <header className="awakening-header">
-        <span>LUNARIS // ANNALIS DATA-VAULT</span>
-        <span>RITE 008.M42/DR-017</span>
+      <div className="boot-vignette" aria-hidden="true" />
+      <header className="boot-header">
+        <span>LUNAR DRAGONS // CHAPTER DATA-VAULT</span>
+        <span>AUTH · M42.ARCHIVUM</span>
       </header>
-
-      {phase === "awakening" ? (
-        <main className="awakening-terminal">
-          <div className="awakening-terminal-heading">
-            <span>ARCHIVE CONSECRATION</span>
-            <strong>COGITATOR WAKE</strong>
-          </div>
-          <div className="awakening-lines" aria-label={awakeningLines.join(". ")}>
-            {awakeningLines.slice(0, visibleLines).map((line, index) => (
-              <p className={line.startsWith("++") ? "complete" : ""} key={line} aria-hidden="true">
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                {line}
-              </p>
-            ))}
-            <i aria-hidden="true" />
-          </div>
-        </main>
-      ) : (
-        <main className="awakening-access-core">
-          <div className="awakening-seal" aria-hidden="true">
-            <i />
-            <img alt="" draggable={false} src="/lunar-dragons-sigil-depth.png" />
-            <span />
-          </div>
-
-          <div className="awakening-access-copy">
-            <span>{phase === "gate" ? "IDENTITY GATE" : identityStatus}</span>
-            <h1>{phase === "gate" ? "ENTER THE ARCHIVE" : identityTitle}</h1>
-            {phase !== "gate" && displayName && <strong>{displayName}</strong>}
-            <p>
-              {phase === "gate"
-                ? "Present an authorised identity seal to access the Lunar Dragons annals."
-                : phase === "chapter-master"
-                  ? "The command nexus recognises its Chapter Master."
-                  : "The data-vault has recognised your retained credentials."}
+      {phase === "booting" ? (
+        <div className="boot-terminal">
+          {bootLines.slice(0, visibleLines).map((line, index) => (
+            <p
+              className={line.startsWith("!!") ? "warning" : line.startsWith("++") ? "complete" : ""}
+              key={line}
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              {line}
             </p>
+          ))}
+          <i className="boot-cursor" aria-hidden="true" />
+        </div>
+      ) : isChapterMasterLogin ? (
+        <div className="chapter-master-auth-screen">
+          <div className="chapter-master-auth-frame">
+            <div className="chapter-master-emblem" aria-hidden="true">
+              <img alt="" draggable={false} src="/lunar-dragons-sigil-depth.png" />
+              <span />
+              <i />
+            </div>
+            <div className="chapter-master-welcome">
+              <span>COMMAND IDENTITY CONFIRMED</span>
+              <p>WELCOME TO THE ARCHIVE</p>
+              <h1>CHAPTER MASTER</h1>
+              {displayName && <strong>{displayName}</strong>}
+              <div className="chapter-master-clearance">
+                <span><b>IDENTITY SEAL</b><i>VERIFIED</i></span>
+                <span><b>COMMAND AUTHORITY</b><i>ABSOLUTE</i></span>
+                <span><b>ARCHIVE PRIVILEGES</b><i>UNRESTRICTED</i></span>
+              </div>
+              <div className="chapter-master-progress">
+                <span>OPENING COMMAND NEXUS</span>
+                <b><i /></b>
+              </div>
+            </div>
+          </div>
+          <p className="chapter-master-oath">RECLAIM WHAT HAS BEEN LOST · GUARD THE PASSAGE</p>
+        </div>
+      ) : (
+        <div className="boot-seal-stage">
+          <div className="boot-seal-grid">
+            <aside className="boot-data-panel boot-data-panel-left" aria-hidden="true">
+              <span className="boot-data-heading">ARCHIVE LINK / ACTIVE</span>
+              <div className="boot-data-lines">
+                {archiveTelemetry.map((line) => <p key={line}>{line}</p>)}
+              </div>
+              <div className="boot-data-meter">
+                {Array.from({ length: 12 }, (_, index) => <i key={index} />)}
+              </div>
+            </aside>
 
-            {phase === "gate" ? (
-              <form className="awakening-auth-form" onSubmit={signInGuest}>
+            <div className="boot-mark-column">
+              <div className="boot-mark-stage">
+            <div className="boot-mark-signal">
+              <div className="boot-mark-composite">
+                <img
+                  alt="Lunar Dragons crescent moon, dragon, and star chapter emblem"
+                  draggable={false}
+                  height="1254"
+                  src="/lunar-dragons-sigil-depth.png"
+                  width="1254"
+                />
+                <span className="boot-mark-base" aria-hidden="true" />
+                <span className="boot-mark-live-static" aria-hidden="true" />
+                <span className="boot-mark-echo" aria-hidden="true" />
+                <span className="boot-mark-static" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+          <div className="boot-mark-caption">
+            <span>CHAPTER ICON VERIFIED</span>
+            <strong>THE LUNAR DRAGONS</strong>
+            <small>THE ARGENT VIGIL · ARCHIVE LINK ESTABLISHED</small>
+            {authenticationSuccessful && (
+              <div className="boot-auth-success" role="status">
+                <span>IDENTITY SEAL ACCEPTED</span>
+                <strong>AUTHENTICATION SUCCESSFUL</strong>
+                <small>ARCHIVE CLEARANCE CONFIRMED · OPENING DATA-VAULT</small>
+                <i aria-hidden="true" />
+              </div>
+            )}
+            {!isAuthenticated && (
+              <form className="boot-auth-gate" onSubmit={signInGuest}>
+                <span>IDENTITY SEAL REQUIRED</span>
                 <label>
                   <span>GUEST USERNAME</span>
                   <input
@@ -239,32 +324,66 @@ export function ArchiveBootSequence({
                     maxLength={128}
                   />
                 </label>
-                <div>
-                  <button type="submit" disabled={isSigningIn}>
-                    {isSigningIn ? "VERIFYING…" : "ENTER AS GUEST"}
-                  </button>
-                  <a href={signInHref}>SIGN IN WITH CHATGPT</a>
-                </div>
+                <button type="submit" disabled={isSigningIn}>
+                  {isSigningIn ? "VERIFYING…" : "LOGIN TO ARCHIVE"}
+                </button>
+                <a href={signInHref}>USE CHATGPT LOGIN</a>
+                <small>Guest sessions are remembered for 30 days on this browser.</small>
                 {authMessage && <p role="status">{authMessage}</p>}
               </form>
-            ) : (
-              <div className="awakening-verification-progress" aria-hidden="true">
-                <span>OPENING {phase === "chapter-master" ? "COMMAND NEXUS" : "ARCHIVE APERTURE"}</span>
-                <i><b /></i>
-              </div>
             )}
           </div>
-        </main>
-      )}
+            </div>
 
-      <footer className="awakening-footer">
-        <span>RECLAIM WHAT HAS BEEN LOST <b>·</b> GUARD THE PASSAGE</span>
-        {phase === "awakening" && (
-          <button type="button" onClick={finishAwakening}>SKIP AWAKENING</button>
-        )}
-        {phase === "gate" && <span>ENTER / SPACE · FOCUS IDENTITY GATE</span>}
-        {(phase === "verified" || phase === "chapter-master") && (
-          <span>ENTER / SPACE · OPEN IMMEDIATELY</span>
+            <aside className="boot-data-panel boot-data-panel-right" aria-hidden="true">
+              <span className="boot-data-heading">MACHINE-SPIRIT / WITNESS</span>
+              <div className="boot-data-lines">
+                {machineTelemetry.map((line) => <p key={line}>{line}</p>)}
+              </div>
+              <div className="boot-data-meter">
+                {Array.from({ length: 12 }, (_, index) => <i key={index} />)}
+              </div>
+            </aside>
+          </div>
+
+          <div className="boot-rite-feed" aria-hidden="true">
+            {riteFeed.map((line) => <span key={line}>{line}</span>)}
+            <i />
+          </div>
+          <p className="boot-seal-motto">
+            THE DRAGON DOES NOT SEEK THE LIGHT <b>·</b> IT IS THE LIGHT IN THE VOID
+          </p>
+        </div>
+      )}
+      <footer className={phase === "booting" ? "boot-footer" : "boot-footer entry-ready"}>
+        {phase === "booting" ? (
+          <>
+            <div>
+              <span>COGITATOR LOAD</span>
+              <b><i /></b>
+            </div>
+            <button type="button" onClick={advanceRite}>ADVANCE RITE</button>
+          </>
+        ) : (
+          <>
+            <div>
+              <span>
+                {isAuthenticated
+                  ? "IDENTITY VERIFIED · ACCESS GATE ARMED"
+                  : "IDENTITY UNKNOWN · ACCESS GATE LOCKED"}
+              </span>
+              <b><i /></b>
+            </div>
+            <span className="boot-entry-prompt">
+              {isAuthenticated
+                ? isChapterMasterLogin
+                  ? "CHAPTER MASTER VERIFIED · COMMAND NEXUS OPENING"
+                  : authenticationSuccessful
+                    ? "CLEARANCE ACCEPTED · OPENING ARCHIVE"
+                    : "PRESS SCREEN OR ENTER TO OPEN ARCHIVE"
+                : "ENTER GUEST CREDENTIALS OR USE CHATGPT LOGIN"}
+            </span>
+          </>
         )}
       </footer>
     </section>
