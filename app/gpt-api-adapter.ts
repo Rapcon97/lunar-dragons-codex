@@ -14,6 +14,14 @@ import {
   type GPTLoreEntryListOptions,
 } from "./gpt-response-window";
 import {
+  DEVELOPMENT_DOMAINS,
+  developmentTopicSummaries,
+  getDevelopmentTopic,
+  unmappedDevelopmentLore,
+  type DevelopmentDomain,
+  type DevelopmentTopicStatus,
+} from "./chapter-development";
+import {
   mutateChapterLore,
   readChapterArchive,
 } from "../storage/chapter-records";
@@ -32,6 +40,7 @@ export type GPTSearchResult = {
   status?: LoreEntry["status"];
   createdAt?: number;
   updatedAt?: number;
+  developmentTopicIds?: string[];
 };
 
 async function loadArchive() {
@@ -132,6 +141,74 @@ export async function getGPTLoreEntryById(id: string) {
   };
 }
 
+export async function getGPTDevelopmentTopics(options: {
+  offset?: number;
+  limit?: number;
+  domain?: DevelopmentDomain;
+  status?: DevelopmentTopicStatus;
+} = {}) {
+  const { archive, source, persisted } = await loadArchive();
+  const summaries = developmentTopicSummaries(archive.loreEntries, archive.milestones)
+    .filter((item) => !options.domain || item.domain === options.domain)
+    .filter((item) => !options.status || item.status === options.status);
+  const offset = Math.max(0, options.offset ?? 0);
+  const limit = Math.min(50, Math.max(1, options.limit ?? 20));
+  const topics = summaries.slice(offset, offset + limit);
+  const nextOffset = offset + topics.length;
+  return {
+    source,
+    persisted,
+    count: summaries.length,
+    returned: topics.length,
+    offset,
+    limit,
+    hasMore: nextOffset < summaries.length,
+    nextOffset: nextOffset < summaries.length ? nextOffset : null,
+    domains: DEVELOPMENT_DOMAINS,
+    topics,
+  };
+}
+
+export async function getGPTDevelopmentTopicById(id: string) {
+  const { archive, source, persisted } = await loadArchive();
+  const topic = getDevelopmentTopic(id);
+  if (!topic) return { success: false as const, reason: "not-found" as const, source, persisted };
+  const summary = developmentTopicSummaries(archive.loreEntries, archive.milestones)
+    .find((item) => item.id === topic.id);
+  return { success: true as const, source, persisted, topic: summary };
+}
+
+export async function getGPTUnmappedDevelopmentLore(options: {
+  offset?: number;
+  limit?: number;
+} = {}) {
+  const { archive, source, persisted } = await loadArchive();
+  const records = unmappedDevelopmentLore(archive.loreEntries);
+  const offset = Math.max(0, options.offset ?? 0);
+  const limit = Math.min(50, Math.max(1, options.limit ?? 20));
+  const selected = records.slice(offset, offset + limit).map((entry) => ({
+    id: entry.id,
+    title: entry.title,
+    ...(entry.subtitle ? { subtitle: entry.subtitle } : {}),
+    date: entry.date,
+    category: entry.category,
+    status: entry.status,
+    updatedAt: entry.updatedAt,
+  }));
+  const nextOffset = offset + selected.length;
+  return {
+    source,
+    persisted,
+    count: records.length,
+    returned: selected.length,
+    offset,
+    limit,
+    hasMore: nextOffset < records.length,
+    nextOffset: nextOffset < records.length ? nextOffset : null,
+    entries: selected,
+  };
+}
+
 export async function searchGPTLore(query: string) {
   const { archive, source } = await loadArchive();
   const normalizedQuery = query.trim().toLowerCase();
@@ -174,6 +251,9 @@ export async function searchGPTLore(query: string) {
         status: entry.status,
         createdAt: entry.createdAt,
         updatedAt: entry.updatedAt,
+        ...(entry.developmentTopicIds?.length
+          ? { developmentTopicIds: entry.developmentTopicIds }
+          : {}),
       });
     }
   }
@@ -314,6 +394,7 @@ export type GPTLoreEntryInput = {
   category?: LoreEntry["category"];
   status?: LoreEntry["status"];
   content: string;
+  developmentTopicIds?: string[];
 };
 
 export async function appendGPTLoreEntry(input: GPTLoreEntryInput) {
@@ -334,6 +415,9 @@ export async function appendGPTLoreEntry(input: GPTLoreEntryInput) {
     category: input.category ?? "event",
     status: input.status ?? "draft",
     content,
+    ...(input.developmentTopicIds?.length
+      ? { developmentTopicIds: input.developmentTopicIds }
+      : {}),
     createdAt: now,
     updatedAt: now,
   };
@@ -375,6 +459,7 @@ export type GPTLoreEntryUpdate = {
   category?: LoreEntry["category"];
   status?: LoreEntry["status"];
   content?: string;
+  developmentTopicIds?: string[];
 };
 
 export async function updateGPTLoreEntry(
@@ -413,6 +498,10 @@ export async function updateGPTLoreEntry(
       status: input.status ?? existing.status,
       content:
         input.content !== undefined ? input.content.trim() : existing.content,
+      developmentTopicIds:
+        input.developmentTopicIds !== undefined
+          ? input.developmentTopicIds
+          : existing.developmentTopicIds,
       updatedAt: Date.now(),
     };
 

@@ -25,6 +25,10 @@ export type ChapterIdentity = {
 export type ChapterMilestone = {
   label: string;
   done: boolean;
+  topicId?: string;
+  manualStatus?: "operational-only" | "intentionally-unresolved";
+  notes?: string;
+  updatedAt?: number;
 };
 
 export type ChapterRelic = {
@@ -88,6 +92,7 @@ export type LoreEntry = {
   category: LoreCategory;
   status: LoreStatus;
   content: string;
+  developmentTopicIds?: string[];
   createdAt: number;
   updatedAt: number;
 };
@@ -1929,12 +1934,30 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
   const identity = record(source.identity);
 
   const milestones = Array.isArray(source.milestones)
-    ? source.milestones.slice(0, 20).map((item, index) => {
+    ? source.milestones.slice(0, 100).map((item, index) => {
         const candidate = record(item);
         const fallback = defaults.milestones[index] ?? { label: `Milestone ${index + 1}`, done: false };
+        const topicId = text(candidate.topicId, "", 80)
+          .trim()
+          .toLowerCase()
+          .replace(/[\s_]+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        const manualStatus: ChapterMilestone["manualStatus"] =
+          candidate.manualStatus === "operational-only" ||
+          candidate.manualStatus === "intentionally-unresolved"
+            ? candidate.manualStatus
+            : undefined;
+        const notes = text(candidate.notes, "", 2000).trim();
+        const updatedAt = Math.max(0, Math.floor(Number(candidate.updatedAt) || 0));
         return {
           label: text(candidate.label, fallback.label, 160),
           done: typeof candidate.done === "boolean" ? candidate.done : fallback.done,
+          ...(topicId ? { topicId } : {}),
+          ...(manualStatus ? { manualStatus } : {}),
+          ...(notes ? { notes } : {}),
+          ...(updatedAt ? { updatedAt } : {}),
         };
       })
     : defaults.milestones;
@@ -2021,6 +2044,23 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
           MAX_LORE_SUBTITLE_LENGTH,
         ).trim();
 
+        const developmentTopicIds = Array.isArray(candidate.developmentTopicIds)
+          ? [...new Set(
+              candidate.developmentTopicIds
+                .filter((topicId): topicId is string => typeof topicId === "string")
+                .map((topicId) =>
+                  topicId
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[\s_]+/g, "-")
+                    .replace(/[^a-z0-9-]/g, "")
+                    .replace(/-+/g, "-")
+                    .replace(/^-|-$/g, ""),
+                )
+                .filter(Boolean),
+            )].slice(0, 32)
+          : [];
+
         const storedDate = text(candidate.date, "", MAX_LORE_DATE_LENGTH);
         const chronology = normalizedChronologyForDate(
           storedDate,
@@ -2047,6 +2087,7 @@ export function normalizeArchiveData(value: unknown): ChapterArchiveData {
           category,
           status,
           content,
+          ...(developmentTopicIds.length ? { developmentTopicIds } : {}),
           createdAt,
           updatedAt,
         } satisfies LoreEntry;

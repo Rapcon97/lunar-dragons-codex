@@ -39,8 +39,13 @@ function archiveForViewer(data: ChapterArchiveData, canAdmin: boolean) {
 
   return {
     ...data,
+    milestones: data.milestones.filter((milestone) => !milestone.topicId),
     entries: canonChronicleEntries(data),
-    loreEntries: data.loreEntries.filter((entry) => entry.status === "canon"),
+    loreEntries: data.loreEntries.filter((entry) => entry.status === "canon")
+      .map(({ developmentTopicIds: _developmentTopicIds, ...entry }) => {
+        void _developmentTopicIds;
+        return entry;
+      }),
   };
 }
 

@@ -9,6 +9,7 @@ import { CartographyTransitionLink } from "../_components/CartographyTransitionL
 import { ArchiveTerminalFrame } from "../_components/ArchiveTerminalFrame";
 import { CharacterDirectory } from "../_components/CharacterDirectory";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
+import { ChapterDevelopmentLedger } from "../_components/ChapterDevelopmentLedger";
 import { LoreEntryEditor } from "../_components/LoreEntryEditor";
 import { LoreFormattedContent } from "../_components/LoreFormattedContent";
 import { LoreStatusControl } from "../_components/LoreStatusControl";
@@ -161,6 +162,8 @@ export default function SectionPage() {
               canAdmin={canAdmin}
               isAdminMode={isAdminMode}
               loreEntries={data.loreEntries}
+              milestones={data.milestones}
+              onSaveMilestones={(value) => saveSection("milestones", value)}
               onArchiveRefresh={load}
             />
           )}
@@ -2023,11 +2026,15 @@ function SettingsSection({
   canAdmin,
   isAdminMode,
   loreEntries,
+  milestones,
+  onSaveMilestones,
   onArchiveRefresh,
 }: {
   canAdmin: boolean;
   isAdminMode: boolean;
   loreEntries: LoreEntry[];
+  milestones: import("../archive-data").ChapterMilestone[];
+  onSaveMilestones: (value: import("../archive-data").ChapterMilestone[]) => Promise<boolean>;
   onArchiveRefresh: () => Promise<void>;
 }) {
   const canEdit = isAdminMode;
@@ -2041,6 +2048,13 @@ function SettingsSection({
         entries={loreEntries}
         isAdminMode={isAdminMode}
         onPublished={onArchiveRefresh}
+      />
+      <ChapterDevelopmentLedger
+        canAdmin={canAdmin}
+        entries={loreEntries}
+        isAdminMode={isAdminMode}
+        milestones={milestones}
+        onSaveMilestones={onSaveMilestones}
       />
       <GuestAccountManager canEdit={canEdit} />
     </div>

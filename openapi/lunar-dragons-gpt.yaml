@@ -233,6 +233,75 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
 
+  /api/gpt/v1/development/topics:
+    get:
+      operationId: listChapterDevelopmentTopics
+      summary: List Chapter development topics and derived progress
+      description: Returns the bounded Chapter Organisation taxonomy. Progress is derived from linked lore; planning prompts are not canon.
+      parameters:
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - name: domain
+          in: query
+          schema: { type: string, enum: [identity, culture, organisation, warfare, institutions] }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/DevelopmentTopicStatus" }
+      responses:
+        "200":
+          description: Paginated Chapter development topics.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DevelopmentTopicListResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/gpt/v1/development/topics/{id}:
+    get:
+      operationId: getChapterDevelopmentTopic
+      summary: Read one Chapter development topic
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 80 }
+      responses:
+        "200":
+          description: One topic with linked lore summaries.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DevelopmentTopicResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /api/gpt/v1/development/unmapped:
+    get:
+      operationId: listUnmappedDevelopmentLore
+      summary: List lore not linked to development topics
+      description: Returns bounded record metadata only; retrieve content by stable entry ID.
+      parameters:
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Paginated unmapped lore.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnmappedDevelopmentLoreResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -261,6 +330,10 @@ components:
         - organization
         - decree
         - other
+
+    DevelopmentTopicStatus:
+      type: string
+      enum: [undeveloped, in-development, review, established, previously-covered, operational-only, intentionally-unresolved]
 
     LoreChronologyPrecision:
       type: string
@@ -370,6 +443,12 @@ components:
           type: integer
           format: int64
           description: Last update timestamp in Unix milliseconds.
+        developmentTopicIds:
+          type: array
+          maxItems: 32
+          uniqueItems: true
+          items: { type: string, maxLength: 80 }
+          description: Stable Chapter-development topic IDs linked to this lore record.
 
     CreateLoreEntryRequest:
       type: object
@@ -408,6 +487,12 @@ components:
           minLength: 1
           maxLength: 64000
           description: Complete lore text.
+        developmentTopicIds:
+          type: array
+          maxItems: 32
+          uniqueItems: true
+          items: { type: string, maxLength: 80 }
+          description: Known Chapter-development topic IDs; unknown IDs are rejected.
 
     UpdateLoreEntryRequest:
       type: object
@@ -441,6 +526,79 @@ components:
           minLength: 1
           maxLength: 64000
           description: Replacement lore content.
+        developmentTopicIds:
+          type: array
+          maxItems: 32
+          uniqueItems: true
+          items: { type: string, maxLength: 80 }
+          description: Replacement known topic IDs. Supply an empty array to unlink.
+
+    DevelopmentLinkedLore:
+      type: object
+      additionalProperties: false
+      required: [id, title, date, category, status, updatedAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        subtitle: { type: string }
+        date: { type: string }
+        category: { $ref: "#/components/schemas/LoreCategory" }
+        status: { $ref: "#/components/schemas/LoreStatus" }
+        updatedAt: { type: integer, format: int64 }
+
+    DevelopmentTopic:
+      type: object
+      additionalProperties: false
+      required: [id, domain, label, prompt, status, notes, linkedCount, linkedEntries]
+      properties:
+        id: { type: string }
+        domain: { type: string, enum: [identity, culture, organisation, warfare, institutions] }
+        label: { type: string }
+        prompt: { type: string, description: Development guidance, not canon. }
+        status: { $ref: "#/components/schemas/DevelopmentTopicStatus" }
+        notes: { type: string }
+        linkedCount: { type: integer, minimum: 0 }
+        linkedEntries:
+          type: array
+          items: { $ref: "#/components/schemas/DevelopmentLinkedLore" }
+
+    DevelopmentTopicListResponse:
+      type: object
+      required: [source, persisted, count, returned, offset, limit, hasMore, nextOffset, domains, topics]
+      properties:
+        source: { type: string }
+        persisted: { type: boolean }
+        count: { type: integer, minimum: 0 }
+        returned: { type: integer, minimum: 0 }
+        offset: { type: integer, minimum: 0 }
+        limit: { type: integer, minimum: 1 }
+        hasMore: { type: boolean }
+        nextOffset: { type: [integer, "null"] }
+        domains: { type: array, items: { type: object, additionalProperties: true } }
+        topics: { type: array, items: { $ref: "#/components/schemas/DevelopmentTopic" } }
+
+    DevelopmentTopicResponse:
+      type: object
+      required: [success, source, persisted, topic]
+      properties:
+        success: { type: boolean }
+        source: { type: string }
+        persisted: { type: boolean }
+        topic: { $ref: "#/components/schemas/DevelopmentTopic" }
+
+    UnmappedDevelopmentLoreResponse:
+      type: object
+      required: [source, persisted, count, returned, offset, limit, hasMore, nextOffset, entries]
+      properties:
+        source: { type: string }
+        persisted: { type: boolean }
+        count: { type: integer, minimum: 0 }
+        returned: { type: integer, minimum: 0 }
+        offset: { type: integer, minimum: 0 }
+        limit: { type: integer, minimum: 1 }
+        hasMore: { type: boolean }
+        nextOffset: { type: [integer, "null"] }
+        entries: { type: array, items: { $ref: "#/components/schemas/DevelopmentLinkedLore" } }
 
     LoreEntryListResponse:
       type: object
@@ -560,6 +718,12 @@ components:
           minimum: 0
         contentTruncated:
           type: boolean
+        developmentTopicIds:
+          type: array
+          maxItems: 32
+          uniqueItems: true
+          items: { type: string, maxLength: 80 }
+          description: Stable Chapter-development topic IDs linked to this lore record.
 
     SearchResponse:
       type: object

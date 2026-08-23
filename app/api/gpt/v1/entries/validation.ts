@@ -10,6 +10,10 @@ import {
   validateLoreChronology,
   type LoreChronology,
 } from "../../../../lore-chronology.ts";
+import {
+  isDevelopmentTopicId,
+  normalizeDevelopmentTopicId,
+} from "../../../../chapter-development.ts";
 
 export const MAX_LORE_ENTRY_ID_LENGTH = 160;
 export {
@@ -48,6 +52,7 @@ export type ValidatedLoreCreate = {
   category?: LoreCategory;
   status: LoreStatus;
   content: string;
+  developmentTopicIds?: string[];
 };
 
 export type ValidatedLoreUpdate = {
@@ -58,6 +63,7 @@ export type ValidatedLoreUpdate = {
   category?: LoreCategory;
   status?: LoreStatus;
   content?: string;
+  developmentTopicIds?: string[];
 };
 
 type ValidationResult<Value> =
@@ -72,7 +78,34 @@ const writeFields = new Set([
   "category",
   "status",
   "content",
+  "developmentTopicIds",
 ]);
+
+function parsedDevelopmentTopicIds(
+  body: Record<string, unknown>,
+): ValidationResult<string[] | undefined> {
+  if (!Object.prototype.hasOwnProperty.call(body, "developmentTopicIds")) {
+    return { ok: true, value: undefined };
+  }
+  if (!Array.isArray(body.developmentTopicIds)) {
+    return { ok: false, error: "developmentTopicIds must be an array." };
+  }
+  if (body.developmentTopicIds.length > 32) {
+    return { ok: false, error: "A lore entry may link to at most 32 development topics." };
+  }
+  const normalized: string[] = [];
+  for (const value of body.developmentTopicIds) {
+    if (typeof value !== "string") {
+      return { ok: false, error: "Every development topic ID must be a string." };
+    }
+    const topicId = normalizeDevelopmentTopicId(value);
+    if (!isDevelopmentTopicId(topicId)) {
+      return { ok: false, error: `Unknown development topic ID: ${value}` };
+    }
+    if (!normalized.includes(topicId)) normalized.push(topicId);
+  }
+  return { ok: true, value: normalized };
+}
 
 function objectBody(value: unknown) {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -223,6 +256,8 @@ export function parseLoreCreateBody(
 
   const chronology = parsedChronologyFields(body);
   if (!chronology.ok) return chronology;
+  const topicIds = parsedDevelopmentTopicIds(body);
+  if (!topicIds.ok) return topicIds;
 
   return {
     ok: true,
@@ -237,6 +272,7 @@ export function parseLoreCreateBody(
           ? (body.category as LoreCategory)
           : undefined,
       status: status as LoreStatus,
+      ...(topicIds.value ? { developmentTopicIds: topicIds.value } : {}),
     },
   };
 }
@@ -288,6 +324,8 @@ export function parseLoreUpdateBody(
 
   const chronology = parsedChronologyFields(body);
   if (!chronology.ok) return chronology;
+  const topicIds = parsedDevelopmentTopicIds(body);
+  if (!topicIds.ok) return topicIds;
 
   return {
     ok: true,
@@ -306,6 +344,7 @@ export function parseLoreUpdateBody(
           : undefined,
       content:
         typeof body.content === "string" ? body.content.trim() : undefined,
+      ...(topicIds.value ? { developmentTopicIds: topicIds.value } : {}),
     },
   };
 }

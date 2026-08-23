@@ -6252,3 +6252,71 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 @media (prefers-reduced-motion: reduce) {
   .archive-terminal-frame--chronicle .chronicle-reader-scroll { scroll-behavior: auto; }
 }
+.chapter-development-ledger {
+  margin-top: 2rem;
+  border: 1px solid var(--line);
+  background: rgba(2, 8, 4, 0.82);
+}
+
+.chapter-development-header,
+.chapter-development-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.5rem;
+}
+
+.chapter-development-header h2 { margin: .3rem 0 .6rem; }
+.chapter-development-header p { max-width: 68rem; }
+.chapter-development-progress { min-width: 16rem; text-align: right; }
+.chapter-development-progress strong { display: block; font: 2.4rem/1 var(--font-display); }
+.chapter-development-progress span,
+.chapter-development-progress small { display: block; margin-top: .45rem; }
+.chapter-development-progress small,
+.chapter-development-topic small,
+.chapter-development-topic label,
+.chapter-development-actions { font-family: var(--font-mono); letter-spacing: .12em; }
+
+.chapter-development-meter { height: .25rem; background: rgba(111, 145, 101, .14); }
+.chapter-development-meter i { display: block; height: 100%; background: var(--green-bright); box-shadow: 0 0 .8rem var(--green-bright); }
+.chapter-development-domains { padding: 1rem; }
+.chapter-development-domain { margin: .75rem 0; }
+.chapter-development-domain > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+}
+.chapter-development-domain > summary span { display: grid; gap: .25rem; }
+.chapter-development-domain > summary small { opacity: .65; }
+.chapter-development-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border-top: 1px solid var(--line);
+}
+.chapter-development-topic { display: grid; gap: 1rem; padding: 1.25rem; background: var(--ink); }
+.chapter-development-topic > header { display: flex; justify-content: space-between; gap: 1rem; }
+.chapter-development-topic h3 { margin: .25rem 0 0; }
+.chapter-development-topic > header > b { color: var(--green-bright); font: .72rem/1.4 var(--font-mono); letter-spacing: .1em; }
+.chapter-development-topic[data-status="undeveloped"] > header > b,
+.chapter-development-topic[data-status="previously-covered"] > header > b { opacity: .55; }
+.chapter-development-links { display: grid; gap: .4rem; }
+.chapter-development-links span { font: .72rem/1.4 var(--font-mono); letter-spacing: .1em; }
+.chapter-development-links code { white-space: normal; opacity: .75; }
+.chapter-development-topic label { display: grid; gap: .5rem; font-size: .72rem; }
+.chapter-development-topic select,
+.chapter-development-topic textarea { width: 100%; }
+.chapter-development-topic textarea { min-height: 6rem; resize: vertical; }
+.chapter-development-actions { border-top: 1px solid var(--line); }
+
+@media (max-width: 900px) {
+  .chapter-development-header,
+  .chapter-development-actions { align-items: stretch; flex-direction: column; }
+  .chapter-development-progress { min-width: 0; text-align: left; }
+  .chapter-development-topic-grid { grid-template-columns: 1fr; }
+}
