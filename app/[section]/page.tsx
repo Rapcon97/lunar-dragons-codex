@@ -170,6 +170,7 @@ export default function SectionPage() {
                 entries={data.loreEntries}
                 isAdminMode={isAdminMode}
                 milestones={data.milestones}
+                onArchiveRefresh={load}
                 onSaveMilestones={(value) => saveSection("milestones", value)}
               />
             </div>

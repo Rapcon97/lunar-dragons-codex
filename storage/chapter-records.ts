@@ -29,6 +29,10 @@ import {
   type LoreDraftInput,
   type LoreEditorReason,
 } from "../app/lore-editor";
+import {
+  proposeDevelopmentTopicLinkUpdate,
+  type DevelopmentLinkUpdateReason,
+} from "../app/development-links";
 
 const ARCHIVE_ID = "lunar-dragons";
 const MAX_LORE_WRITE_ATTEMPTS = 3;
@@ -349,6 +353,22 @@ export function updateAdminLoreEntry(
       current,
       id,
       input,
+      expectedUpdatedAt,
+      Date.now(),
+    ),
+  );
+}
+
+export function updateAdminLoreDevelopmentTopics(
+  id: string,
+  developmentTopicIds: readonly string[],
+  expectedUpdatedAt: number,
+): Promise<OptimisticResult<{ entry: LoreEntry }, DevelopmentLinkUpdateReason>> {
+  return mutateChapterLore((current) =>
+    proposeDevelopmentTopicLinkUpdate(
+      current,
+      id,
+      developmentTopicIds,
       expectedUpdatedAt,
       Date.now(),
     ),

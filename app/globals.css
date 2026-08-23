@@ -6299,6 +6299,83 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 
 .chapter-development-meter { height: .25rem; background: rgba(111, 145, 101, .14); }
 .chapter-development-meter i { display: block; height: 100%; background: var(--green-bright); box-shadow: 0 0 .8rem var(--green-bright); }
+.development-link-console {
+  margin: 1.25rem;
+  overflow: hidden;
+}
+.development-link-console > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+.development-link-console > header h3 { margin: .25rem 0 .5rem; }
+.development-link-console > header p { margin-bottom: 0; max-width: 64rem; }
+.development-link-console > header > strong,
+.development-link-record,
+.development-link-proposal,
+.development-topic-selector legend,
+.development-topic-option,
+.chapter-development-linked-record {
+  font-family: var(--font-mono);
+  letter-spacing: .1em;
+}
+.development-link-console > header > strong {
+  color: var(--green-bright);
+  font-size: .72rem;
+  white-space: nowrap;
+}
+.development-link-console-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+.development-link-record { display: grid; gap: .5rem; font-size: .72rem; }
+.development-link-record select { width: 100%; }
+.development-link-record small { overflow-wrap: anywhere; opacity: .66; }
+.development-link-buttons { display: flex; flex-wrap: wrap; gap: .6rem; }
+.development-link-proposal {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-block: 1px solid var(--line);
+  color: var(--green-mid);
+  font-size: .76rem;
+}
+.development-topic-selector {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+}
+.development-topic-selector fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  background: var(--ink);
+}
+.development-topic-selector legend {
+  width: 100%;
+  padding-bottom: .75rem;
+  color: var(--green-bright);
+  font-size: .68rem;
+}
+.development-topic-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .65rem;
+  align-items: start;
+  padding: .5rem 0;
+  cursor: pointer;
+  font-size: .68rem;
+}
+.development-topic-option input { margin-top: .15rem; accent-color: var(--green-bright); }
+.development-topic-option span { display: grid; gap: .2rem; }
+.development-topic-option small { opacity: .55; overflow-wrap: anywhere; }
 .chapter-development-domains { padding: 1rem; }
 .chapter-development-domain { margin: .75rem 0; }
 .chapter-development-domain > summary {
@@ -6326,7 +6403,16 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
 .chapter-development-topic[data-status="previously-covered"] > header > b { opacity: .55; }
 .chapter-development-links { display: grid; gap: .4rem; }
 .chapter-development-links span { font: .72rem/1.4 var(--font-mono); letter-spacing: .1em; }
-.chapter-development-links code { white-space: normal; opacity: .75; }
+.chapter-development-linked-record {
+  width: 100%;
+  padding: .45rem .6rem;
+  border: 1px solid transparent;
+  text-align: left;
+  white-space: normal;
+  opacity: .75;
+}
+.chapter-development-linked-record:hover,
+.chapter-development-linked-record:focus-visible { border-color: var(--green-mid); opacity: 1; }
 .chapter-development-topic label { display: grid; gap: .5rem; font-size: .72rem; }
 .chapter-development-topic select,
 .chapter-development-topic textarea { width: 100%; }
@@ -6338,4 +6424,9 @@ footer { color: #65725f; font-size: var(--ui-text-9); }
   .chapter-development-actions { align-items: stretch; flex-direction: column; }
   .chapter-development-progress { min-width: 0; text-align: left; }
   .chapter-development-topic-grid { grid-template-columns: 1fr; }
+  .development-link-console > header,
+  .development-link-console-grid { grid-template-columns: 1fr; align-items: stretch; }
+  .development-link-console > header { flex-direction: column; }
+  .development-topic-selector { grid-template-columns: 1fr; }
+  .development-link-buttons > button { flex: 1 1 12rem; }
 }
