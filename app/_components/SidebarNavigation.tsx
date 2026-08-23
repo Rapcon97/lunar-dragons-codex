@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useAdminMode } from "./AdminMode";
 
 type SidebarGlyphName =
   | "command"
@@ -11,6 +14,7 @@ type SidebarGlyphName =
   | "intel"
   | "relay"
   | "chronicles"
+  | "development"
   | "settings";
 
 type SidebarNavigationProps = {
@@ -33,6 +37,7 @@ const SIDEBAR_ITEMS: readonly SidebarItem[] = [
   { href: "/intel", icon: "intel", label: "Sector Intel" },
   { href: "/relay", icon: "relay", label: "Relay" },
   { href: "/chronicles", icon: "chronicles", label: "Chronicles" },
+  { href: "/development", icon: "development", label: "Development" },
   { href: "/settings", icon: "settings", label: "Settings" },
 ] as const;
 
@@ -94,6 +99,13 @@ const SIDEBAR_GLYPHS: Record<SidebarGlyphName, ReactNode> = {
       <path d="M11 8h5M11 12h5M11 16h5M3 6h2M3 18h2" />
     </>
   ),
+  development: (
+    <>
+      <path d="M4 4h16v16H4z" />
+      <path d="M8 8h8M8 12h5M8 16h3" />
+      <path d="m15 15 1.5 1.5L20 13" />
+    </>
+  ),
   settings: (
     <>
       <path d="m9.5 3 .6-1h3.8l.6 1 .5 2 2-.8 1.1.2 1.9 3.3-.6.9-1.6 1.3 1.6 1.3.6.9-1.9 3.3-1.1.2-2-.8-.5 2-.6 1h-3.8l-.6-1-.5-2-2 .8-1.1-.2-1.9-3.3.6-.9 1.6-1.3-1.6-1.3-.6-.9 1.9-3.3 1.1-.2 2 .8z" />
@@ -139,7 +151,10 @@ function SidebarNavigationItem({ activeHref, item }: { activeHref: string; item:
 }
 
 export function SidebarNavigation({ activeHref }: SidebarNavigationProps) {
-  const primaryItems = SIDEBAR_ITEMS.slice(0, -1);
+  const { canAdmin, isAdminMode } = useAdminMode();
+  const primaryItems = SIDEBAR_ITEMS
+    .slice(0, -1)
+    .filter((item) => item.icon !== "development" || (canAdmin && isAdminMode));
   const settingsItem = SIDEBAR_ITEMS[SIDEBAR_ITEMS.length - 1];
 
   return (

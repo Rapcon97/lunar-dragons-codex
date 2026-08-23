@@ -73,6 +73,12 @@ const sectionInfo = {
     title: "Astropathic Relay",
     description: "Access decoded vox-missives, recovered astropathic traffic, and sealed command signals through the Lunaris data reliquarium.",
   },
+  development: {
+    code: "PROGRESSIO",
+    kicker: "Canon development & unresolved doctrine",
+    title: "Chapter Development",
+    description: "Track which parts of the Lunar Dragons have been established, remain under review, or still require deliberate development.",
+  },
   settings: {
     code: "ARCHIVUM",
     kicker: "Archive controls",
@@ -97,7 +103,7 @@ export default function SectionPage() {
   const section = (pathname.split("/")[1] || "chapter") as Section;
   const info = sectionInfo[section] || sectionInfo.chapter;
   const chapterName = "THE LUNAR DRAGONS";
-  const usesArchiveBoundary = ["chapter", "flagship", "armoury", "companies", "characters", "intel"].includes(section);
+  const usesArchiveBoundary = ["chapter", "flagship", "armoury", "companies", "characters", "intel", "development"].includes(section);
   const usesArchiveTerminal = ["relay", "chronicles", "characters"].includes(section);
 
   return (
@@ -157,13 +163,30 @@ export default function SectionPage() {
           )}
           {section === "intel" && <SectorIntelSection canEdit={isAdminMode} intel={data.sectorIntel} onSave={(value) => saveSection("sectorIntel", value)} originLocationId={searchParams.get("origin")} />}
           {section === "relay" && <AstropathicRelaySection intel={data.sectorIntel} messages={data.relayMessages} />}
+          {section === "development" && canAdmin && isAdminMode && (
+            <div className="development-page">
+              <ChapterDevelopmentLedger
+                canAdmin={canAdmin}
+                entries={data.loreEntries}
+                isAdminMode={isAdminMode}
+                milestones={data.milestones}
+                onSaveMilestones={(value) => saveSection("milestones", value)}
+              />
+            </div>
+          )}
+          {section === "development" && (!canAdmin || !isAdminMode) && (
+            <section className="panel development-access-sealed" aria-label="Restricted development archive">
+              <p className="section-kicker">Administratum seal required</p>
+              <h2>Development archive unavailable</h2>
+              <p>Authenticate as the Chapter administrator and enter Admin Mode to open this restricted ledger.</p>
+              <Link className="seal-button" href="/settings">RETURN TO ARCHIVE SETTINGS</Link>
+            </section>
+          )}
           {section === "settings" && (
             <SettingsSection
               canAdmin={canAdmin}
               isAdminMode={isAdminMode}
               loreEntries={data.loreEntries}
-              milestones={data.milestones}
-              onSaveMilestones={(value) => saveSection("milestones", value)}
               onArchiveRefresh={load}
             />
           )}
@@ -2026,15 +2049,11 @@ function SettingsSection({
   canAdmin,
   isAdminMode,
   loreEntries,
-  milestones,
-  onSaveMilestones,
   onArchiveRefresh,
 }: {
   canAdmin: boolean;
   isAdminMode: boolean;
   loreEntries: LoreEntry[];
-  milestones: import("../archive-data").ChapterMilestone[];
-  onSaveMilestones: (value: import("../archive-data").ChapterMilestone[]) => Promise<boolean>;
   onArchiveRefresh: () => Promise<void>;
 }) {
   const canEdit = isAdminMode;
@@ -2048,13 +2067,6 @@ function SettingsSection({
         entries={loreEntries}
         isAdminMode={isAdminMode}
         onPublished={onArchiveRefresh}
-      />
-      <ChapterDevelopmentLedger
-        canAdmin={canAdmin}
-        entries={loreEntries}
-        isAdminMode={isAdminMode}
-        milestones={milestones}
-        onSaveMilestones={onSaveMilestones}
       />
       <GuestAccountManager canEdit={canEdit} />
     </div>

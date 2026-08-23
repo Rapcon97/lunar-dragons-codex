@@ -218,7 +218,7 @@ test("principal archive sections share the Relay and Chronicle frame boundaries"
 
   assert.match(home, /workspace archive-boundary-workspace command-boundary-workspace/);
   assert.match(home, /content-grid command-grid-redesign archive-boundary-content/);
-  assert.match(sectionPage, /\["chapter", "flagship", "armoury", "companies", "characters", "intel"\]\.includes\(section\)/);
+  assert.match(sectionPage, /\["chapter", "flagship", "armoury", "companies", "characters", "intel", "development"\]\.includes\(section\)/);
   assert.match(sectionPage, /usesArchiveBoundary \? "archive-boundary-workspace"/);
   assert.match(sectionPage, /usesArchiveBoundary \? "archive-boundary-subpage"/);
   assert.match(companyPage, /workspace archive-boundary-workspace/);
@@ -491,6 +491,7 @@ test("the sidebar uses one coordinated accessible SVG command-glyph system", asy
     ["Sector Intel", "/intel", "intel"],
     ["Relay", "/relay", "relay"],
     ["Chronicles", "/chronicles", "chronicles"],
+    ["Development", "/development", "development"],
     ["Settings", "/settings", "settings"],
   ];
 
@@ -512,6 +513,7 @@ test("the sidebar uses one coordinated accessible SVG command-glyph system", asy
   assert.match(sidebar, /strokeLinecap="square"/);
   assert.match(sidebar, /strokeLinejoin="miter"/);
   assert.match(sidebar, /aria-current=\{active \? "page" : undefined\}/);
+  assert.match(sidebar, /item\.icon !== "development" \|\| \(canAdmin && isAdminMode\)/);
   assert.doesNotMatch(sidebar, /<img|from ["'][^"']*(lucide|heroicons|fontawesome)/i);
 
   for (const surface of surfaces) {

@@ -66,10 +66,19 @@ test("summaries expose stable IDs without copying full lore and unmapped inbox r
 });
 
 test("development ledger renders only for ChatGPT administrators in active Admin Mode", async () => {
-  const source = await readFile(
-    new URL("../app/_components/ChapterDevelopmentLedger.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.match(source, /if \(!canAdmin \|\| !isAdminMode\) return null/);
-  assert.match(source, /Chapter Development Ledger/);
+  const [ledger, sectionPage, sidebar] = await Promise.all([
+    readFile(new URL("../app/_components/ChapterDevelopmentLedger.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/[section]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/_components/SidebarNavigation.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(ledger, /if \(!canAdmin \|\| !isAdminMode\) return null/);
+  assert.match(ledger, /Chapter Development Ledger/);
+  assert.match(sectionPage, /section === "development" && canAdmin && isAdminMode/);
+  assert.match(sectionPage, /section === "development" && \(!canAdmin \|\| !isAdminMode\)/);
+  assert.match(sidebar, /item\.icon !== "development" \|\| \(canAdmin && isAdminMode\)/);
+
+  const settingsStart = sectionPage.indexOf("function SettingsSection(");
+  const settingsEnd = sectionPage.indexOf("type GuestUser", settingsStart);
+  assert.ok(settingsStart > -1 && settingsEnd > settingsStart);
+  assert.doesNotMatch(sectionPage.slice(settingsStart, settingsEnd), /ChapterDevelopmentLedger/);
 });
