@@ -142,9 +142,11 @@ test("development ledger renders only for ChatGPT administrators in active Admin
   assert.match(sectionPage, /section === "development" && canAdmin && isAdminMode/);
   assert.match(sectionPage, /section === "development" && \(!canAdmin \|\| !isAdminMode\)/);
   assert.match(sidebar, /item\.icon !== "development" \|\| \(canAdmin && isAdminMode\)/);
-  assert.match(ledger, /Record Link Console/);
-  assert.match(ledger, /COGITATE LINK PROPOSAL/);
-  assert.match(ledger, /SEAL RECORD LINKS/);
+  assert.match(ledger, /Link lore records to the development ledger/);
+  assert.match(ledger, /COGITATE PROPOSAL/);
+  assert.match(ledger, /SEAL LINKS/);
+  assert.match(ledger, /<details className="development-link-console panel"/);
+  assert.match(ledger, /development-domain-nav/);
   assert.match(ledger, /PROPOSAL LOADED \/\/ REVIEW BEFORE SEALING/);
   assert.match(linkRoute, /getArchiveAdmin/);
   assert.match(linkRoute, /isSameOriginRequest/);
