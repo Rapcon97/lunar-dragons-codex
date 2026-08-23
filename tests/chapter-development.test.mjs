@@ -138,16 +138,19 @@ test("development ledger renders only for ChatGPT administrators in active Admin
     readFile(new URL("../app/api/admin/development/analyse/route.ts", import.meta.url), "utf8"),
   ]);
   assert.match(ledger, /if \(!canAdmin \|\| !isAdminMode\) return null/);
-  assert.match(ledger, /Chapter Development Ledger/);
+  assert.match(ledger, /Chapter Development/);
   assert.match(sectionPage, /section === "development" && canAdmin && isAdminMode/);
   assert.match(sectionPage, /section === "development" && \(!canAdmin \|\| !isAdminMode\)/);
   assert.match(sidebar, /item\.icon !== "development" \|\| \(canAdmin && isAdminMode\)/);
-  assert.match(ledger, /Link lore records to the development ledger/);
-  assert.match(ledger, /COGITATE PROPOSAL/);
-  assert.match(ledger, /SEAL LINKS/);
-  assert.match(ledger, /<details className="development-link-console panel"/);
+  assert.match(ledger, /NEXT BEST TASK/);
+  assert.match(ledger, /SAVE DEVELOPMENT NOTES/);
+  assert.match(ledger, /development-workbench-focus/);
+  assert.match(ledger, /Link lore records to development topics/);
+  assert.match(ledger, /SUGGEST TOPICS/);
+  assert.match(ledger, /SAVE TOPIC LINKS/);
+  assert.match(ledger, /<details className="development-link-console"/);
   assert.match(ledger, /development-domain-nav/);
-  assert.match(ledger, /PROPOSAL LOADED \/\/ REVIEW BEFORE SEALING/);
+  assert.match(ledger, /PROPOSAL LOADED \/\/ REVIEW BEFORE SAVING/);
   assert.match(linkRoute, /getArchiveAdmin/);
   assert.match(linkRoute, /isSameOriginRequest/);
   assert.match(linkRoute, /x-lunar-admin-mode/);
