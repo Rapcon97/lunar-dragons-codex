@@ -1,0 +1,270 @@
+/* Complete alternate environment: inset surfaces, workbenches and modal windows.
+   Nothing in this file applies to the Classic archive. */
+html[data-archive-appearance="modern"] {
+  --glass-inset: linear-gradient(140deg, #ffffff95, #ffffff40);
+  --glass-edge: #ffffffc7;
+  --glass-text: #263b5b;
+  --glass-muted: #506681;
+  --glass-accent: #4766a9;
+}
+
+/* Fixed dialogs must escape the containing blocks created by backdrop-filter. */
+html[data-archive-appearance="modern"] :is(.panel,.archive-terminal-frame,.character-reliquary,.chapter-development-ledger,.sector-cartography-experience,.company-dossier,.character-dossier):has([aria-modal="true"]) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  isolation: auto;
+}
+
+/* One window language for lore, characters, heraldry, transcripts and planets. */
+html[data-archive-appearance="modern"] :is(.lore-editor-backdrop,.character-editor-backdrop,.character-viewer-backdrop,.planet-dossier-backdrop,.relay-dialog-backdrop,.archive-previewer-backdrop,.heraldry-preview-backdrop,.eleventh-clearance-backdrop) {
+  position: fixed;
+  inset: 0;
+  z-index: 9900;
+  padding: clamp(12px,2.5vw,36px);
+  background: #3a527746;
+  backdrop-filter: blur(18px) saturate(.8);
+  -webkit-backdrop-filter: blur(18px) saturate(.8);
+}
+html[data-archive-appearance="modern"] .lunaris-media-dialog::backdrop { background: #3a527746; backdrop-filter: blur(18px); }
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer,.heraldry-preview-dialog) {
+  max-width: 100%;
+  max-height: calc(100dvh - 48px);
+  color: var(--glass-text);
+  background: linear-gradient(130deg,#f6f9ffee,#e2edf7e8 60%,#e6e2f3ed) !important;
+  border: 1px solid #ffffffec !important;
+  border-radius: 28px;
+  box-shadow: 0 32px 100px #24375438, inset 0 1px #ffffff !important;
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  overflow: auto;
+  scrollbar-color: #8b9fbb #ffffff40;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) :is(h1,h2,h3,h4) {
+  color: var(--glass-text) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  letter-spacing: -.035em !important;
+  text-transform: none !important;
+  text-shadow: none !important;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) :is(p,span,strong,b,small,label,dt,dd,li,legend,summary,code) {
+  color: var(--glass-muted) !important;
+  font-family: var(--font-body) !important;
+  letter-spacing: normal;
+  text-shadow: none !important;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) :is(p,li,dd) { font-size: 1rem; line-height: 1.65; }
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) > header {
+  padding: 24px 28px;
+  background: #ffffff5c !important;
+  border-color: #ffffffb5;
+  gap: 20px;
+  box-shadow: none;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) :is(input,textarea,select) {
+  min-width: 0;
+  padding: 12px 14px;
+  background: #ffffffa0 !important;
+  color: var(--glass-text) !important;
+  border: 1px solid #aebfd5 !important;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 3px #50658b0a;
+  font: 1rem/1.5 var(--font-body) !important;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) :is(button,.seal-button) {
+  min-height: 40px;
+  padding: 10px 16px;
+  background: #ffffff96 !important;
+  border: 1px solid #c5d2e5 !important;
+  border-radius: 12px;
+  color: #335688 !important;
+  font: 500 .875rem/1.4 var(--font-body);
+  letter-spacing: normal;
+  text-transform: none;
+  box-shadow: 0 2px 5px #5e75940a;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) button:hover:not(:disabled) { background: white !important; border-color: #8ea6ca !important; }
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) :is(footer,form > footer) {
+  background: #eef4fbd9 !important;
+  border-color: #ffffffc9;
+  padding: 20px 28px;
+  box-shadow: 0 -6px 24px #7387a20a;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) button[type="submit"],
+html[data-archive-appearance="modern"] .workspace :is(.save-edit,.lore-cogitator-input button) {
+  background: #4564a0 !important;
+  border-color: #4564a0 !important;
+  color: #ffffff !important;
+}
+html[data-archive-appearance="modern"] :is([role="dialog"],.workspace) :is(.character-delete-button,.character-delete-warning,.character-delete-error,.lore-editor-message.error,.lore-cogitator-error,.imperial-date-legacy) {
+  color: #9b2949 !important;
+  border-color: #d89eaf !important;
+  background: #fff1f4b0 !important;
+}
+
+/* The editor is a writing desk with a separate advisory pane. */
+html[data-archive-appearance="modern"] .lore-editor-dialog { width: min(1280px,100%); overflow: hidden; }
+html[data-archive-appearance="modern"] .lore-editor-dialog.assistant-open { width: min(1640px,100%); }
+html[data-archive-appearance="modern"] .lore-editor-dialog > form { min-height: 0; }
+html[data-archive-appearance="modern"] .lore-editor-signifiers { background: #ffffff3d; border-color: #ffffffaa; padding: 8px 12px; }
+html[data-archive-appearance="modern"] .lore-editor-signifiers span { border: 0; padding: 10px 16px; font-size: .75rem; }
+html[data-archive-appearance="modern"] .lore-editor-signifiers strong { margin-top: 4px; font-size: .875rem; overflow-wrap: anywhere; }
+html[data-archive-appearance="modern"] .lore-editor-workspace { padding: 0 16px 16px; gap: 16px; background: transparent; }
+html[data-archive-appearance="modern"] .lore-editor-fields { padding: 20px; gap: 20px; border: 0; background: #ffffff38; border-radius: 18px; }
+html[data-archive-appearance="modern"] .lore-editor-identity-grid { grid-template-columns: minmax(0,1fr); gap: 20px; }
+html[data-archive-appearance="modern"] .lore-editor-content-field textarea { min-height: 22rem; font-size: 1.0625rem !important; line-height: 1.8 !important; padding: 20px; }
+html[data-archive-appearance="modern"] :is(.imperial-date-builder,.imperial-date-point,.imperial-date-fixed-value,.imperial-date-millennium b) {
+  background: #ffffff65 !important; border-color: #c0cfe2; border-radius: 12px;
+}
+html[data-archive-appearance="modern"] .imperial-date-builder { padding: 18px; gap: 14px; }
+html[data-archive-appearance="modern"] .imperial-date-builder-heading { flex-wrap: wrap; gap: 6px; }
+html[data-archive-appearance="modern"] .imperial-date-point legend { font-size: .8125rem; }
+html[data-archive-appearance="modern"] .imperial-date-point-placeholder { display: none; }
+html[data-archive-appearance="modern"] .imperial-date-builder-grid:has(.imperial-date-point-placeholder) .imperial-date-point:not(.imperial-date-point-placeholder) { grid-column: 1 / -1; }
+html[data-archive-appearance="modern"] .lore-cogitator {
+  border: 1px solid #ffffffc9; border-radius: 18px;
+  background: linear-gradient(160deg,#e7eefb99,#dbe9f380) !important;
+  box-shadow: none; overflow: hidden;
+}
+html[data-archive-appearance="modern"] .lore-cogitator > header { padding: 20px; background: #ffffff5c; border-color: #ffffffa8; }
+html[data-archive-appearance="modern"] .lore-cogitator > header h3 { font-size: 1.4rem; }
+html[data-archive-appearance="modern"] .lore-cogitator-quick { padding: 14px; gap: 8px; }
+html[data-archive-appearance="modern"] :is(.lore-cogitator-log,.lore-cogitator-input,.lore-cogitator-proposal) { background: #ffffff35; border-color: #ffffffb0; }
+html[data-archive-appearance="modern"] .lore-cogitator-turn { margin-bottom: 14px; padding: 16px; border: 1px solid #ffffffa0; border-radius: 16px; background: #ffffff70; }
+html[data-archive-appearance="modern"] .lore-cogitator-turn.user { background: #e2eafa; }
+html[data-archive-appearance="modern"] .lore-cogitator-input { padding: 16px; }
+html[data-archive-appearance="modern"] .lore-cogitator-proposal { padding: 16px; border-radius: 14px; }
+
+/* Personnel: readable dossiers, rounded identity tiles and individual fact cards. */
+html[data-archive-appearance="modern"] :is(.character-dossier-header,.character-viewer-header,.character-dossier-footer,.character-viewer-footer,.character-editor-dialog > footer) { background: #ffffff45; border-color: #ffffffa0; }
+html[data-archive-appearance="modern"] :is(.character-dossier-mark,.character-viewer-mark,.character-index-mark,.member-glyph,.squad-number) {
+  background: linear-gradient(145deg,#ffffffbc,#cbdcf366); border: 1px solid #ffffffcc;
+  color: #476899; border-radius: 18px; clip-path: none; box-shadow: 0 6px 20px #536f9910;
+}
+html[data-archive-appearance="modern"] :is(.character-editor-scroll,.character-viewer-scroll,.character-viewer-records,.character-viewer-biography,.character-viewer-deeds,.character-dossier-section,.character-extractor-intro,.character-extractor-result,.character-canon-links) {
+  background: #ffffff30 !important; border-color: #ffffffa8; color: var(--glass-muted);
+}
+html[data-archive-appearance="modern"] :is(.character-dossier-vitals,.character-viewer-vitals) { padding: 20px; gap: 12px; background: transparent; border: 0; }
+html[data-archive-appearance="modern"] :is(.character-dossier-vitals,.character-viewer-vitals) > div {
+  padding: 16px; background: var(--glass-inset); border: 1px solid var(--glass-edge); border-radius: 14px;
+}
+html[data-archive-appearance="modern"] :is(.character-dossier-source-list,.character-viewer-sources) article { background: #ffffff60; border: 1px solid #ffffffaa; border-radius: 14px; padding: 18px; margin-bottom: 10px; }
+html[data-archive-appearance="modern"] .character-editor-grid { gap: 20px; }
+html[data-archive-appearance="modern"] .character-editor-grid label { font-size: .875rem; line-height: 1.5; }
+html[data-archive-appearance="modern"] .character-canon-links { padding: 18px; border-radius: 14px; }
+html[data-archive-appearance="modern"] .character-canon-links label { padding: 12px; border-radius: 10px; }
+
+/* Fleet and company frames become a card-based roster, with quieter controls. */
+html[data-archive-appearance="modern"] .company-roster { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+html[data-archive-appearance="modern"] .company-roster > :is(.edit-mode-bar,.roster-summary,.eleventh-company-divider,.redacted-company-row) { grid-column: 1 / -1; }
+html[data-archive-appearance="modern"] .company-roster-columns { display: none; }
+html[data-archive-appearance="modern"] .company-row { display: grid; grid-template-columns: 56px minmax(0,1fr); gap: 16px; padding: 26px; align-items: start; }
+html[data-archive-appearance="modern"] .company-row > .company-heraldry-preview { grid-column: 2; justify-content: flex-start; }
+html[data-archive-appearance="modern"] .company-row > .roster-strength { grid-column: 1 / -1; }
+html[data-archive-appearance="modern"] .company-number { border-radius: 16px; background: #ffffff90; border-color: #ffffff; color: #46618b !important; font: 500 1.25rem/1.4 var(--font-body); padding: 14px 8px; }
+html[data-archive-appearance="modern"] :is(.roster-summary,.company-dossier-matrix) { gap: 12px; padding: 16px; }
+html[data-archive-appearance="modern"] :is(.roster-summary,.company-dossier-matrix) article { border: 0; border-radius: 16px; background: #ffffff45; padding: 20px; }
+html[data-archive-appearance="modern"] .roster-summary strong { font: 500 clamp(1.7rem,3vw,2.8rem)/1.2 var(--font-body); }
+html[data-archive-appearance="modern"] :is(.company-sigil-frame,.company-pauldron-frame,.company-sigil-button,.company-pauldron-button,.heraldry-preview-image) { border-radius: 20px; border-color: #ffffffb0; background: #ffffff3d; box-shadow: none; }
+html[data-archive-appearance="modern"] :is(.member-card,.squad-card,.company-character-link) { padding: 24px; border-radius: 22px; }
+html[data-archive-appearance="modern"] :is(.company-calculation-notice,.company-roster-empty,.company-personnel-empty) { border-color: #b7cbe1; background: #ffffff4c; border-radius: 16px; padding: 20px; }
+html[data-archive-appearance="modern"] :is(.company-row,.member-card,.squad-card,.character-index-card,.planet-type-card) { transition: box-shadow .2s,border-color .2s,background-color .2s; }
+html[data-archive-appearance="modern"] :is(.clickable-company,.character-index-card,.planet-type-card):hover { border-color: white !important; box-shadow: 0 12px 30px #45659122 !important; }
+
+/* Navigation frames, archive references and inset administrative controls. */
+html[data-archive-appearance="modern"] :is(.record-card,.field-card,.wide-record,.settings-card,.relic-card,.lore-record-card,.guest-users-locked,.guest-user-card,.guest-user-form,.development-evidence-pane,.development-decision-pane,.development-link-console,.planet-type-dossier,.planet-type-card) {
+  background: var(--glass-inset) !important; border-color: var(--glass-edge) !important;
+  border-radius: 18px; box-shadow: inset 0 1px #ffffffb0;
+}
+html[data-archive-appearance="modern"] :is(.record-card,.field-card,.settings-card,.relic-card) { padding: 24px; }
+html[data-archive-appearance="modern"] :is(.development-workbook-columns,.development-evidence-list,.development-link-domain-tabs,.development-topic-selector,.development-workbook-progress,.development-next-task,.lore-development-stats) { background: transparent; border-color: #ffffffa0; }
+html[data-archive-appearance="modern"] :is(.development-evidence-pane,.development-decision-pane) { margin: 10px; }
+html[data-archive-appearance="modern"] .chapter-development-linked-record { padding: 16px; border-radius: 12px; background: #ffffff60; border-color: #ffffffc0; }
+html[data-archive-appearance="modern"] :is(.development-domain-nav,.development-topic-nav) button { padding: 14px; border-radius: 10px; }
+html[data-archive-appearance="modern"] :is(.development-domain-nav,.development-topic-nav) button.is-active { background: #ffffffa0; box-shadow: inset 3px 0 #6481b7; }
+html[data-archive-appearance="modern"] :is(.development-workbook-header,.development-next-task,.development-evidence-pane,.development-decision-pane,.settings-card) small { font-size: .8125rem; opacity: 1; }
+html[data-archive-appearance="modern"] :is(.chronicle-record-signifiers,.chronicle-record-footer,.chronicle-record-publication,.lore-manual-status-control,.chronicle-record-contents,.chronicle-record-content blockquote) {
+  background: #ffffff4c; border-color: #c3d3e6; border-radius: 14px;
+}
+html[data-archive-appearance="modern"] :is(.chronicle-record-footer,.chronicle-record-publication) { padding: 20px; }
+html[data-archive-appearance="modern"] .chronicle-reader-scroll { background: transparent; }
+html[data-archive-appearance="modern"] :is(.archive-previewer-body,.archive-transcript,.relay-dialog-body,.relay-dialog-transcript,.transmission-signal-auspex) { background: #ffffff35 !important; border-color: #ffffffaa; color: var(--glass-text); }
+html[data-archive-appearance="modern"] :is(.relay-terminal-log,.relay-terminal-content,.relay-data-stream) { background: #ffffff35 !important; color: var(--glass-muted) !important; border-color: #c6d5e8; border-radius: 14px; }
+html[data-archive-appearance="modern"] .archive-previewer-body { padding: 24px; }
+html[data-archive-appearance="modern"] .archive-previewer-body img { border-radius: 12px; }
+
+/* Cartography remains spatial, surrounded by translucent controls and dossiers. */
+html[data-archive-appearance="modern"] :is(.sector-chart-shell,.system-cartography-shell) { background: transparent; gap: 16px; padding: 16px; }
+html[data-archive-appearance="modern"] :is(.sector-chart,.system-orbital-stage) { background: radial-gradient(ellipse at 70% 15%,#345d85,#142841 70%); border: 1px solid #c5d5e77a; border-radius: 22px; box-shadow: inset 0 1px #ffffff40; }
+html[data-archive-appearance="modern"] :is(.sector-chart-register,.system-orbital-register) { background: #ffffff75; border: 1px solid #ffffffc0; border-radius: 20px; }
+html[data-archive-appearance="modern"] :is(.sector-chart-register,.system-orbital-register) > header { background: #ffffff40; padding: 20px; border-color: #d7e2ef; }
+html[data-archive-appearance="modern"] :is(.sector-chart-register,.system-orbital-register) > button { border-color: #d4dfed; padding: 18px; border-radius: 0; }
+html[data-archive-appearance="modern"] :is(.sector-chart-register,.system-orbital-register) > button:hover { background: #ffffffbd; box-shadow: inset 3px 0 #6d8cba; }
+html[data-archive-appearance="modern"] :is(.sector-system-anchor > b,.sector-system-anchor > small,.system-orbital-body > b,.system-orbital-body > small,.system-primary-star b,.sector-chart-axis,.system-cartography-breadcrumb) { background: #132940b8; color: #e5efff !important; border-color: #6688af; border-radius: 6px; padding: 5px 8px; }
+html[data-archive-appearance="modern"] .sector-chart-frame { border-color: #a4bfdc40; border-radius: 14px; }
+html[data-archive-appearance="modern"] .sector-chart-frame i { display: none; }
+html[data-archive-appearance="modern"] .planet-dossier-scroll { background: transparent; padding: 28px; }
+html[data-archive-appearance="modern"] .planet-dossier-data { gap: 12px; border: 0; }
+html[data-archive-appearance="modern"] .planet-dossier-data > div { background: #ffffff65; border: 1px solid #ffffffc0; border-radius: 14px; padding: 16px; }
+html[data-archive-appearance="modern"] .planet-dossier-globe { border-radius: 50%; overflow: hidden; border: 5px solid #ffffffb0; box-shadow: 0 12px 30px #27436a26; }
+html[data-archive-appearance="modern"] .planet-dossier-globe::after { display: none; }
+html[data-archive-appearance="modern"] .planet-dossier-identity strong { border: 1px solid #b9cbe2; border-radius: 999px; padding: 6px 12px; background: #ffffff70; }
+html[data-archive-appearance="modern"] .planet-dossier-prototype { background: #e2ecf7; border-color: #bacde4; border-radius: 12px; padding: 16px; }
+html[data-archive-appearance="modern"] :is(.planet-archive-controls,.planet-archive-heading,.planet-type-notes) { border-color: #ffffffa0; background: transparent; }
+html[data-archive-appearance="modern"] .planet-type-card { padding: 16px; }
+html[data-archive-appearance="modern"] .planet-type-dossier { padding: 24px; }
+html[data-archive-appearance="modern"] .sector-cogitation-boot { border-radius: 24px; background: linear-gradient(135deg,#224464,#152a43); border-color: #accbe070; }
+
+@media (max-width: 1100px) {
+  html[data-archive-appearance="modern"] .company-roster { grid-template-columns: minmax(0,1fr); }
+  html[data-archive-appearance="modern"] .lore-editor-dialog.assistant-open .lore-editor-workspace { grid-template-columns: minmax(0,1fr); overflow-y: auto; }
+  html[data-archive-appearance="modern"] .lore-editor-workspace > .lore-editor-fields { height: auto; overflow: visible; }
+  html[data-archive-appearance="modern"] .lore-editor-workspace > #lore-cogitator-panel { height: 36rem; min-height: 28rem; }
+}
+@media (max-width: 700px) {
+  html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer,.heraldry-preview-dialog) { max-height: calc(100dvh - 24px); border-radius: 22px; }
+  html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) > header { padding: 18px; flex-wrap: wrap; }
+  html[data-archive-appearance="modern"] :is([role="dialog"],.archive-previewer) :is(footer,form > footer) { padding: 16px; flex-wrap: wrap; }
+  html[data-archive-appearance="modern"] .lore-editor-signifiers { display: none; }
+  html[data-archive-appearance="modern"] .lore-editor-workspace { padding: 0 10px 10px; }
+  html[data-archive-appearance="modern"] .lore-editor-fields { padding: 12px; }
+  html[data-archive-appearance="modern"] .lore-editor-content-field textarea { min-height: 18rem; }
+  html[data-archive-appearance="modern"] .imperial-date-builder-grid { grid-template-columns: minmax(0,1fr); }
+  html[data-archive-appearance="modern"] .imperial-date-point-placeholder { display: none; }
+  html[data-archive-appearance="modern"] .character-editor-grid { grid-template-columns: minmax(0,1fr); }
+  html[data-archive-appearance="modern"] .character-editor-grid .span-two { grid-column: 1; }
+  html[data-archive-appearance="modern"] :is(.character-dossier-vitals,.character-viewer-vitals) { padding: 12px; }
+  html[data-archive-appearance="modern"] .company-row { padding: 20px; }
+  html[data-archive-appearance="modern"] :is(.sector-chart-shell,.system-cartography-shell) { padding: 10px; gap: 12px; }
+}
+
+@media (min-width: 1200px) {
+  html[data-archive-appearance="modern"] .lore-editor-dialog:not(.assistant-open) .lore-editor-identity-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+}
+
+html[data-archive-appearance="modern"] .lore-format-toolbar {
+  padding: 10px; gap: 8px; background: #ffffff70; border: 1px solid #ffffffc0; border-radius: 14px;
+}
+html[data-archive-appearance="modern"] .lore-format-toolbar button { min-width: 40px; padding: 8px 12px; }
+html[data-archive-appearance="modern"] :is(.lore-cogitator-empty,.lore-cogitator-working) { border-color: #b7cbe2; border-radius: 12px; background: #ffffff35; }
+
+html[data-archive-appearance="modern"] :is(.company-heraldry-thumb,.company-heraldry-placeholder,.company-heraldry-thumb > small) {
+  background: #ffffff60; border-color: #c3d2e5; border-radius: 12px;
+}
+html[data-archive-appearance="modern"] .company-heraldry-thumb { width: 92px; height: 100px; }
+html[data-archive-appearance="modern"] .company-heraldry-placeholder { font-size: .6875rem; letter-spacing: 0; word-break: normal; }
+html[data-archive-appearance="modern"] .roster-strength > i { background: #b6c9e14d; border: 0; border-radius: 8px; height: 8px; overflow: hidden; }
+html[data-archive-appearance="modern"] .roster-strength > i > span { background: linear-gradient(90deg,#8295ce,#5d9eb7); border-radius: 8px; box-shadow: none; }
+html[data-archive-appearance="modern"] .roster-strength > i > mark { display: none; }
+html[data-archive-appearance="modern"] :is(.transmission-signal-grid,.signal-source-fix,.transmission-signal-events,.transmission-archive-disposition,.transmission-origin-actions) { background: #ffffff45; border-color: #c3d2e5; border-radius: 12px; }
+html[data-archive-appearance="modern"] .transmission-signal-auspex > summary { padding: 16px; }
+
+html[data-archive-appearance="modern"] .company-sigil { border: 1px solid #ffffffc0; border-radius: 20px; clip-path: none; background: #ffffff50; }
+html[data-archive-appearance="modern"] .company-sigil-actions :is(label,button) {
+  min-height: 40px; padding: 10px; border-radius: 12px; border: 1px solid #c5d2e5;
+  background: #ffffff96; color: #335688; font: 500 .75rem/1.5 var(--font-body); letter-spacing: 0;
+}
+html[data-archive-appearance="modern"] .company-sigil-actions label:focus-within { outline: 2px solid #4564a0; outline-offset: 3px; }
+html[data-archive-appearance="modern"] .archive-terminal-readout strong { color: #334f72; }
+html[data-archive-appearance="modern"] .archive-terminal-footer.admin-active .archive-terminal-readout > span:last-child strong { color: #335688; }

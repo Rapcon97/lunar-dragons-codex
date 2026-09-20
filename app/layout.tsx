@@ -6,6 +6,9 @@ import { ChapterArchiveProvider } from "./_hooks/useChapterArchive";
 import { getArchiveViewer } from "./archive-auth";
 import { chatGPTSignInPath, chatGPTSignOutPath } from "./chatgpt-auth";
 import "./globals.css";
+import "./modern.css";
+import "./glass-workspaces.css";
+import "./glass-layouts.css";
 
 export const dynamic = "force-dynamic";
 

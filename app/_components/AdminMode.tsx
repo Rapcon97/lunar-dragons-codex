@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 import { ArchiveTerminalFooter } from "./ArchiveTerminalFooter";
+import { useArchiveAppearance } from "./ArchiveAppearance";
 
 const ADMIN_MODE_SESSION_KEY = "lunar-dragons-admin-mode";
 const ADMIN_MODE_CHANGE_EVENT = "lunar-dragons-admin-mode-change";
@@ -71,6 +72,7 @@ export function AdminModeProvider({
     () => false,
   );
   const isAdminMode = canAdmin && persistedAdminMode;
+  const { modern, toggleAppearance } = useArchiveAppearance(canAdmin);
 
   useEffect(() => {
     if (!canAdmin) {
@@ -93,6 +95,8 @@ export function AdminModeProvider({
         displayName={displayName}
         isAdminMode={isAdminMode}
         onToggleAdminMode={toggleMode}
+        modernAppearance={modern}
+        onToggleAppearance={toggleAppearance}
         signOutHref={signOutHref}
         viewerKind={viewerKind}
       />

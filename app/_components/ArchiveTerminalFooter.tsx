@@ -7,6 +7,8 @@ export function ArchiveTerminalFooter({
   displayName,
   isAdminMode,
   onToggleAdminMode,
+  modernAppearance,
+  onToggleAppearance,
   signOutHref,
   viewerKind,
 }: {
@@ -14,6 +16,8 @@ export function ArchiveTerminalFooter({
   displayName: string;
   isAdminMode: boolean;
   onToggleAdminMode: () => void;
+  modernAppearance: boolean;
+  onToggleAppearance: () => void;
   signOutHref: string;
   viewerKind: "chatgpt" | "guest";
 }) {
@@ -65,6 +69,18 @@ export function ArchiveTerminalFooter({
           )}
         </div>
         <div className="archive-terminal-controls">
+          {canAdmin && (
+            <button
+              type="button"
+              className="archive-appearance-switch"
+              aria-label="Modern appearance"
+              aria-pressed={modernAppearance}
+              title="Switch appearance across all tabs on this browser"
+              onClick={onToggleAppearance}
+            >
+              {modernAppearance ? "CLASSIC STYLE" : "MODERN STYLE"}
+            </button>
+          )}
           {canAdmin && (
             <button type="button" onClick={onToggleAdminMode}>
               {isAdminMode ? "EXIT ADMIN" : "ENTER ADMIN"}

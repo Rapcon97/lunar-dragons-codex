@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAdminMode } from "./AdminMode";
 
@@ -152,15 +152,20 @@ function SidebarNavigationItem({ activeHref, item }: { activeHref: string; item:
 
 export function SidebarNavigation({ activeHref }: SidebarNavigationProps) {
   const { canAdmin, isAdminMode } = useAdminMode();
+  const [menuOpen, setMenuOpen] = useState(false);
   const primaryItems = SIDEBAR_ITEMS
     .slice(0, -1)
     .filter((item) => item.icon !== "development" || (canAdmin && isAdminMode));
   const settingsItem = SIDEBAR_ITEMS[SIDEBAR_ITEMS.length - 1];
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${menuOpen ? " glass-menu-open" : ""}`}>
       <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon" title="Lunar Dragons" />
-      <nav aria-label="Primary navigation">
+      <button className="glass-navigation-toggle" type="button" aria-expanded={menuOpen} aria-controls="archive-primary-navigation" onClick={() => setMenuOpen(!menuOpen)}>
+        <span>{SIDEBAR_ITEMS.find((item) => item.href === activeHref)?.label ?? "Archive"}</span>
+        <span>{menuOpen ? "Close ×" : "Menu +"}</span>
+      </button>
+      <nav id="archive-primary-navigation" aria-label="Primary navigation" onClick={() => setMenuOpen(false)} onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}>
         {primaryItems.map((item) => (
           <SidebarNavigationItem activeHref={activeHref} item={item} key={item.href} />
         ))}

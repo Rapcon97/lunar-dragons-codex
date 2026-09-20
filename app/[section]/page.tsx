@@ -7,6 +7,7 @@ import { useAdminMode } from "../_components/AdminMode";
 import { chronicleEntriesForViewer } from "../chronicle-visibility";
 import { CartographyTransitionLink } from "../_components/CartographyTransitionLink";
 import { ArchiveTerminalFrame } from "../_components/ArchiveTerminalFrame";
+import { revealGlassRecord } from "../_components/GlassReadingNavigation";
 import { CharacterDirectory } from "../_components/CharacterDirectory";
 import { LoreDevelopmentDashboard } from "../_components/LoreDevelopmentDashboard";
 import { ChapterDevelopmentLedger } from "../_components/ChapterDevelopmentLedger";
@@ -110,7 +111,7 @@ export default function SectionPage() {
     <main className="app-shell">
       <SidebarNavigation activeHref={`/${section}`} />
 
-      <section className={`workspace ${usesArchiveTerminal ? `archive-terminal-workspace ${section}-workspace` : usesArchiveBoundary ? "archive-boundary-workspace" : ""}`.trim()}>
+      <section data-archive-page={section} className={`workspace ${usesArchiveTerminal ? `archive-terminal-workspace ${section}-workspace` : usesArchiveBoundary ? "archive-boundary-workspace" : ""}`.trim()}>
         <header className="topbar">
           <div>
             <p className="eyebrow">The Lunar Dragons · {info.code}</p>
@@ -259,14 +260,16 @@ function LunarisSection() {
   return (
     <>
     <div className="lunaris-dossier">
-      <section className="panel lunaris-command-plate">
+      <nav className="glass-page-jumps" aria-label="Lunaris dossier sections"><a href="#vessel-overview">Overview</a><a href="#vessel-profile">Vessel profile</a><a href="#vessel-armament">Armament</a><a href="#vessel-logistics">Logistics</a><a href="#vessel-legacy">Service record</a></nav>
+      <section id="vessel-overview" className="panel lunaris-command-plate">
         <div className="lunaris-vessel-art">
           <img src="/lunaris-flagship.png" alt="The Lunaris, heavy command battle barge and flagship of the Lunar Dragons" />
           <span aria-hidden="true">IDENTIFICATION LOCK · NAVIS PRAETORIA</span>
         </div>
         <div className="lunaris-title-block">
           <p className="section-kicker">Serialis Imperialis · 008.M42/DR-017-A</p>
-          <h2>Lunaris</h2>
+          <h2 className="classic-layout-copy">Lunaris</h2>
+          <h1 className="glass-layout-copy">Lunaris</h1>
           <strong>Bearer of the First Stone <i /> The Argent Spear</strong>
           <p>Heavy Command Battle Barge and mobile headquarters of the Lunar Dragons. Command vessel of the Nachmund Reclamation and the Argent Vigil Crusade.</p>
         </div>
@@ -301,7 +304,7 @@ function LunarisSection() {
         </div>
       </section>
 
-      <section className="lunaris-profile-grid">
+      <section id="vessel-profile" className="lunaris-profile-grid">
         <article className="panel lunaris-profile">
           <header><p className="section-kicker">Vessel profile</p><span>ASTARTES WARSHIP</span></header>
           <dl>
@@ -338,18 +341,18 @@ function LunarisSection() {
         </article>
       </section>
 
-      <section className="panel lunaris-armament">
+      <section id="vessel-armament" className="panel lunaris-armament">
         <header><p className="section-kicker">Armament register</p><span>OFFENSIVE & DEFENSIVE SYSTEMS</span></header>
         <div>{armament.map(([heading, ...items]) => <article key={heading}><h3>{heading}</h3><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></article>)}</div>
       </section>
 
-      <section className="lunaris-logistics-grid">
+      <section id="vessel-logistics" className="lunaris-logistics-grid">
         <article className="panel lunaris-capacity"><p className="section-kicker">Launch capacity</p><dl>{launchCapacity.map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl></article>
         <article className="panel lunaris-capacity"><p className="section-kicker">Vehicle capacity</p><dl>{vehicleCapacity.map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl></article>
         <article className="panel lunaris-facilities"><p className="section-kicker">Key facilities</p><ul>{facilities.map((facility) => <li key={facility}>{facility}</li>)}</ul></article>
       </section>
 
-      <section className="lunaris-legacy-grid">
+      <section id="vessel-legacy" className="lunaris-legacy-grid">
         <article className="panel lunaris-reliquary"><p className="section-kicker">The Reliquary of the First Stone</p><div aria-hidden="true"><i>◆</i></div><p>The Gift of Luna entered Chapter keeping during the Ultima Founding and was installed aboard <i>Lunaris</i> at the vessel’s consecration. Guilliman’s decree of 008.M42 reaffirmed that trust. Its physical form remains absent from the accessible canon and is not represented here.</p></article>
         <article className="panel lunaris-honours"><p className="section-kicker">Authenticated service record</p><ul>{serviceRecord.map((record) => <li key={record}>{record}</li>)}</ul><p className="lunaris-symbolism">The Argent Spear · The First Home · Bearer of the First Stone · The Unfinished Foundation</p></article>
       </section>
@@ -406,7 +409,8 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
           <div className="relay-terminal-ident" aria-hidden="true">&gt;&gt;</div>
           <div className="relay-terminal-rack-title">
             <span>DATA RELIQUARIUM 056//ASTROPATHICA</span>
-            <strong>ASTROPATHIC EXLOAD TERMINAL</strong>
+            <strong className="classic-layout-copy">ASTROPATHIC EXLOAD TERMINAL</strong>
+            <h1 className="glass-layout-copy">Astropathic Relay</h1>
           </div>
           <div className="relay-inbox-status"><i /><span>EXLOAD LINK ACTIVE</span><b>{messages.length} MISSIVES COGITATED</b></div>
         </header>}
@@ -417,7 +421,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
               aria-pressed={message.id === selected?.id}
               className={`${message.id === selected?.id ? "selected " : ""}${index < 2 ? "unread " : ""}relay-inbox-item`}
               key={message.id}
-              onClick={() => setSelectedId(message.id)}
+              onClick={() => { setSelectedId(message.id); if (window.matchMedia("(max-width: 950px)").matches) revealGlassRecord(".relay-inbox-reader"); }}
             >
               <span className="relay-inbox-glyph" aria-hidden="true">[{String(index + 1).padStart(2, "0")}]</span>
               <span className="relay-inbox-item-copy">
@@ -430,7 +434,7 @@ function AstropathicRelaySection({ intel, messages }: { intel: SectorIntel; mess
             </button>
           )) : <p className="relay-empty">The choir listens into the dark between stars…</p>}
         </div>}
-        detail={<article className="relay-inbox-reader" aria-live="polite">
+        detail={<article className="relay-inbox-reader" aria-live="polite" tabIndex={-1}>
           {selected ? (
             <>
               <header>
@@ -572,9 +576,10 @@ function ChapterSection({
     onChange(next);
   }
   return (
-    <>
-      <DecreeRecord />
-      <div className="record-grid">
+    <div className="chapter-profile-layout">
+      <div className="chapter-mandate"><DecreeRecord /></div>
+      <div className="record-grid chapter-identity-profile">
+      <header className="glass-profile-heading"><img src="/lunar-dragons-sigil-depth.png" alt="" /><div><p className="section-kicker">The Lunar Dragons</p><h2>Identity &amp; origins</h2><p>The Chapter at a glance.</p></div></header>
       {identityFields.map((field, index) => (
         <label className="field-card panel" key={field}>
           <span>0{index + 1} · {field}</span>
@@ -584,6 +589,7 @@ function ChapterSection({
             onChange={(event) => canEdit && update(field, event.target.value)}
             onBlur={() => canEdit && void onSave(identity)}
           />
+          <span className="glass-identity-value">{identity[field]}</span>
         </label>
       ))}
       <section className="panel wide-record">
@@ -597,7 +603,7 @@ function ChapterSection({
         />
       </section>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -617,7 +623,8 @@ function ArmourySection({
     if (await onSave(next)) setName("");
   }
   return (
-    <>
+    <div className="armoury-catalogue">
+      <aside className="glass-armoury-summary"><p className="section-kicker">The Chapter collection</p><h2>Relics.<br />Wargear.<br />Legacy.</h2><p>Weapons, vessels, and treasured objects held in the Chapter archive.</p><dl><div><dt>Catalogued assets</dt><dd>{relics.length}</dd></div><div><dt>Classifications</dt><dd>{new Set(relics.map((relic) => relic.type)).size}</dd></div></dl></aside>
       {canEdit && (
         <div className="quick-entry panel">
           <input value={name} onChange={(event) => setName(event.target.value)} onKeyDown={(event) => event.key === "Enter" && addRelic()} placeholder="Name a relic, vehicle, or vessel…" />
@@ -625,6 +632,7 @@ function ArmourySection({
         </div>
       )}
       <div className="relic-grid">
+        {!relics.length && <div className="glass-catalogue-empty"><span aria-hidden="true">✦</span><h2>The collection awaits its first record</h2><p>Recorded relics and wargear will appear here.</p></div>}
         {relics.map((relic, index) => (
           <article className="relic-card panel" key={`${relic.name}-${index}`}>
             <span className="relic-index">RELIC · 0{index + 1}</span>
@@ -633,7 +641,7 @@ function ArmourySection({
           </article>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -1766,7 +1774,7 @@ function ChroniclesSection({
           {publicationStatus}
         </p>
       )}</>}
-      index={<aside className="chronicle-exload-index" aria-label={canEdit ? "Structured lore development record index" : "Canonical Chronicle record index"}>
+      index={<aside className="chronicle-exload-index" aria-label={canEdit ? "Structured lore development record index" : "Canonical Chronicle record index"} tabIndex={-1}>
           <header>
             <span>{canEdit ? "LORE DEVELOPMENT INDEX" : "SEALED RECORD INDEX"}</span>
             <small>{entries.length + 1} RETRIEVABLE OBJECTS</small>
@@ -1776,7 +1784,7 @@ function ChroniclesSection({
               type="button"
               className={`chronicle-index-entry decree ${selectedId === "decree" ? "selected" : ""}`}
               aria-pressed={selectedId === "decree"}
-              onClick={() => setSelectedId("decree")}
+              onClick={() => { setSelectedId("decree"); revealGlassRecord(".chronicle-exload-reader"); }}
             >
               <span className="chronicle-index-number">I</span>
               <span className="chronicle-index-copy">
@@ -1792,7 +1800,7 @@ function ChroniclesSection({
                 className={`chronicle-index-entry ${selectedId === entry.id ? "selected" : ""}`}
                 aria-pressed={selectedId === entry.id}
                 key={entry.id}
-                onClick={() => setSelectedId(entry.id)}
+                onClick={() => { setSelectedId(entry.id); revealGlassRecord(".chronicle-exload-reader"); }}
               >
                 <span className="chronicle-index-number">{String(index + 1).padStart(2, "0")}</span>
                 <span className="chronicle-index-copy">
@@ -1812,7 +1820,7 @@ function ChroniclesSection({
             )}
           </div>
         </aside>}
-      detail={<article className="chronicle-exload-reader" aria-live="polite">
+      detail={<article className="chronicle-exload-reader" aria-live="polite" tabIndex={-1}>
           <header className="chronicle-reader-terminal-header">
             <p className="chronicle-reader-terminal-line">
               <span>ACTIVE EXLOAD</span>
@@ -1825,6 +1833,7 @@ function ChroniclesSection({
               {canEdit && <><b>{"//"}</b><span>ADMIN DEVELOPMENT VIEW</span></>}
             </p>
             <div className="chronicle-reader-actions">
+              <button className="glass-return-index" type="button" onClick={() => revealGlassRecord(".chronicle-exload-index")}>← Browse records</button>
               {canEdit && selectedEntry && (
                 selectedEntry.status === "draft"
                 || selectedEntry.status === "review"

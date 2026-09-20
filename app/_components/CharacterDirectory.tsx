@@ -1,5 +1,7 @@
 "use client";
 
+import { revealGlassRecord } from "./GlassReadingNavigation";
+
 import { useEffect, useMemo, useState } from "react";
 import type {
   ChapterCharacter,
@@ -148,6 +150,7 @@ export function CharacterDirectory({
     const url = new URL(window.location.href);
     url.searchParams.set("record", character.id);
     window.history.pushState({ characterId: character.id }, "", url);
+    revealGlassRecord(".character-workspace-detail");
   }
 
   function clearSelection() {
@@ -155,6 +158,7 @@ export function CharacterDirectory({
     const url = new URL(window.location.href);
     url.searchParams.delete("record");
     window.history.pushState({}, "", url);
+    revealGlassRecord(".character-workspace-index");
   }
 
   function openExtractor(character: ChapterCharacter | null = null) {
@@ -299,7 +303,7 @@ export function CharacterDirectory({
           {canEdit && <div className="character-reliquary-actions"><button className="seal-button" onClick={() => openExtractor()} type="button">EXTRACT NEW FROM LORE</button><button className="seal-button" onClick={beginCreate} type="button">ADD MANUALLY</button></div>}
         </div>
       </header>}
-      index={<aside className="character-workspace-index" aria-label="Character record index">
+      index={<aside className="character-workspace-index" aria-label="Character record index" tabIndex={-1}>
           <div className="character-directory-tools" aria-label="Character directory filters">
             <label className="character-search-field">
               <span>SEARCH PERSONNEL</span>
@@ -355,7 +359,7 @@ export function CharacterDirectory({
           )}
           </div>
         </aside>}
-      detail={<div className="character-workspace-detail" role="region" aria-label="Selected character dossier">
+      detail={<div className="character-workspace-detail" role="region" aria-label="Selected character dossier" tabIndex={-1}>
           <CharacterDossier
             canEdit={canEdit}
             character={selectedCharacter}
