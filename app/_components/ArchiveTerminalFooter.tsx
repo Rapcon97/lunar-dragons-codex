@@ -73,8 +73,7 @@ export function ArchiveTerminalFooter({
             <button
               type="button"
               className="archive-appearance-switch"
-              aria-label="Modern appearance"
-              aria-pressed={modernAppearance}
+              aria-label={modernAppearance ? "Switch to Classic style" : "Switch to Modern style"}
               title="Switch appearance across all tabs on this browser"
               onClick={onToggleAppearance}
             >

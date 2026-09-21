@@ -886,7 +886,7 @@ test("the Lunaris dossier uses the sealed canon profile and current visual archi
 });
 
 test("the on-site lore editor is an Admin Mode-only structured-lore workflow", async () => {
-  const [sectionPage, editor, dateBuilder, formattedContent, createRoute, updateRoute, domain, storage, styles] = await Promise.all([
+  const [sectionPage, editor, dateBuilder, formattedContent, createRoute, updateRoute, domain, storage, styles, dialogFocus] = await Promise.all([
     readFile("app/[section]/page.tsx", "utf8"),
     readFile("app/_components/LoreEntryEditor.tsx", "utf8"),
     readFile("app/_components/ImperialDateBuilder.tsx", "utf8"),
@@ -896,6 +896,7 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
     readFile("app/lore-editor.ts", "utf8"),
     readFile("storage/chapter-records.ts", "utf8"),
     readFile("app/globals.css", "utf8"),
+    readFile("app/_components/useDialogFocus.ts", "utf8"),
   ]);
 
   assert.match(sectionPage, /canEdit=\{canAdmin && isAdminMode\}/);
@@ -917,7 +918,9 @@ test("the on-site lore editor is an Admin Mode-only structured-lore workflow", a
   assert.match(editor, /status: "draft"/);
   assert.match(editor, /expectedUpdatedAt: entry\.updatedAt/);
   assert.match(editor, /MAX_LORE_CONTENT_LENGTH/);
-  assert.match(editor, /document\.body\.style\.overflow = "hidden"/);
+  assert.match(editor, /useDialogFocus\('\[aria-labelledby="lore-editor-title"\]'\)/);
+  assert.match(dialogFocus, /document\.body\.style\.overflow = "hidden"/);
+  assert.match(dialogFocus, /document\.body\.style\.overflow = previousOverflow/);
   assert.match(editor, /role="toolbar"/);
   assert.match(editor, /applyInlineFormat/);
   assert.match(editor, /applyLineFormat/);

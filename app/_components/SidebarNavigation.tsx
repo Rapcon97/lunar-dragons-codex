@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAdminMode } from "./AdminMode";
 
@@ -153,21 +153,41 @@ function SidebarNavigationItem({ activeHref, item }: { activeHref: string; item:
 export function SidebarNavigation({ activeHref }: SidebarNavigationProps) {
   const { canAdmin, isAdminMode } = useAdminMode();
   const [menuOpen, setMenuOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const dismissOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !sidebarRef.current?.contains(event.target)) setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", dismissOutside);
+    return () => document.removeEventListener("pointerdown", dismissOutside);
+  }, [menuOpen]);
   const primaryItems = SIDEBAR_ITEMS
     .slice(0, -1)
     .filter((item) => item.icon !== "development" || (canAdmin && isAdminMode));
   const settingsItem = SIDEBAR_ITEMS[SIDEBAR_ITEMS.length - 1];
 
   return (
-    <aside className={`sidebar${menuOpen ? " glass-menu-open" : ""}`}>
-      <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon" title="Lunar Dragons" />
-      <button className="glass-navigation-toggle" type="button" aria-expanded={menuOpen} aria-controls="archive-primary-navigation" onClick={() => setMenuOpen(!menuOpen)}>
+    <aside ref={sidebarRef} className={`sidebar${menuOpen ? " glass-menu-open" : ""}`} onKeyDown={(event) => {
+      if (event.key === "Escape" && menuOpen) {
+        setMenuOpen(false);
+        toggleRef.current?.focus();
+      }
+    }} onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setMenuOpen(false);
+    }}>
+      <Link href="/" className="brand-mark" aria-label="Lunar Dragons chapter icon" title="Lunar Dragons"><span className="glass-brand-copy"><strong>Lunar Dragons</strong><small>Chapter archive</small></span></Link>
+      <button ref={toggleRef} className="glass-navigation-toggle" type="button" aria-expanded={menuOpen} aria-controls="archive-primary-navigation" onClick={() => setMenuOpen(!menuOpen)}>
         <span>{SIDEBAR_ITEMS.find((item) => item.href === activeHref)?.label ?? "Archive"}</span>
         <span>{menuOpen ? "Close ×" : "Menu +"}</span>
       </button>
-      <nav id="archive-primary-navigation" aria-label="Primary navigation" onClick={() => setMenuOpen(false)} onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }}>
+      <nav id="archive-primary-navigation" aria-label="Primary navigation" onClick={() => setMenuOpen(false)}>
         {primaryItems.map((item) => (
-          <SidebarNavigationItem activeHref={activeHref} item={item} key={item.href} />
+          <Fragment key={item.href}>
+            {["command", "companies", "intel", "chronicles"].includes(item.icon) && <span className="glass-nav-group" aria-hidden="true">{{ command: "Archive", companies: "Personnel", intel: "Operations", chronicles: "Records" }[item.icon as "command" | "companies" | "intel" | "chronicles"]}</span>}
+            <SidebarNavigationItem activeHref={activeHref} item={item} />
+          </Fragment>
         ))}
       </nav>
       <SidebarNavigationItem activeHref={activeHref} item={settingsItem} />

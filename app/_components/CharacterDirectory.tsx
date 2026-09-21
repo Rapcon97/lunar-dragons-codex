@@ -13,6 +13,7 @@ import type { CharacterExtractionAnswer } from "../character-extractor";
 import { applyCharacterDraft, createExtractedCharacterDraft, removeCharacterRecord } from "../character-records";
 import { ArchiveTerminalFrame } from "./ArchiveTerminalFrame";
 import { CharacterDossier } from "./CharacterDossier";
+import { useDialogFocus } from "./useDialogFocus";
 
 type CharacterDirectoryProps = {
   canEdit: boolean;
@@ -79,6 +80,8 @@ export function CharacterDirectory({
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionMessage, setExtractionMessage] = useState("");
   const [extractionUnresolved, setExtractionUnresolved] = useState<string[]>([]);
+
+  useDialogFocus(deleting ? '[aria-labelledby="character-delete-title"]' : isExtractorOpen ? '[aria-labelledby="character-extractor-title"]' : editing ? '[aria-labelledby="character-editor-title"]' : null);
 
   const canonEntries = useMemo(
     () => loreEntries.filter((entry) => entry.status === "canon"),
@@ -375,7 +378,7 @@ export function CharacterDirectory({
 
       {editing && (
         <div className="character-editor-backdrop" role="presentation">
-          <section aria-labelledby="character-editor-title" aria-modal="true" className="character-editor-dialog" role="dialog">
+          <section aria-labelledby="character-editor-title" aria-modal="true" className="character-editor-dialog" role="dialog" onKeyDown={(event) => { if (event.key === "Escape" && !isSaving) { setEditing(null); setEditingTargetId(null); } }}>
             <header>
               <div><p className="section-kicker">Administratum personnel editor</p><h2 id="character-editor-title">{editingTargetId ? "Revise Character Record" : "Create Character Record"}</h2></div>
               <button className="seal-button" onClick={() => { setEditing(null); setEditingTargetId(null); }} type="button">CLOSE</button>
@@ -415,7 +418,7 @@ export function CharacterDirectory({
 
       {isExtractorOpen && (
         <div className="character-editor-backdrop" role="presentation">
-          <section aria-labelledby="character-extractor-title" aria-modal="true" className="character-editor-dialog character-extractor-dialog" role="dialog">
+          <section aria-labelledby="character-extractor-title" aria-modal="true" className="character-editor-dialog character-extractor-dialog" role="dialog" onKeyDown={(event) => { if (event.key === "Escape" && !isExtracting) setIsExtractorOpen(false); }}>
             <header>
               <div><p className="section-kicker">Canon-guided personnel extraction</p><h2 id="character-extractor-title">{extractionTargetId ? "Revise Character from Lore" : "Create Character from Lore"}</h2></div>
               <button className="seal-button" onClick={() => setIsExtractorOpen(false)} type="button">CLOSE</button>
@@ -465,7 +468,7 @@ export function CharacterDirectory({
 
       {deleting && (
         <div className="character-editor-backdrop" role="presentation">
-          <section aria-labelledby="character-delete-title" aria-modal="true" className="character-editor-dialog character-delete-dialog" role="dialog">
+          <section aria-labelledby="character-delete-title" aria-modal="true" className="character-editor-dialog character-delete-dialog" role="dialog" onKeyDown={(event) => { if (event.key === "Escape" && !isDeleting) setDeleting(null); }}>
             <header>
               <div><p className="section-kicker">Administratum personnel deletion</p><h2 id="character-delete-title">Delete Character Record</h2></div>
               <button className="seal-button" disabled={isDeleting} onClick={() => setDeleting(null)} type="button">CLOSE</button>

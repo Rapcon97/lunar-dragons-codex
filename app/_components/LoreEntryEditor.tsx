@@ -16,6 +16,7 @@ import {
 } from "../lore-chronology";
 import { ImperialDateBuilder } from "./ImperialDateBuilder";
 import { LoreCogitatorPanel } from "./LoreCogitatorPanel";
+import { useDialogFocus } from "./useDialogFocus";
 
 const categoryOptions: Array<{ value: LoreCategory; label: string }> = [
   { value: "campaign", label: "Campaign" },
@@ -78,6 +79,7 @@ export function LoreEntryEditor({
   const initialDraft = useMemo(() => draftForEntry(entry), [entry]);
   const isDirty = JSON.stringify(draft) !== JSON.stringify(initialDraft);
   const isCreating = entry === null;
+  useDialogFocus('[aria-labelledby="lore-editor-title"]');
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- A newly selected stable entry deliberately resets the isolated editor session. */
@@ -87,14 +89,6 @@ export function LoreEntryEditor({
     setAssistantOpen(false);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [initialDraft]);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -311,7 +305,7 @@ export function LoreEntryEditor({
                 <label className="lore-editor-title-field">
                   RECORD TITLE
                   <input
-                    autoFocus
+                    data-dialog-initial-focus
                     required
                     maxLength={MAX_LORE_TITLE_LENGTH}
                     value={draft.title}
